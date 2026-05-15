@@ -124,7 +124,7 @@ cinemood/
 ```bash
 # Clone the repository
 git clone https://github.com/FelixBesancon/holbertonschool-CineMood.git
-cd cinemood
+cd holbertonschool-CineMood
 
 # Frontend
 cd frontend
