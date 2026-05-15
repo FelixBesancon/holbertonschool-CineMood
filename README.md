@@ -123,7 +123,7 @@ cinemood/
 
 ```bash
 # Clone the repository
-git clone https://github.com/FelixBesancon/cinemood.git
+git clone https://github.com/FelixBesancon/holbertonschool-CineMood.git
 cd cinemood
 
 # Frontend
