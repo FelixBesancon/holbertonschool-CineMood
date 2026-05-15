@@ -161,7 +161,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 
 - [Stage 1 — Idea Development & Team Formation](https://docs.google.com/document/d/1FasUDL7rBWEM1wyy7Tdx2kuHnpZ7bkZwgL1AbhZAlzQ)
 - [Stage 2 — Project Planning](https://docs.google.com/document/d/1I3SiKH2X2ekeTmv2lYn2jFTJYUXYhNQikRndpG9SDv4)
-- Stage 3 — Technical Documentation *(in progress)*
+- [Stage 3 — Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
 
 ---
 
