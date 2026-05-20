@@ -72,7 +72,7 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 
 | Visibility | Name | Return type | Description |
 |---|---|---|---|
-| `+` | `username()` | str | Computed property returning `first_name + " " + last_name`. Not stored in the database. |
+| `+` | `username()` | str | Computed property returning `first_name + last_name`. Not stored in the database. |
 | `+` | `validate_name()` | None | Checks that first and last names are non-empty strings within defined character limits. |
 | `+` | `validate_email()` | None | Checks email format (regex) and uniqueness in the database. Raises an error if already taken. |
 | `+` | `validate_password()` | None | Checks password complexity: minimum length and required character types. |
