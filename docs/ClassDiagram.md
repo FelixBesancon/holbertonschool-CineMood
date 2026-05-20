@@ -1,0 +1,359 @@
+# CinéMood — Class Diagram
+
+This document describes the class structure of the CinéMood backend business logic layer.
+It covers all persistent entities, data transfer objects, and enumerations used in the application.
+
+---
+
+## 1. Design Conventions
+
+### 1.1. Visibility Modifiers (UML)
+
+| Symbol | Meaning | Usage in CinéMood |
+|---|---|---|
+| `+` | Public | Methods and attributes accessible from outside the class |
+| `-` | Private | Sensitive data or internal logic, not accessible from outside |
+| `#` | Protected | Attributes inherited from BaseModel, accessible in subclasses only |
+
+> Note: Python does not enforce visibility at runtime. These modifiers reflect design intent and are used here to communicate architectural decisions clearly, as recommended by the supervising software engineer.
+
+### 1.2. Stereotypes
+
+| Stereotype | Meaning |
+|---|---|
+| `<<abstract>>` | Base class — never instantiated directly, only inherited |
+| `<<entity>>` | Persistent class — stored in the PostgreSQL database |
+| `<<DTO>>` | Data Transfer Object — temporary object, never stored in DB |
+| `<<enumeration>>` | Fixed list of allowed values |
+
+---
+
+## 2. Class Descriptions
+
+---
+
+### 2.1. BaseModel `<<abstract>>`
+
+The base class inherited by all persistent entities (User, WatchlistEntry, ViewingHistoryEntry).
+It centralises the attributes and methods that every entity needs, avoiding duplication across the codebase.
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `#` | `id` | UUID4 | Primary key, generated automatically at creation. Never modified. |
+| `#` | `created_at` | datetime | Timestamp of creation, set once and never modified. |
+| `#` | `updated_at` | datetime | Timestamp of last modification, refreshed automatically by `save()`. |
+
+**Methods**
+
+| Visibility | Name | Return type | Description |
+|---|---|---|---|
+| `+` | `save()` | None | Creates or updates the entity in the database. Automatically refreshes `updated_at` on every call. |
+| `+` | `delete()` | None | Permanently removes the entity from the database. PostgreSQL cascade constraints automatically remove all related records (e.g. deleting a User removes their watchlist and viewing history). |
+
+---
+
+### 2.2. User `<<entity>>`
+
+Represents a registered user of CinéMood. Handles authentication, profile data, and access to personal content (viewing history, watchlist, platform preferences).
+
+**Attributes**
+
+| Visibility | Name | Type | Default | Description |
+|---|---|---|---|---|
+| `-` | `first_name` | str | — | Stored separately from last name for flexible display and sorting. |
+| `-` | `last_name` | str | — | Stored separately from first name. |
+| `-` | `email` | str | — | Unique login identifier. Validated for format and uniqueness before saving. |
+| `-` | `hashed_password` | str | — | The password is never stored in plain text. It is hashed using bcrypt before storage. |
+| `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
+
+**Methods**
+
+| Visibility | Name | Return type | Description |
+|---|---|---|---|
+| `+` | `username()` | str | Computed property returning `first_name + " " + last_name`. Not stored in the database. |
+| `+` | `validate_name()` | None | Checks that first and last names are non-empty strings within defined character limits. |
+| `+` | `validate_email()` | None | Checks email format (regex) and uniqueness in the database. Raises an error if already taken. |
+| `+` | `validate_password()` | None | Checks password complexity: minimum length and required character types. |
+| `+` | `hash_password()` | None | Transforms the plain-text password into a bcrypt hash. Called before `save()` on creation or password update. |
+| `+` | `verify_password()` | bool | Compares a plain-text input against the stored bcrypt hash. Returns True if valid. Used at login. |
+| `+` | `get_watchlist()` | List[WatchlistEntry] | Queries the database and returns all WatchlistEntry records belonging to this user. |
+| `+` | `get_viewing_history()` | List[ViewingHistoryEntry] | Queries the database and returns all ViewingHistoryEntry records belonging to this user. |
+| `+` | `get_platforms()` | List[Platform] | Returns all Platform objects linked to this user via the user_platforms join table. |
+
+---
+
+### 2.3. Film `<<DTO>>`
+
+A Data Transfer Object (DTO) is a temporary object used to carry data between layers of the application. It is **never saved to the database**.
+
+Film is populated from the TMDB API response and passed to the frontend for display. It is used when displaying search results, film details, or enriching WatchlistEntry and ViewingHistoryEntry objects for display purposes.
+
+> **Why a DTO and not a persistent entity?** CinéMood uses TMDB as its single source of truth for film metadata. Storing film data locally would duplicate information that TMDB already maintains. The `tmdb_id` stored in WatchlistEntry and ViewingHistoryEntry is sufficient to retrieve full film details on demand.
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `+` | `tmdb_id` | int | TMDB unique identifier. Used to fetch or cross-reference film data. |
+| `+` | `title` | str | Film title, returned in the requested language (fr-FR or en-US). |
+| `+` | `year` | int | Release year. |
+| `+` | `genres` | list[str] | List of genre labels as returned by TMDB (e.g. "Drama", "Thriller"). |
+| `+` | `poster_url` | str | Full URL to the film poster image hosted on TMDB's CDN. |
+| `+` | `synopsis` | str | Short plot description, returned in the requested language. |
+| `+` | `director` | str | Director name, extracted from the TMDB crew data. |
+| `+` | `cast` | list[str] | List of main cast member names. |
+| `+` | `runtime` | int | Film duration in minutes. |
+| `+` | `streaming_platforms` | list[str] | List of platform names where the film is available, from TMDB Watch Providers filtered by country. |
+
+*Film has no methods — it is a passive data container.*
+
+---
+
+### 2.4. WatchlistEntry `<<entity>>`
+
+Represents a single film saved in a user's watchlist. A user can have zero or more WatchlistEntry records. Each entry references a film by its TMDB identifier only — no film metadata is stored locally.
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `-` | `user_id` | UUID4 | Foreign key linking the entry to its owner. Never exposed directly to the frontend. |
+| `+` | `tmdb_id` | int | TMDB identifier of the film. Used to fetch film details on demand via the Film DTO. |
+
+**Methods**
+
+| Visibility | Name | Return type | Description |
+|---|---|---|---|
+| `+` | `add()` | None | Saves the entry to the database. |
+| `+` | `remove()` | None | Deletes the entry from the database. |
+| `+` | `mark_as_watched()` | ViewingHistoryEntry | Creates a new ViewingHistoryEntry from this entry's `user_id` and `tmdb_id`, then deletes this WatchlistEntry. Triggered when the user marks a watchlisted film as seen. |
+| `+` | `get_film_details()` | Film | Calls the TMDB API with `tmdb_id` and returns a fully populated Film DTO. |
+
+---
+
+### 2.5. ViewingHistoryEntry `<<entity>>`
+
+Represents a single film that a user has watched and rated. This is the core entity of CinéMood — it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
+
+> Note: the creation date of this entry (inherited as `created_at` from BaseModel) is used as the watch date. No separate `watched_at` field is needed.
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `-` | `user_id` | UUID4 | Foreign key linking the entry to its owner. Never exposed directly to the frontend. |
+| `+` | `tmdb_id` | int | TMDB identifier of the film. Used to fetch film details on demand via the Film DTO. |
+| `+` | `tags` | list[Tag] | List of Tag objects associated with this entry. Managed via a join table (`viewing_history_tags`). |
+| `+` | `prestige_tier` | PrestigeTier | A PrestigeTier enum value representing the user's global rating of the film. Optional — can be left unset. |
+| `+` | `personal_note` | str | Optional free-text field for the user's personal review or impressions. |
+
+**Methods**
+
+| Visibility | Name | Return type | Description |
+|---|---|---|---|
+| `+` | `add_tag()` | None | Adds a Tag to this entry by inserting a row in the `viewing_history_tags` join table. |
+| `+` | `remove_tag()` | None | Removes a Tag from this entry by deleting the corresponding row in the join table. |
+| `+` | `update_prestige_tier()` | None | Updates the `prestige_tier` field and calls `save()` to persist the change and refresh `updated_at`. |
+| `+` | `get_film_details()` | Film | Calls the TMDB API with `tmdb_id` and returns a fully populated Film DTO. |
+
+---
+
+### 2.6. Tag `<<entity>>`
+
+Represents a predefined emotional or contextual label that a user can apply to a film they have watched. Tags are fixed and managed by the application — users cannot create custom tags in the MVP.
+
+Tags are shared across all users. Each tag appears once in the `tags` table and is referenced by many ViewingHistoryEntry records through a join table (`viewing_history_tags`).
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `+` | `id` | int | Integer primary key, auto-incremented by PostgreSQL. Used as a foreign key in the join table. |
+| `+` | `name` | str | Tag label displayed to the user (e.g. "Guilty pleasure", "Great with a group"). |
+| `+` | `description` | str | Short explanation of when to use this tag, displayed as a tooltip or helper text in the UI. |
+
+*Tag has no methods — its records are managed directly by the application at initialisation.*
+
+> **Examples:** "Great with a group", "Guilty pleasure", "Needs full attention", "Mind blowing", "Would rewatch immediately", "Perfect background watch", "Emotional wreck", "So stupid it's good".
+
+---
+
+### 2.7. Platform `<<entity>>`
+
+Represents a streaming platform available to users. The list of platforms is fixed and managed by the application. Users select which platforms they subscribe to in their profile, and this selection is used to filter recommendations.
+
+**Attributes**
+
+| Visibility | Name | Type | Description |
+|---|---|---|---|
+| `+` | `id` | int | Integer primary key, auto-incremented by PostgreSQL. Used as a foreign key in the join table. |
+| `+` | `name` | str | Platform name displayed in the UI (e.g. "Netflix", "Prime Video"). |
+| `+` | `logo_url` | str | URL to the platform logo image, displayed alongside the platform name in the UI. |
+
+*Platform has no methods — its records are managed directly by the application at initialisation.*
+
+> **Examples:** Netflix, Prime Video, Disney+, Canal+, Apple TV+, OCS.
+
+> **Why an integer ID instead of UUID?** Tag and Platform are reference tables managed by the application, not by users. Their IDs are never exposed in security-sensitive contexts. An auto-incremented integer is simpler, lighter, and faster for join operations than a UUID.
+
+---
+
+### 2.8. PrestigeTier `<<enumeration>>`
+
+A fixed set of values representing the user's global rating of a film. Using an enumeration ensures consistency — no typos, no case mismatches — and the allowed values are self-documenting in the schema.
+
+| Value | Intended meaning |
+|---|---|
+| `PLATINUM` | An absolute favourite — a personal masterpiece |
+| `GOLD` | Excellent — highly recommended |
+| `SILVER` | Good — worth watching |
+| `BRONZE` | Average — watchable but unremarkable |
+| `TRASH` | Poor — would not recommend |
+
+---
+
+## 3. Class Diagram
+
+```mermaid
+classDiagram
+direction LR
+
+class BaseModel {
+    <<abstract>>
+    #id: UUID4
+    #created_at: datetime
+    #updated_at: datetime
+    +save()
+    +delete()
+}
+
+class User {
+    <<entity>>
+    -first_name: str
+    -last_name: str
+    -email: str
+    -hashed_password: str
+    -is_admin: bool = False
+    +username() str
+    +validate_name()
+    +validate_email()
+    +validate_password()
+    +hash_password()
+    +verify_password()
+    +get_watchlist()
+    +get_viewing_history()
+    +get_platforms()
+}
+
+class WatchlistEntry {
+    <<entity>>
+    -user_id: UUID
+    +tmdb_id: int
+    +add()
+    +remove()
+    +mark_as_watched()
+    +get_film_details() Film
+}
+
+class Film {
+    <<DTO>>
+    +tmdb_id: int
+    +title: str
+    +year: int
+    +genres: list
+    +poster_url: str
+    +synopsis: str
+    +director: str
+    +cast: list
+    +runtime: int
+    +streaming_platforms: list
+}
+
+class ViewingHistoryEntry {
+    <<entity>>
+    -user_id: UUID
+    +tmdb_id: int
+    +tags: list
+    +prestige_tier: PrestigeTier
+    +personal_note: str
+    +add_tag()
+    +remove_tag()
+    +update_prestige_tier()
+    +get_film_details() Film
+}
+
+class Tag {
+    <<entity>>
+    +id: int
+    +name: str
+    +description: str
+}
+
+class Platform {
+    <<entity>>
+    +id: int
+    +name: str
+    +logo_url: str
+}
+
+class PrestigeTier {
+    <<enumeration>>
+    PLATINUM
+    GOLD
+    SILVER
+    BRONZE
+    TRASH
+}
+
+BaseModel <|-- User : extends
+User "1" --> "0..*" WatchlistEntry : owns
+
+BaseModel <|-- ViewingHistoryEntry : extends
+User "1" --> "0..*" ViewingHistoryEntry : owns
+ViewingHistoryEntry --> PrestigeTier : uses
+ViewingHistoryEntry ..> Film : fetches via TMDB
+
+BaseModel <|-- WatchlistEntry : extends
+WatchlistEntry ..> Film : fetches via TMDB
+WatchlistEntry ..> ViewingHistoryEntry : mark_as_watched
+
+User "0..*" <--> "0..*" Platform : subscribes to
+ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
+```
+
+---
+
+## 4. Relationship Summary
+
+| Relationship | Type | Description |
+|---|---|---|
+| BaseModel → User / WatchlistEntry / ViewingHistoryEntry | Inheritance | Shared attributes (`id`, `created_at`, `updated_at`) and CRUD methods (`save`, `delete`) |
+| User → WatchlistEntry | One-to-many | A user owns zero or more watchlist entries |
+| User → ViewingHistoryEntry | One-to-many | A user owns zero or more viewing history entries |
+| User ↔ Platform | Many-to-many | A user subscribes to multiple platforms; each platform can have many users. Managed via `user_platforms` join table. |
+| ViewingHistoryEntry ↔ Tag | Many-to-many | An entry can have multiple tags; each tag can be used across many entries. Managed via `viewing_history_tags` join table. |
+| ViewingHistoryEntry → PrestigeTier | Association | Each entry optionally uses one value from the PrestigeTier enumeration |
+| WatchlistEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand — not a database relationship |
+| ViewingHistoryEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand — not a database relationship |
+| WatchlistEntry → ViewingHistoryEntry | Dependency | `mark_as_watched()` creates a ViewingHistoryEntry and deletes the WatchlistEntry |
+
+---
+
+## 5. Design Decisions
+
+**Why no Film table in the database?**
+CinéMood uses TMDB as its single source of truth for film metadata. Storing film data locally would duplicate information that TMDB already maintains, adding complexity without benefit for the MVP. The `tmdb_id` stored in each entry is sufficient to retrieve full film details on demand. A local film cache may be considered post-MVP to support collaborative filtering features.
+
+**Why a fixed Tag list?**
+Fixed tags ensure consistency across all users and enable future analytics (most-used tags, tag-based recommendations). Custom user-defined tags are planned as a post-MVP feature.
+
+**Why an enumeration for PrestigeTier?**
+An enumeration prevents inconsistent values (typos, case mismatches) and makes the allowed values self-documenting in the schema. It also enables direct comparison and sorting in the database.
+
+**Why integer IDs for Tag and Platform?**
+Tag and Platform are reference tables managed by the application, not by users. Their IDs are never exposed in security-sensitive contexts. An auto-incremented integer is simpler, lighter, and faster for join operations than a UUID.
+
+**Why is watched_at absent from ViewingHistoryEntry?**
+The creation date of a ViewingHistoryEntry is semantically equivalent to the date the film was watched. The `created_at` field inherited from BaseModel serves this purpose without duplication.
