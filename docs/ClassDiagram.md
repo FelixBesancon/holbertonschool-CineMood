@@ -67,6 +67,7 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 | `-` | `email` | str | - | Unique login identifier. Validated for format and uniqueness before saving. |
 | `-` | `hashed_password` | str | - | The password is never stored in plain text. It is hashed using bcrypt before storage. |
 | `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
+| `+` | `age` | int | - | Used store user's age and filter recommendations by age rating. Not required at registration. |
 
 **Methods**
 
@@ -236,6 +237,7 @@ class User {
     -email: str
     -hashed_password: str
     -is_admin: bool = False
+    +age: int
     +username() str
     +validate_name()
     +validate_email()
@@ -357,3 +359,6 @@ Tag and Platform are reference tables managed by the application, not by users. 
 
 **Why is watched_at absent from ViewingHistoryEntry?**
 The creation date of a ViewingHistoryEntry is semantically equivalent to the date the film was watched. The `created_at` field inherited from BaseModel serves this purpose without duplication.
+
+**Why is there an `age` attribute in the `User` class?**
+Since incorporating the user's age into the recommendation process is not part of the MVP (US-14 is in status 'Could Have'), the `age` attribute of the `User` class is optional. To simplify implementation and limit the collection of personal data, we use the age directly rather than the date of birth; this may be subject to future changes.
