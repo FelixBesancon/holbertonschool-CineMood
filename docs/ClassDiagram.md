@@ -1,4 +1,4 @@
-# CinéMood — Class Diagram
+# CinéMood - Class Diagram
 
 This document describes the class structure of the CinéMood backend business logic layer.
 It covers all persistent entities, data transfer objects, and enumerations used in the application.
@@ -21,9 +21,9 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 
 | Stereotype | Meaning |
 |---|---|
-| `<<abstract>>` | Base class — never instantiated directly, only inherited |
-| `<<entity>>` | Persistent class — stored in the PostgreSQL database |
-| `<<DTO>>` | Data Transfer Object — temporary object, never stored in DB |
+| `<<abstract>>` | Base class - never instantiated directly, only inherited |
+| `<<entity>>` | Persistent class - stored in the PostgreSQL database |
+| `<<DTO>>` | Data Transfer Object - temporary object, never stored in DB |
 | `<<enumeration>>` | Fixed list of allowed values |
 
 ---
@@ -62,10 +62,10 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 
 | Visibility | Name | Type | Default | Description |
 |---|---|---|---|---|
-| `-` | `first_name` | str | — | Stored separately from last name for flexible display and sorting. |
-| `-` | `last_name` | str | — | Stored separately from first name. |
-| `-` | `email` | str | — | Unique login identifier. Validated for format and uniqueness before saving. |
-| `-` | `hashed_password` | str | — | The password is never stored in plain text. It is hashed using bcrypt before storage. |
+| `-` | `first_name` | str | - | Stored separately from last name for flexible display and sorting. |
+| `-` | `last_name` | str | - | Stored separately from first name. |
+| `-` | `email` | str | - | Unique login identifier. Validated for format and uniqueness before saving. |
+| `-` | `hashed_password` | str | - | The password is never stored in plain text. It is hashed using bcrypt before storage. |
 | `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
 
 **Methods**
@@ -107,13 +107,13 @@ Film is populated from the TMDB API response and passed to the frontend for disp
 | `+` | `runtime` | int | Film duration in minutes. |
 | `+` | `streaming_platforms` | list[str] | List of platform names where the film is available, from TMDB Watch Providers filtered by country. |
 
-*Film has no methods — it is a passive data container.*
+*Film has no methods - it is a passive data container.*
 
 ---
 
 ### 2.4. WatchlistEntry `<<entity>>`
 
-Represents a single film saved in a user's watchlist. A user can have zero or more WatchlistEntry records. Each entry references a film by its TMDB identifier only — no film metadata is stored locally.
+Represents a single film saved in a user's watchlist. A user can have zero or more WatchlistEntry records. Each entry references a film by its TMDB identifier only - no film metadata is stored locally.
 
 **Attributes**
 
@@ -135,7 +135,7 @@ Represents a single film saved in a user's watchlist. A user can have zero or mo
 
 ### 2.5. ViewingHistoryEntry `<<entity>>`
 
-Represents a single film that a user has watched and rated. This is the core entity of CinéMood — it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
+Represents a single film that a user has watched and rated. This is the core entity of CinéMood - it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
 
 > Note: the creation date of this entry (inherited as `created_at` from BaseModel) is used as the watch date. No separate `watched_at` field is needed.
 
@@ -146,7 +146,7 @@ Represents a single film that a user has watched and rated. This is the core ent
 | `-` | `user_id` | UUID4 | Foreign key linking the entry to its owner. Never exposed directly to the frontend. |
 | `+` | `tmdb_id` | int | TMDB identifier of the film. Used to fetch film details on demand via the Film DTO. |
 | `+` | `tags` | list[Tag] | List of Tag objects associated with this entry. Managed via a join table (`viewing_history_tags`). |
-| `+` | `prestige_tier` | PrestigeTier | A PrestigeTier enum value representing the user's global rating of the film. Optional — can be left unset. |
+| `+` | `prestige_tier` | PrestigeTier | A PrestigeTier enum value representing the user's global rating of the film. Optional - can be left unset. |
 | `+` | `personal_note` | str | Optional free-text field for the user's personal review or impressions. |
 
 **Methods**
@@ -162,7 +162,7 @@ Represents a single film that a user has watched and rated. This is the core ent
 
 ### 2.6. Tag `<<entity>>`
 
-Represents a predefined emotional or contextual label that a user can apply to a film they have watched. Tags are fixed and managed by the application — users cannot create custom tags in the MVP.
+Represents a predefined emotional or contextual label that a user can apply to a film they have watched. Tags are fixed and managed by the application - users cannot create custom tags in the MVP.
 
 Tags are shared across all users. Each tag appears once in the `tags` table and is referenced by many ViewingHistoryEntry records through a join table (`viewing_history_tags`).
 
@@ -174,7 +174,7 @@ Tags are shared across all users. Each tag appears once in the `tags` table and 
 | `+` | `name` | str | Tag label displayed to the user (e.g. "Guilty pleasure", "Great with a group"). |
 | `+` | `description` | str | Short explanation of when to use this tag, displayed as a tooltip or helper text in the UI. |
 
-*Tag has no methods — its records are managed directly by the application at initialisation.*
+*Tag has no methods - its records are managed directly by the application at initialisation.*
 
 > **Examples:** "Great with a group", "Guilty pleasure", "Needs full attention", "Mind blowing", "Would rewatch immediately", "Perfect background watch", "Emotional wreck", "So stupid it's good".
 
@@ -192,7 +192,7 @@ Represents a streaming platform available to users. The list of platforms is fix
 | `+` | `name` | str | Platform name displayed in the UI (e.g. "Netflix", "Prime Video"). |
 | `+` | `logo_url` | str | URL to the platform logo image, displayed alongside the platform name in the UI. |
 
-*Platform has no methods — its records are managed directly by the application at initialisation.*
+*Platform has no methods - its records are managed directly by the application at initialisation.*
 
 > **Examples:** Netflix, Prime Video, Disney+, Canal+, Apple TV+, OCS.
 
@@ -202,15 +202,15 @@ Represents a streaming platform available to users. The list of platforms is fix
 
 ### 2.8. PrestigeTier `<<enumeration>>`
 
-A fixed set of values representing the user's global rating of a film. Using an enumeration ensures consistency — no typos, no case mismatches — and the allowed values are self-documenting in the schema.
+A fixed set of values representing the user's global rating of a film. Using an enumeration ensures consistency - no typos, no case mismatches - and the allowed values are self-documenting in the schema.
 
 | Value | Intended meaning |
 |---|---|
-| `PLATINUM` | An absolute favourite — a personal masterpiece |
-| `GOLD` | Excellent — highly recommended |
-| `SILVER` | Good — worth watching |
-| `BRONZE` | Average — watchable but unremarkable |
-| `TRASH` | Poor — would not recommend |
+| `PLATINUM` | An absolute favourite - a personal masterpiece |
+| `GOLD` | Excellent - highly recommended |
+| `SILVER` | Good - worth watching |
+| `BRONZE` | Average - watchable but unremarkable |
+| `TRASH` | Poor - would not recommend |
 
 ---
 
@@ -335,8 +335,8 @@ ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
 | User ↔ Platform | Many-to-many | A user subscribes to multiple platforms; each platform can have many users. Managed via `user_platforms` join table. |
 | ViewingHistoryEntry ↔ Tag | Many-to-many | An entry can have multiple tags; each tag can be used across many entries. Managed via `viewing_history_tags` join table. |
 | ViewingHistoryEntry → PrestigeTier | Association | Each entry optionally uses one value from the PrestigeTier enumeration |
-| WatchlistEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand — not a database relationship |
-| ViewingHistoryEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand — not a database relationship |
+| WatchlistEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand - not a database relationship |
+| ViewingHistoryEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand - not a database relationship |
 | WatchlistEntry → ViewingHistoryEntry | Dependency | `mark_as_watched()` creates a ViewingHistoryEntry and deletes the WatchlistEntry |
 
 ---
