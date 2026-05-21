@@ -94,21 +94,21 @@ erDiagram
 
 ## 2. Design Notes
 
-**Why there is no `films` table**
+**Why there is no `films` table?**
 CinéMood does not store film metadata locally. Film details such as title, poster, synopsis, cast, runtime, and streaming platforms are fetched from TMDB.
 The database only stores the tmdb_id, which is enough to retrieve the full film information when needed.
 This avoids duplicating external data and keeps the local database simpler.
 
-**Why `User`, `WatchlistEntry`, and `ViewingHistoryEntry` use UUIDs**
+**Why `User`, `WatchlistEntry`, and `ViewingHistoryEntry` use UUIDs?**
 These entities are linked to user data. UUIDs are less predictable than sequential integers, which is safer for user-owned resources.
 Why Tag and Platform use integer IDs
 Tags and platforms are fixed reference data managed by the application. They are not sensitive user-owned resources, so integer IDs are simple and efficient.
 
-**Why join tables are needed**
+**Why join tables are needed?**
 `user_platforms` is required because one user can subscribe to many platforms, and one platform can be linked to many users.
 `viewing_history_tags` is required because one viewing history entry can have many tags, and one tag can be used by many entries.
 
-**Why created_at is used as the watch date**
+**Why created_at is used as the watch date?**
 A `ViewingHistoryEntry` is created when the user marks a film as watched. Therefore, its `created_at` field can represent the watch date without adding a separate `watched_at` column.
 
 **Prestige tier values**
