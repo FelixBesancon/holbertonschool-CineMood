@@ -67,7 +67,7 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 | `-` | `email` | str | - | Unique login identifier. Validated for format and uniqueness before saving. |
 | `-` | `hashed_password` | str | - | The password is never stored in plain text. It is hashed using bcrypt before storage. |
 | `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
-| `+` | `age` | int | - | Used store user's age and filter recommendations by age rating. Not required at registration. |
+| `+` | `age` | int | - | Used to store user's age and filter recommendations by age rating. Not required at registration. |
 
 **Methods**
 
