@@ -15,7 +15,7 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 | `-` | Private | Sensitive data or internal logic, not accessible from outside |
 | `#` | Protected | Attributes inherited from BaseModel, accessible in subclasses only |
 
-> Note: Python does not enforce visibility at runtime. These modifiers reflect design intent and are used here to communicate architectural decisions clearly, as recommended by the supervising software engineer.
+> *Note: Python does not enforce visibility at runtime. These modifiers reflect design intent and are used here to communicate architectural decisions clearly, as recommended by the supervising software engineer.*
 
 ### 1.2. Stereotypes
 
@@ -68,6 +68,7 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 | `-` | `hashed_password` | str | - | The password is never stored in plain text. It is hashed using bcrypt before storage. |
 | `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
 | `+` | `age` | int | - | Used to store user's age and filter recommendations by age rating. Not required at registration. |
+> *Note: A `preferred_language` attribute (VARCHAR, default 'en') may be added post-MVP to support language preferences.*
 
 **Methods**
 
@@ -98,7 +99,7 @@ Film is populated from the TMDB API response and passed to the frontend for disp
 | Visibility | Name | Type | Description |
 |---|---|---|---|
 | `+` | `tmdb_id` | int | TMDB unique identifier. Used to fetch or cross-reference film data. |
-| `+` | `title` | str | Film title, returned in the requested language (fr-FR or en-US). |
+| `+` | `title` | str | Film title, returned in English (en-US) for the MVP. French language support (fr-FR) is planned as a post-MVP feature. |
 | `+` | `year` | int | Release year. |
 | `+` | `genres` | list[str] | List of genre labels as returned by TMDB (e.g. "Drama", "Thriller"). |
 | `+` | `poster_url` | str | Full URL to the film poster image hosted on TMDB's CDN. |
@@ -138,7 +139,7 @@ Represents a single film saved in a user's watchlist. A user can have zero or mo
 
 Represents a single film that a user has watched and rated. This is the core entity of CinéMood - it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
 
-> Note: the creation date of this entry (inherited as `created_at` from BaseModel) is used as the watch date. No separate `watched_at` field is needed.
+> *Note: the creation date of this entry (inherited as `created_at` from BaseModel) is used as the watch date. No separate `watched_at` field is needed.*
 
 **Attributes**
 
