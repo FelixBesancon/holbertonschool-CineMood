@@ -96,7 +96,7 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 ## Project Structure
 
 ```
-cinemood/
+holbertonschool-CineMood/
 ├── README.md
 ├── docs/
 │   ├── diagrams/
@@ -117,6 +117,7 @@ cinemood/
 │   └── services/
 └── tests/
 ```
+
 ---
 
 ## Getting Started
@@ -171,8 +172,8 @@ uvicorn app.main:app --reload
 All project documentation is maintained as part of the Holberton portfolio process:
 
 - **Portfolio Project Progress Report**:
-  - [Stage 1 — Idea Development & Team Formation](https://docs.google.com/document/d/1FasUDL7rBWEM1wyy7Tdx2kuHnpZ7bkZwgL1AbhZAlzQ)
-  - [Stage 2 — Project Planning](https://docs.google.com/document/d/1I3SiKH2X2ekeTmv2lYn2jFTJYUXYhNQikRndpG9SDv4)
+  - [Stage 1 — Idea Development & Team Formation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%201%20Report%20-%20Team%20Formation%2C%20Brainstorming%20and%20MVP.pdf)
+  - [Stage 2 — Project Planning](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%202%20Report%20-%20Project%20Planning.pdf)
   - [Stage 3 — Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
 - **Technical Diagrams**:
   - [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
