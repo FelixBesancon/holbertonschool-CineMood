@@ -15,7 +15,7 @@ Each diagram shows how the system components communicate step by step for a give
 
 ---
 
-## 1. User Registration:
+## User Registration
 
 This sequence covers the full flow when a new user creates an account on CinéMood.
 
@@ -106,7 +106,7 @@ sequenceDiagram
 
 ---
 
-## 2. User Login
+## User Login
 
 This sequence covers the flow when a returning user logs into their account.
 
@@ -183,7 +183,7 @@ sequenceDiagram
 
 ---
 
-## 3. Searching for a Movie
+## Searching for a Movie
 
 This sequence covers the flow when a user searches for a movie in the TMDB catalog, in order to log it or add it to their watchlist.
 
@@ -251,7 +251,7 @@ sequenceDiagram
 
 ---
 
-## 4. Log a Film
+## Log a Film
 
 This sequence covers the flow when a user views a film's details page and logs it to their viewing history.
 
@@ -358,7 +358,7 @@ sequenceDiagram
 
 ---
 
-## 5. Film Recommendation
+## Film Recommendation
 
 This sequence covers the full recommendation flow, from the mood questionnaire to the final film suggestions.
 
