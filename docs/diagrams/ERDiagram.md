@@ -1,4 +1,4 @@
-# CinéMood - Entity Relationship Diagram
+# 🎬 CinéMood - Entity Relationship Diagram
 
 This document describes the relational database structure used by CinéMood.
 
@@ -9,7 +9,18 @@ Only the `tmdb_id` is stored in the database when a user saves or watches a film
 
 ---
 
-## 1. ER Diagram
+## Table of Contents
+
+- [1. ER Diagram](#er-diagram)
+    - [1.1. Glossary](#glossary)
+    - [1.2. Relationship Summary](#relationship-summary)
+- [2. Design Notes](#design-notes)
+    - [2.2. Prestige Tier Values](#prestige-tier-values)
+- [3. Author](#author)
+
+---
+
+## ER Diagram
 
 ```mermaid
 erDiagram
@@ -96,14 +107,14 @@ erDiagram
 
 | Relationship | Entity A | Entity B | Type | Join table |
 |---|---|---|---|---|
-| A user owns watchlist entries | `users` | `watchlist_entries` | One-to-many | — |
-| A user owns viewing history entries | `users` | `viewing_history_entries` | One-to-many | — |
+| A user owns watchlist entries | `users` | `watchlist_entries` | One-to-many | - |
+| A user owns viewing history entries | `users` | `viewing_history_entries` | One-to-many | - |
 | A user subscribes to platforms | `users` | `platforms` | Many-to-many | `user_platforms` |
 | A viewing history entry is labeled with tags | `viewing_history_entries` | `tags` | Many-to-many | `viewing_history_tags` |
 
 ---
 
-## 2. Design Notes
+## Design Notes
 
 **Why there is no `films` table?**
 CinéMood does not store film metadata locally. Film details such as title, poster, synopsis, cast, runtime, and streaming platforms are fetched from TMDB.
@@ -123,7 +134,7 @@ Tags and platforms are fixed reference data managed by the application. They are
 **Why created_at is used as the watch date?**
 A `ViewingHistoryEntry` is created when the user marks a film as watched. Therefore, its `created_at` field can represent the watch date without adding a separate `watched_at` column.
 
-### Prestige tier values
+### Prestige Tier Values
 
 The prestige_tier enum can contain:
 
@@ -134,3 +145,16 @@ The prestige_tier enum can contain:
 | SILVER |	Good film |
 | BRONZE |	Average but watchable |
 | TRASH |	Poor film |
+
+---
+
+## Author
+
+**Félix Besançon**
+Holberton School Bordeaux - Bachelor CDA, Year 1
+Specialisation: Fullstack Development & Machine Learning
+
+- GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
+- LinkedIn: [@FelixBesancon](https://linkedin.com/in/felix-besancon)
+
+---
