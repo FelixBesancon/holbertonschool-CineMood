@@ -5,6 +5,16 @@ Each diagram shows how the system components communicate step by step for a give
 
 ---
 
+## Table of Contents
+
+- [1. User Registration](#user-registration)
+- [2. User Login](#user-login)
+- [3. Searching for a Movie](#searching-for-a-movie)
+- [4. Film Recommendation](#film-recommendation)
+- [5. Log a Film](#log-a-film)
+
+---
+
 ## 1. User Registration:
 
 This sequence covers the full flow when a new user creates an account on CinéMood.
@@ -440,3 +450,18 @@ sequenceDiagram
 > The mood questionnaire and swipe session are handled entirely on the frontend and held in memory - no intermediate data is sent to the backend until the user submits the final request.<br>
 > This keeps the backend stateless and reduces unnecessary API calls.<br>
 > The optional free-text prompt allows the user to add a personal touch to the recommendation request before it is sent to the LLM.*
+
+---
+
+## Author
+
+**Félix Besançon**
+Holberton School Bordeaux — Bachelor CDA, Year 1
+Specialisation: Fullstack Development & Machine Learning
+
+- GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
+- LinkedIn: [@FelixBesancon](https://linkedin.com/in/felix-besancon)
+
+---
+
+*End-of-year portfolio project — Holberton School Bordeaux — 2026*
