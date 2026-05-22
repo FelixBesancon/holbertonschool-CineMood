@@ -10,7 +10,7 @@ Each diagram shows how the system components communicate step by step for a give
 This sequence covers the full flow when a new user creates an account on CinéMood.
 
 **Actors:**
-- `User` - the React Frontend
+- `User` - user interacting through the React frontend
 - `Backend` - the `/auth/register` route of the `FastAPI`
 - `Business Logic` - the  User Service of the `FastAPI`
 - `Database` - the PostgreSQL database
@@ -101,9 +101,9 @@ sequenceDiagram
 This sequence covers the flow when a returning user logs into their account.
 
 **Actors:**
-- `User` - the React Frontend
+- `User` - user interacting through the React frontend
 - `Backend` - the `/auth/login` route of the `FastAPI`
-- `Business` Logic - the User Service of the `FastAPI`
+- `Business Logic` - the User Service of the `FastAPI`
 - `Database` - the PostgreSQL database
 
 **Key steps:**
@@ -159,8 +159,8 @@ sequenceDiagram
             Note over BL: Create access token<br>linked to user_id
             BL-->>Back: Return success response
             Note over BL,Back: 200 OK<br>{jwt_token, user_id}
-            Back-->>User: Redirect to dashboard
-            Note over Back,User: User is authenticated<br>and redirected
+            Back-->>User: Return success
+            Note over Back,User: User is authenticated<br>and redirected to dashboard
         end
     end
 ```
@@ -178,7 +178,7 @@ sequenceDiagram
 This sequence covers the flow when a user searches for a movie in the TMDB catalog, in order to log it or add it to their watchlist.
 
 **Actors:**
-- `User` - the React Frontend
+- `User` - user interacting through the React frontend
 - `Backend` - the `/films/search` route of the `FastAPI`
 - `Business Logic` - the Film Service of the `FastAPI`
 - `API` - the TMDB API
@@ -246,8 +246,8 @@ sequenceDiagram
 This sequence covers the flow when a user views a film's details page and logs it to their viewing history.
 
 **Actors:**
-- `User` - the React Frontend
-- `Backend` - the `/films/*` route of the `FastAPI`
+- `User` - user interacting through the React frontend
+- `Backend` - the `/films/*` routes of the `FastAPI`
 - `Business Logic - Film Service` - the Film Service of the `FastAPI`
 - `Business Logic - User Service` - the User Service of the `FastAPI`
 - `API` - the TMDB API
@@ -295,6 +295,7 @@ sequenceDiagram
     BLU-->>BLF: Return status
     BLF-->>Back: Film details + status
     Back-->>User: Display film page
+    Note over Back,User: Film details displayed
     Note over DB,User: Buttons adapt to film status:<br>"Log this film" or "Remove from history"<br>"Add to watchlist" or "Remove from watchlist"
 
     alt User clicks "Log this film"
@@ -335,7 +336,7 @@ sequenceDiagram
         DB-->>BLF: Entry deleted
         BLF-->>Back: Success
         Note over BLF,Back: 200 OK
-        Back-->>User: Confirm removal
+        Back-->>User: Display confirmation removal message
         Note over Back,User: Film removed from history<br>Button switches back to "Log this film"
     end
 ```
@@ -343,4 +344,99 @@ sequenceDiagram
 > ***Note on film status check**:<br>
 > When a user opens a film details page, the backend automatically checks whether that film is already present in the user's viewing history and watchlist.<br>
 > This check runs before the page is displayed, so the action buttons always reflect the current state: "Log this film" or "Remove from history", "Add to watchlist" or "Remove from watchlist".<br>
-> On the frontend side, no page reload is required after an action — React updates the button state immediately using local component state, providing an instant and seamless experience.*
+> On the frontend side, no page reload is required after an action - React updates the button state immediately using local component state, providing an instant and seamless experience.*
+
+---
+
+## 5. Film Recommendation
+
+This sequence covers the full recommendation flow, from the mood questionnaire to the final film suggestions.
+
+**Actors:**
+- `User` - user interacting through the React frontend
+- `Backend` - the `/Recommendation/*` routes of the `FastAPI`
+- `Business Logic - Recommendation Facade` - the Recommendation Facade of the `FastAPI`
+- `Business Logic - User Service` - the User Service of the `FastAPI`
+- `API` - the TMDB API
+- `LLM` - the Mistral AI API
+- `Database` - the PostgreSQL database
+
+**Key steps:**
+0. The user navigates from the home screen to the Recommendation experience
+1. The user starts the recommendation experience
+2. The user completes a mood questionnaire (handled entirely on the frontend)
+3. The user swipes through film cards (right = interested, left = not interested)
+4. The user optionally adds a free-text prompt before final submission
+5. The backend retrieves the user's viewing history and platform preferences
+6. The backend sends a structured prompt to the LLM
+7. The LLM returns film suggestions
+8. The backend enriches the suggestions with TMDB data and streaming availability
+9. The frontend displays the final recommendation list
+
+```mermaid
+sequenceDiagram
+    actor User as User (Frontend)
+    participant Back as Backend<br>(FastAPI<br>/recommendations)
+    participant BLR as Business Logic<br>(Recommendation Facade)
+    participant BLU as Business Logic<br>(User Service)
+    participant DB as PostgreSQL<br>Database
+    participant LLM as Mistral AI
+    participant API as TMDB API
+
+    User->>Back: Start recommendation experience
+
+    Note over User: Mood questionnaire<br>(handled on frontend)
+    Note over User: Film card swiping session<br>(swipe data held in memory)
+    Note over User: Optional free-text prompt<br>("I want something like...")
+
+    User->>Back: Submit recommendation request
+    Note over User,Back: POST /recommendations/start<br>{mood, swipe_results[], optional_prompt}
+
+    Back->>BLR: Process recommendation request
+    BLR->>BLU: Fetch user context
+    BLU->>DB: Get viewing history + platform preferences
+    Note over BLU,DB: SELECT viewing_history + user_platforms<br>WHERE user_id = ?
+    DB-->>BLU: User data
+    BLU-->>BLR: Viewing history + platforms
+
+    BLR->>BLR: Build structured prompt
+    Note over BLR: Combines mood, swipe results,<br>optional prompt, history,<br>and platform preferences
+
+    BLR->>LLM: Send prompt
+    Note over BLR,LLM: POST to Mistral API<br>Structured JSON output requested
+
+    alt LLM unavailable
+        LLM-->>BLR: Error or timeout
+        BLR-->>Back: Service error
+        Note over BLR,Back: 503 Service Unavailable
+        Back-->>User: Display error message
+        Note over Back,User: Recommendation service<br>temporarily unavailable
+    else LLM responds
+        LLM-->>BLR: Film suggestions
+        Note over LLM,BLR: [{tmdb_id, title, reason}]
+
+        BLR->>API: Fetch film details + streaming availability
+        Note over BLR,API: GET /movie/{tmdb_id}<br>GET /movie/{tmdb_id}/watch/providers<br>for each suggested film
+
+        API-->>BLR: Enriched film data
+        BLR->>BLR: Filter by user platform preferences
+        BLR-->>Back: Final recommendations
+        Note over BLR,Back: 200 OK<br>[{film, platform, reason}]
+
+        Back-->>User: Display recommendation list
+        Note over Back,User: Curated film suggestions<br>with streaming availability
+
+        opt User adds film to watchlist
+            User->>Back: Add to watchlist
+            Note over User,Back: POST /films/watchlist<br>{tmdb_id}
+            Back->>DB: INSERT INTO watchlist_entries
+            DB-->>Back: 201 Created
+            Back-->>User: Confirm film added
+        end
+    end
+```
+
+> ***Note on the recommendation flow**
+> The mood questionnaire and swipe session are handled entirely on the frontend and held in memory - no intermediate data is sent to the backend until the user submits the final request.<br>
+> This keeps the backend stateless and reduces unnecessary API calls.<br>
+> The optional free-text prompt allows the user to add a personal touch to the recommendation request before it is sent to the LLM.*
