@@ -1,4 +1,4 @@
-# CinéMood - High-Level Sequence Diagrams
+# 🎬 CinéMood - High-Level Sequence Diagrams
 
 This document illustrates the key interaction flows of the CinéMood application.
 Each diagram shows how the system components communicate step by step for a given use case.
@@ -12,6 +12,7 @@ Each diagram shows how the system components communicate step by step for a give
 - [3. Searching for a Movie](#searching-for-a-movie)
 - [4. Film Recommendation](#film-recommendation)
 - [5. Log a Film](#log-a-film)
+- [6. Author](#author)
 
 ---
 
