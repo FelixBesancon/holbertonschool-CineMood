@@ -1,4 +1,4 @@
-# CinéMood - Class Diagram
+# 🎬 CinéMood - Class Diagram
 
 This document describes the class structure of the CinéMood backend business logic layer.
 It covers all persistent entities, data transfer objects, and enumerations used in the application.
