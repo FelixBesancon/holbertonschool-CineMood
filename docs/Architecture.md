@@ -8,9 +8,9 @@ Two levels of detail are provided: a high-level overview and a detailed componen
 ## Table of Contents
 
 - [1. High-Level Architecture Overview](#high-level-architecture-overview)
-  - [1.1. Component Interactions](component-interactions)
+  - [1.1. Component Interactions](#component-interactions)
 - [2. Detailed Component Architecture](#detailed-component-architecture)
-  - [2.1. Component Interactions](component-interactions-1)
+  - [2.1. Component Interactions](#component-interactions-1)
 - [3. Design Patterns](#design-patterns)
 
 ---
