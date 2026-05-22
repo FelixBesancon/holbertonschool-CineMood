@@ -406,7 +406,7 @@ Since incorporating the user's age into the recommendation process is not part o
 ## Author
 
 **Félix Besançon**
-Holberton School Bordeaux — Bachelor CDA, Year 1
+Holberton School Bordeaux - Bachelor CDA, Year 1
 Specialisation: Fullstack Development & Machine Learning
 
 - GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
@@ -414,4 +414,4 @@ Specialisation: Fullstack Development & Machine Learning
 
 ---
 
-*End-of-year portfolio project — Holberton School Bordeaux — 2026*
+*End-of-year portfolio project - Holberton School Bordeaux - 2026*
