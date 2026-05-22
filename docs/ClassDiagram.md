@@ -164,7 +164,9 @@ Represents a single film saved in a user's watchlist. A user can have zero or mo
 
 ---
 
-### ViewingHistoryEntry `<<entity>>`
+### ViewingHistoryEntry
+
+**`<<entity>>`**
 
 Represents a single film that a user has watched and rated. This is the core entity of CinéMood - it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
 
