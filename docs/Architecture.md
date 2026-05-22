@@ -12,6 +12,7 @@ Two levels of detail are provided: a high-level overview and a detailed componen
 - [2. Detailed Component Architecture](#detailed-component-architecture)
   - [2.1. Component Interactions](#component-interactions-1)
 - [3. Design Patterns](#design-patterns)
+- [4. Author](#author)
 
 ---
 
@@ -147,3 +148,18 @@ flowchart TD
 | **Repository** | Data access layer | Isolates all database queries from business logic. Each entity (User, Viewing history, Watchlist) has its own repository, making the code easier to maintain and test. |
 | **Facade** | Recommendation Service | Hides the complexity of orchestrating user data and external APIs (TMDB for the films and Mistral AI for the LLM) behind a single clean interface. The route only calls one method - the facade handles everything else. |
 | **REST** | API design | Standard architectural style for web APIs - stateless, resource-based, JSON responses. Consumed by the React frontend. |
+
+---
+
+## Author
+
+**Félix Besançon**
+Holberton School Bordeaux — Bachelor CDA, Year 1
+Specialisation: Fullstack Development & Machine Learning
+
+- GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
+- LinkedIn: [@FelixBesancon](https://linkedin.com/in/felix-besancon)
+
+---
+
+*End-of-year portfolio project — Holberton School Bordeaux — 2026*
