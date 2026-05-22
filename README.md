@@ -27,7 +27,7 @@
 
 CinéMood was born out of a simple frustration: choosing what to watch is harder than it should be.
 
-Existing tools like Letterboxd or IMDb let you rate films — but they rarely combine your personal taste, your current mood, and what you actually have access to on your streaming subscriptions.
+Existing tools like Letterboxd or IMDb let you rate films - but they rarely combine your personal taste, your current mood, and what you actually have access to on your streaming subscriptions.
 
 CinéMood is different. It acts as a personal film companion that:
 - Remembers everything you have watched and how you felt about it
@@ -172,9 +172,9 @@ uvicorn app.main:app --reload
 All project documentation is maintained as part of the Holberton portfolio process:
 
 - **Portfolio Project Progress Report**:
-  - [Stage 1 — Idea Development & Team Formation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%201%20Report%20-%20Team%20Formation%2C%20Brainstorming%20and%20MVP.pdf)
-  - [Stage 2 — Project Planning](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%202%20Report%20-%20Project%20Planning.pdf)
-  - [Stage 3 — Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
+  - [Stage 1 - Idea Development & Team Formation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%201%20Report%20-%20Team%20Formation%2C%20Brainstorming%20and%20MVP.pdf)
+  - [Stage 2 - Project Planning](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%202%20Report%20-%20Project%20Planning.pdf)
+  - [Stage 3 - Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
 - **Technical Diagrams**:
   - [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
   - [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
@@ -205,7 +205,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 ## Author
 
 **Félix Besançon**
-Holberton School Bordeaux — Bachelor CDA, Year 1
+Holberton School Bordeaux - Bachelor CDA, Year 1
 Specialisation: Fullstack Development & Machine Learning
 
 - GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
@@ -213,4 +213,4 @@ Specialisation: Fullstack Development & Machine Learning
 
 ---
 
-*End-of-year portfolio project — Holberton School Bordeaux — 2026*
+*End-of-year portfolio project - Holberton School Bordeaux - 2026*
