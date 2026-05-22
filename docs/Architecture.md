@@ -1,11 +1,21 @@
-# CinéMood - System Architecture
+# 🎬 CinéMood - System Architecture
 
 This document contains the architecture diagrams for the CinéMood application.
 Two levels of detail are provided: a high-level overview and a detailed component view.
 
 ---
 
-## 1. High-Level Architecture Overview
+## Table of Contents
+
+- [1. High-Level Architecture Overview](#high-level-architecture-overview)
+  - [1.1. Component Interactions](component-interactions)
+- [2. Detailed Component Architecture](#detailed-component-architecture)
+  - [2.1. Component Interactions](component-interactions-1)
+- [3. Design Patterns](#design-patterns)
+
+---
+
+## High-Level Architecture Overview
 
 This diagram shows the four main components of the system and how they communicate.
 
@@ -44,7 +54,7 @@ architecture-beta
 
 ---
 
-## 2. Detailed Component Architecture
+## Detailed Component Architecture
 
 This diagram zooms into the internal structure of the backend, showing the API routes, services, repositories, and their connections to the database and external services.
 
@@ -130,7 +140,7 @@ flowchart TD
 
 ---
 
-## 3. Design Patterns
+## Design Patterns
 
 | Pattern | Where applied | Reason |
 |---|---|---|
