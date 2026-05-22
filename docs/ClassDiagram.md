@@ -5,9 +5,30 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 
 ---
 
-## 1. Design Conventions
+## Table of Contents
 
-### 1.1. Visibility Modifiers (UML)
+- [1. Design Conventions](#design-conventions)
+  - [1.1. Visibility Modifiers (UML)](#visibility-modifiers-uml)
+  - [1.2. Stereotypes](#stereotypes)
+- [2. Class Descriptions](#class-descriptions)
+  - [2.1. BaseModel](#basemodel)
+  - [2.2. User](#user)
+  - [2.3. Film](#film)
+  - [2.4 WatchlistEntry](watchlistentry)
+  - [2.5 ViewingHistoryEntry](viewinghistoryentry)
+  - [2.6 Tag](tag)
+  - [2.7 Platform](platform)
+  - [2.8 PrestigeTier](prestigetier)
+- [3. Class Diagram](#class-diagram)
+- [4. Relationship Summary](#relationship-summary)
+- [5. Design Decisions](#design-decisions)
+- [6. Author](#author)
+
+---
+
+## Design Conventions
+
+### Visibility Modifiers (UML)
 
 | Symbol | Meaning | Usage in CinéMood |
 |---|---|---|
@@ -17,7 +38,7 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 
 > *Note: Python does not enforce visibility at runtime. These modifiers reflect design intent and are used here to communicate architectural decisions clearly, as recommended by the supervising software engineer.*
 
-### 1.2. Stereotypes
+### Stereotypes
 
 | Stereotype | Meaning |
 |---|---|
@@ -28,13 +49,15 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 
 ---
 
-## 2. Class Descriptions
+## Class Descriptions
 
 ---
 
-### 2.1. BaseModel `<<abstract>>`
+### BaseModel
 
-The base class inherited by all persistent entities (User, WatchlistEntry, ViewingHistoryEntry).
+**`<<abstract>>`**
+
+The base class in an `abstract` class inherited by all persistent entities (User, WatchlistEntry, ViewingHistoryEntry).
 It centralises the attributes and methods that every entity needs, avoiding duplication across the codebase.
 
 **Attributes**
@@ -54,7 +77,9 @@ It centralises the attributes and methods that every entity needs, avoiding dupl
 
 ---
 
-### 2.2. User `<<entity>>`
+### User
+
+**`<<entity>>`**
 
 Represents a registered user of CinéMood. Handles authentication, profile data, and access to personal content (viewing history, watchlist, platform preferences).
 
@@ -86,7 +111,9 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 
 ---
 
-### 2.3. Film `<<DTO>>`
+### Film
+
+**`<<DTO>>`**
 
 A Data Transfer Object (DTO) is a temporary object used to carry data between layers of the application. It is **never saved to the database**.
 
@@ -113,7 +140,9 @@ Film is populated from the TMDB API response and passed to the frontend for disp
 
 ---
 
-### 2.4. WatchlistEntry `<<entity>>`
+### WatchlistEntry
+
+**`<<entity>>`**
 
 Represents a single film saved in a user's watchlist. A user can have zero or more WatchlistEntry records. Each entry references a film by its TMDB identifier only - no film metadata is stored locally.
 
@@ -135,7 +164,7 @@ Represents a single film saved in a user's watchlist. A user can have zero or mo
 
 ---
 
-### 2.5. ViewingHistoryEntry `<<entity>>`
+### ViewingHistoryEntry `<<entity>>`
 
 Represents a single film that a user has watched and rated. This is the core entity of CinéMood - it stores the user's personal experience of a film through tags, a prestige tier, and an optional personal note.
 
@@ -162,7 +191,9 @@ Represents a single film that a user has watched and rated. This is the core ent
 
 ---
 
-### 2.6. Tag `<<entity>>`
+### Tag
+
+**`<<entity>>`**
 
 Represents a predefined emotional or contextual label that a user can apply to a film they have watched. Tags are fixed and managed by the application - users cannot create custom tags in the MVP.
 
@@ -182,7 +213,9 @@ Tags are shared across all users. Each tag appears once in the `tags` table and 
 
 ---
 
-### 2.7. Platform `<<entity>>`
+### Platform
+
+**`<<entity>>`**
 
 Represents a streaming platform available to users. The list of platforms is fixed and managed by the application. Users select which platforms they subscribe to in their profile, and this selection is used to filter recommendations.
 
@@ -202,7 +235,9 @@ Represents a streaming platform available to users. The list of platforms is fix
 
 ---
 
-### 2.8. PrestigeTier `<<enumeration>>`
+### PrestigeTier
+
+**`<<enumeration>>`**
 
 A fixed set of values representing the user's global rating of a film. Using an enumeration ensures consistency - no typos, no case mismatches - and the allowed values are self-documenting in the schema.
 
@@ -216,7 +251,7 @@ A fixed set of values representing the user's global rating of a film. Using an 
 
 ---
 
-## 3. Class Diagram
+## Class Diagram
 
 ```mermaid
 classDiagram
@@ -328,7 +363,7 @@ ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
 
 ---
 
-## 4. Relationship Summary
+## Relationship Summary
 
 | Relationship | Type | Description |
 |---|---|---|
@@ -344,7 +379,7 @@ ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
 
 ---
 
-## 5. Design Decisions
+## Design Decisions
 
 **Why no Film table in the database?**
 CinéMood uses TMDB as its single source of truth for film metadata. Storing film data locally would duplicate information that TMDB already maintains, adding complexity without benefit for the MVP. The `tmdb_id` stored in each entry is sufficient to retrieve full film details on demand. A local film cache may be considered post-MVP to support collaborative filtering features.
@@ -363,3 +398,18 @@ The creation date of a ViewingHistoryEntry is semantically equivalent to the dat
 
 **Why is there an `age` attribute in the `User` class?**
 Since incorporating the user's age into the recommendation process is not part of the MVP (US-14 is in status 'Could Have'), the `age` attribute of the `User` class is optional. To simplify implementation and limit the collection of personal data, we use the age directly rather than the date of birth; this may be subject to future changes.
+
+---
+
+## Author
+
+**Félix Besançon**
+Holberton School Bordeaux — Bachelor CDA, Year 1
+Specialisation: Fullstack Development & Machine Learning
+
+- GitHub: [@FelixBesancon](https://github.com/FelixBesancon)
+- LinkedIn: [@FelixBesancon](https://linkedin.com/in/felix-besancon)
+
+---
+
+*End-of-year portfolio project — Holberton School Bordeaux — 2026*
