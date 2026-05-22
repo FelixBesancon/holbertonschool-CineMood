@@ -87,8 +87,7 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 | Frontend | React + Tailwind CSS |
 | Backend | Python + FastAPI |
 | Database | PostgreSQL |
-| Film data | TMDB API |
-| Streaming availability | Watchmode API |
+| Film data and streaming availability | TMDB API |
 | AI recommendations | LLM API (Mistral / OpenAI) |
 | Version control | Git + GitHub |
 
@@ -100,9 +99,11 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 cinemood/
 ├── README.md
 ├── docs/
-│   ├── stage1_report.pdf
-│   ├── stage2_planning.pdf
-│   └── stage3_technical.pdf
+│   ├── diagrams/
+│   ├── images/
+│   ├── Stage 1 Report[...].pdf
+│   ├── Stage 2 Report[...].pdf
+│   └── Stage 3 Report[...].pdf
 ├── frontend/
 │   ├── public/
 │   └── src/
@@ -169,9 +170,15 @@ uvicorn app.main:app --reload
 
 All project documentation is maintained as part of the Holberton portfolio process:
 
-- [Stage 1 — Idea Development & Team Formation](https://docs.google.com/document/d/1FasUDL7rBWEM1wyy7Tdx2kuHnpZ7bkZwgL1AbhZAlzQ)
-- [Stage 2 — Project Planning](https://docs.google.com/document/d/1I3SiKH2X2ekeTmv2lYn2jFTJYUXYhNQikRndpG9SDv4)
-- [Stage 3 — Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
+- **Portfolio Project Progress Report**:
+  - [Stage 1 — Idea Development & Team Formation](https://docs.google.com/document/d/1FasUDL7rBWEM1wyy7Tdx2kuHnpZ7bkZwgL1AbhZAlzQ)
+  - [Stage 2 — Project Planning](https://docs.google.com/document/d/1I3SiKH2X2ekeTmv2lYn2jFTJYUXYhNQikRndpG9SDv4)
+  - [Stage 3 — Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
+- **Technical Diagrams**:
+  - [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
+  - [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
+  - [Entity Relationship Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ERDiagram.md)
+  - [High-Level Sequence Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/SequenceDiagrams.md)
 
 ---
 
