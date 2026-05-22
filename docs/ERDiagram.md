@@ -92,6 +92,17 @@ erDiagram
 
 ---
 
+### Relationship Summary
+
+| Relationship | Entity A | Entity B | Type | Join table |
+|---|---|---|---|---|
+| A user owns watchlist entries | `users` | `watchlist_entries` | One-to-many | — |
+| A user owns viewing history entries | `users` | `viewing_history_entries` | One-to-many | — |
+| A user subscribes to platforms | `users` | `platforms` | Many-to-many | `user_platforms` |
+| A viewing history entry is labeled with tags | `viewing_history_entries` | `tags` | Many-to-many | `viewing_history_tags` |
+
+---
+
 ## 2. Design Notes
 
 **Why there is no `films` table?**
@@ -101,7 +112,8 @@ This avoids duplicating external data and keeps the local database simpler.
 
 **Why `User`, `WatchlistEntry`, and `ViewingHistoryEntry` use UUIDs?**
 These entities are linked to user data. UUIDs are less predictable than sequential integers, which is safer for user-owned resources.
-Why Tag and Platform use integer IDs
+
+**Why Tag and Platform use integer IDs**
 Tags and platforms are fixed reference data managed by the application. They are not sensitive user-owned resources, so integer IDs are simple and efficient.
 
 **Why join tables are needed?**
@@ -111,7 +123,7 @@ Tags and platforms are fixed reference data managed by the application. They are
 **Why created_at is used as the watch date?**
 A `ViewingHistoryEntry` is created when the user marks a film as watched. Therefore, its `created_at` field can represent the watch date without adding a separate `watched_at` column.
 
-**Prestige tier values**
+### Prestige tier values
 
 The prestige_tier enum can contain:
 
