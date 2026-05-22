@@ -7,15 +7,19 @@
 
 ## Table of Contents
 
-- [About the Project](#about-the-project)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [API Overview](#api-overview)
-- [Documentation](#documentation)
-- [Roadmap](#roadmap)
-- [Author](#author)
+- [1. About the Project](#about-the-project)
+- [2. Features](#features)
+  - [2.1. Film Logging](#film-logging)
+  - [2.2. Original Rating System](#original-rating-system)
+  - [2.3. Mood-Based Recommendation Engine](#mood-based-recommendation-engine)
+  - [2.4. Personal Dashboard](#personal-dashboard)
+- [3. Tech Stack](#tech-stack)
+- [4. Project Structure](#project-structure)
+- [5. Getting Started](#getting-started)
+- [6. API Overview](#api-overview)
+- [7. Documentation](#documentation)
+- [8. Roadmap](#roadmap)
+- [9. Author](#author)
 
 ---
 
@@ -36,14 +40,16 @@ This project is the end-of-year portfolio project for the Bachelor CDA program a
 
 ## Features
 
-### 🎞️ Film Logging
+### Film Logging
+
+🎞️ **The tool lets users add movies to personal “watched” or “to-watch” lists**
 - Search for any film by title (powered by the TMDB API)
 - Add it to your viewing history or wishlist
 - Log it with emotional and contextual tags instead of a simple star rating
 
-### 🏷️ Original Rating System
-Rate films with tags that actually mean something:
+### Original Rating System
 
+🏷️ **The tool lets users rate films with tags that actually mean something**:
 | Tag | Meaning |
 |---|---|
 | Great with a group | Best experienced with others |
@@ -57,13 +63,17 @@ Rate films with tags that actually mean something:
 
 Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 
-### 🎭 Mood-Based Recommendation Engine
+### Mood-Based Recommendation Engine
+
+🎭 **The tool provides personalized AI-powered recommendations through a comprehensive user experience**
 - Answer a short mood questionnaire
 - Swipe through film cards (right = interested, left = not interested)
+- Optionally, add a custom prompt (e.g., “I'm boycotting this director,” “I'm looking for a very gory horror movie,” etc.)
 - Receive a curated list of personalised recommendations
 - Filtered by the streaming platforms you actually have
 
-### 📋 Personal Dashboard
+### Personal Dashboard
+📋 **The tool allows users to keep track of the movies they've watched and the emotional impact they had on them at the time of viewing**
 - View your full watching history
 - Browse your wishlist
 - See your tags and tiers at a glance
