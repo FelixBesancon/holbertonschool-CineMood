@@ -158,3 +158,5 @@ Specialisation: Fullstack Development & Machine Learning
 - LinkedIn: [@FelixBesancon](https://linkedin.com/in/felix-besancon)
 
 ---
+
+*End-of-year portfolio project - Holberton School Bordeaux - 2026*
