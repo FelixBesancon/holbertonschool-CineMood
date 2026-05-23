@@ -124,7 +124,7 @@ This avoids duplicating external data and keeps the local database simpler.
 **Why `User`, `WatchlistEntry`, and `ViewingHistoryEntry` use UUIDs?**
 These entities are linked to user data. UUIDs are less predictable than sequential integers, which is safer for user-owned resources.
 
-**Why Tag and Platform use integer IDs**
+**Why Tag and Platform use integer IDs?**
 Tags and platforms are fixed reference data managed by the application. They are not sensitive user-owned resources, so integer IDs are simple and efficient.
 
 **Why join tables are needed?**
@@ -134,7 +134,7 @@ Tags and platforms are fixed reference data managed by the application. They are
 **Why created_at is used as the watch date?**
 A `ViewingHistoryEntry` is created when the user marks a film as watched. Therefore, its `created_at` field can represent the watch date without adding a separate `watched_at` column.
 
-**Why `mark_as_watched()` is a transactional operation across two tables.**
+**Why `mark_as_watched()` is a transactional operation across two tables?**
 When a user marks a watchlisted film as watched, the application creates a new row in `viewing_history_entries` and immediately deletes the corresponding row in `watchlist_entries` - both in a single database transaction.
 If either operation fails, the transaction is rolled back to avoid data inconsistency (a film disappearing from the watchlist without appearing in the history, or appearing in both simultaneously).
 No foreign key relationship exists between the two tables: the link is purely logical, handled at the service layer.
