@@ -10,8 +10,8 @@ Each diagram shows how the system components communicate step by step for a give
 - [1. User Registration](#user-registration)
 - [2. User Login](#user-login)
 - [3. Searching for a Movie](#searching-for-a-movie)
-- [4. Film Recommendation](#film-recommendation)
-- [5. Log a Film](#log-a-film)
+- [4. Log a Film](#log-a-film)
+- [5. Film Recommendation](#film-recommendation)
 - [6. Author](#author)
 
 ---
@@ -365,7 +365,7 @@ This sequence covers the full recommendation flow, from the mood questionnaire t
 
 **Actors:**
 - `User` - user interacting through the React frontend
-- `Backend` - the `/Recommendation/*` routes of the `FastAPI`
+- `Backend` - the `/recommendation/*` routes of the `FastAPI`
 - `Business Logic - Recommendation Facade` - the Recommendation Facade of the `FastAPI`
 - `Business Logic - User Service` - the User Service of the `FastAPI`
 - `API` - the TMDB API
