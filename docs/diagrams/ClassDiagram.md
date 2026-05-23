@@ -386,20 +386,29 @@ ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
 **Why no Film table in the database?**
 CinéMood uses TMDB as its single source of truth for film metadata. Storing film data locally would duplicate information that TMDB already maintains, adding complexity without benefit for the MVP. The `tmdb_id` stored in each entry is sufficient to retrieve full film details on demand. A local film cache may be considered post-MVP to support collaborative filtering features.
 
+**Why do `Tag` and `Platform` not inherit from `BaseModel`?**
+`BaseModel` is designed for user-owned entities: it provides a UUID primary key, `created_at` and `updated_at` timestamps, and `save()` / `delete()` lifecycle methods. `Tag` and `Platform` are application-managed reference tables - their records are seeded at initialisation and never created, modified, or deleted by users at runtime.
+They therefore have no need for UUIDs (predictable integer IDs are simpler and faster for join operations), no need for audit timestamps, and no need for instance-level persistence methods.
+Inheriting from `BaseModel` would add unnecessary complexity and misrepresent their nature in the schema.
+
+**Why integer IDs for Tag and Platform?**
+Tag and Platform are reference tables managed by the application, not by users. Their IDs are never exposed in security-sensitive contexts. An auto-incremented integer is simpler, lighter, and faster for join operations than a UUID.
+
 **Why a fixed Tag list?**
 Fixed tags ensure consistency across all users and enable future analytics (most-used tags, tag-based recommendations). Custom user-defined tags are planned as a post-MVP feature.
 
 **Why an enumeration for PrestigeTier?**
 An enumeration prevents inconsistent values (typos, case mismatches) and makes the allowed values self-documenting in the schema. It also enables direct comparison and sorting in the database.
 
-**Why integer IDs for Tag and Platform?**
-Tag and Platform are reference tables managed by the application, not by users. Their IDs are never exposed in security-sensitive contexts. An auto-incremented integer is simpler, lighter, and faster for join operations than a UUID.
-
 **Why is watched_at absent from ViewingHistoryEntry?**
 The creation date of a ViewingHistoryEntry is semantically equivalent to the date the film was watched. The `created_at` field inherited from BaseModel serves this purpose without duplication.
 
 **Why is there an `age` attribute in the `User` class?**
 Since incorporating the user's age into the recommendation process is not part of the MVP (US-14 is in status 'Could Have'), the `age` attribute of the `User` class is optional. To simplify implementation and limit the collection of personal data, we use the age directly rather than the date of birth; this may be subject to future changes.
+
+**Why is `age` a public attribute when other personal data is private?**
+Unlike `first_name`, `last_name`, `email`, and `hashed_password` - which are authentication or identity data that must never be exposed - `age` is used directly by the Recommendation Facade when building the prompt sent to the LLM.
+Making it public reflects this role as an input to the recommendation pipeline rather than a sensitive credential. It remains optional (no age rating filter is applied if unset), in line with US-14 (Could Have).
 
 ---
 
