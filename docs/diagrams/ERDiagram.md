@@ -15,7 +15,7 @@ Only the `tmdb_id` is stored in the database when a user saves or watches a film
     - [1.1. Glossary](#glossary)
     - [1.2. Relationship Summary](#relationship-summary)
 - [2. Design Notes](#design-notes)
-    - [2.2. Prestige Tier Values](#prestige-tier-values)
+    - [2.1. Prestige Tier Values](#prestige-tier-values)
 - [3. Author](#author)
 
 ---
