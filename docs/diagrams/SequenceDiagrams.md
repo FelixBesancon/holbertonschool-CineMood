@@ -21,12 +21,14 @@ Each diagram shows how the system components communicate step by step for a give
 This sequence covers the full flow when a new user creates an account on CinéMood.
 
 **Actors:**
+
 - `User` - user interacting through the React frontend
 - `Backend` - the `/auth/register` route of the `FastAPI`
 - `Business Logic` - the  User Service of the `FastAPI`
 - `Database` - the PostgreSQL database
 
 **Key steps:**
+
 1. The user submits the registration form via the frontend
 2. The frontend sends a POST request to /auth/register
 3. The backend routes the request to the User Service
@@ -112,12 +114,14 @@ sequenceDiagram
 This sequence covers the flow when a returning user logs into their account.
 
 **Actors:**
+
 - `User` - user interacting through the React frontend
 - `Backend` - the `/auth/login` route of the `FastAPI`
 - `Business Logic` - the User Service of the `FastAPI`
 - `Database` - the PostgreSQL database
 
 **Key steps:**
+
 1. The user submits their email and password via the frontend
 2. The frontend sends a POST request to /auth/login
 3. The backend routes the request to the User Service
@@ -189,12 +193,14 @@ sequenceDiagram
 This sequence covers the flow when a user searches for a movie in the TMDB catalog, in order to log it or add it to their watchlist.
 
 **Actors:**
+
 - `User` - user interacting through the React frontend
 - `Backend` - the `/films/search` route of the `FastAPI`
 - `Business Logic` - the Film Service of the `FastAPI`
 - `API` - the TMDB API
 
 **Key steps:**
+
 0. The user navigates through the app to the movie search page
 1. The user types a movie title in the search bar and confirms
 2. The frontend sends a GET request to `/films/search?query=...`
@@ -257,6 +263,7 @@ sequenceDiagram
 This sequence covers the flow when a user views a film's details page and logs it to their viewing history.
 
 **Actors:**
+
 - `User` - user interacting through the React frontend
 - `Backend` - the `/films/*` routes of the `FastAPI`
 - `Business Logic - Film Service` - the Film Service of the `FastAPI`
@@ -265,6 +272,7 @@ This sequence covers the flow when a user views a film's details page and logs i
 - `Database` - the PostgreSQL database
 
 **Key steps:**
+
 0. The user navigates through the app to a film's details page (from search results)
 1. The backend fetches full film details from TMDB
 2. The backend checks if the film is already in the user's viewing history or watchlist
@@ -364,6 +372,7 @@ sequenceDiagram
 This sequence covers the full recommendation flow, from the mood questionnaire to the final film suggestions.
 
 **Actors:**
+
 - `User` - user interacting through the React frontend
 - `Backend` - the `/recommendation/*` routes of the `FastAPI`
 - `Business Logic - Recommendation Facade` - the Recommendation Facade of the `FastAPI`
@@ -373,6 +382,7 @@ This sequence covers the full recommendation flow, from the mood questionnaire t
 - `Database` - the PostgreSQL database
 
 **Key steps:**
+
 0. The user navigates from the home screen to the Recommendation experience
 1. The user starts the recommendation experience
 2. The user completes a mood questionnaire (handled entirely on the frontend)
