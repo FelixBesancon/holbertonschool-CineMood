@@ -57,7 +57,7 @@ It covers all persistent entities, data transfer objects, and enumerations used 
 
 **`<<abstract>>`**
 
-The base class in an `abstract` class inherited by all persistent entities (User, WatchlistEntry, ViewingHistoryEntry).
+The base class is an `abstract` class inherited by all persistent entities (User, WatchlistEntry, ViewingHistoryEntry).
 It centralises the attributes and methods that every entity needs, avoiding duplication across the codebase.
 
 **Attributes**
