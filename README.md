@@ -1,6 +1,6 @@
 # 🎬 CinéMood
 
-> A personal film diary and AI-powered recommendation engine.
+> A personal film diary and AI-powered recommendation engine.<br>
 > Log what you watch, rate it your way, and get suggestions based on your mood and streaming platforms.
 
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
@@ -122,7 +122,7 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 
 ## Architecture
 
-The application follows a classic three-tier architecture separating the presentation layer, business logic, and data layer.
+The application follows a classic three-tier architecture separating the presentation layer, business logic, and data layer.<br>
 External services (TMDB and Mistral AI) are called exclusively by the backend — never directly by the frontend.
 
 → [View Architecture Diagrams](docs/diagrams/Architecture.md)
@@ -187,7 +187,7 @@ holbertonschool-CineMood/
 
 ## Getting Started
 
-> The project is currently in the documentation and planning phase (Stage 3).
+> The project is currently in the documentation and planning phase (Stage 3).<br>
 > This section will be updated once development begins.
 
 ### Prerequisites
@@ -231,7 +231,7 @@ The API documentation (Swagger UI) will be available at `http://localhost:8000/d
 
 ## API Overview
 
-> Full API specification is available in the [Stage 3 Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing).
+> Full API specification is available in the [Stage 3 Technical Documentation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/develop/docs/Stage%203%20Report%20-%20Technical%20Documentation.pdf).
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
@@ -342,7 +342,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
   > Solo project definition, brainstorming session (Mind Mapping, SCAMPER, How Might We), idea evaluation using MoSCoW, and final MVP selection with scope, SMART goals, and risk analysis.
 - [Stage 2 - Project Planning](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%202%20Report%20-%20Project%20Planning.pdf)
   > High-level project plan with 5 stages, detailed phase breakdown, summary timeline, SMART objectives recap, and key risk summary.
-- [Stage 3 - Technical Documentation](https://docs.google.com/document/d/1r0NgW17kEw7OtL454YLDahwGwA1swqAtHtHLQfqh7zY/edit?usp=sharing)
+- [Stage 3 - Technical Documentation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/Stage%203%20Report%20-%20Technical%20Documentation.pdf)
   > Complete technical blueprint: user stories (MoSCoW), system architecture, class diagram, ER diagram, API specifications (internal and external), React component architecture, UI mockups, sequence diagrams, SCM and QA strategy, and full tech stack justifications.
 
 ### Technical Diagrams
@@ -375,8 +375,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 - [ ] Streaming availability display (Sprint 5)
 
 ### Future versions
-- [ ] Guest mode - full navigation (search, recommendations) without an account,
-      with a sign-up prompt at the end of the recommendation flow to save results
+- [ ] Guest mode - full navigation (search, recommendations) without an account, with a sign-up prompt at the end of the recommendation flow to save results
 - [ ] French language support
 - [ ] Social features (follow users, shared lists)
 - [ ] Cinema listings and nearby showtimes
