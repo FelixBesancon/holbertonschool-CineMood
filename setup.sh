@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-time setup script for CinéMood development environment
 
-set -e # Stops the script if a command fails
+set -e
 
 echo "=== CinéMood Setup ==="
 
@@ -17,7 +17,19 @@ if [ "$PYTHON_VERSION" -lt 11 ]; then
     exit 1
 fi
 
-# 2. Create the virtual environment and install the required dependencies
+# 2. Check for Node.js 18+
+if ! command -v node &> /dev/null; then
+    echo "Node.js not found. Please install Node.js 18+ from https://nodejs.org"
+    exit 1
+fi
+
+NODE_VERSION=$(node -e 'process.stdout.write(String(process.versions.node.split(".")[0]))')
+if [ "$NODE_VERSION" -lt 18 ]; then
+    echo "Node.js 18+ required. Found $NODE_VERSION"
+    exit 1
+fi
+
+# 3. Setup backend
 echo "Setting up backend..."
 cd backend
 python3 -m venv venv
@@ -27,21 +39,36 @@ pip install -r requirements.txt
 echo "Backend ready."
 cd ..
 
-# 3. Create .env from .env.example and generate SECRET_KEY
+# 4. Create backend .env
 if [ ! -f "backend/.env" ]; then
     cp backend/.env.example backend/.env
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
     sed -i "s/your_jwt_secret_key/$SECRET_KEY/" backend/.env
-    echo ".env created with a generated SECRET_KEY"
+    echo "backend/.env created with a generated SECRET_KEY"
 else
-    echo ".env already exists - skipping"
+    echo "backend/.env already exists - skipping"
 fi
 
-# 4. Run PostgreSQL via Docker
+# 5. Setup frontend
+echo "Setting up frontend..."
+cd frontend
+npm install
+echo "Frontend ready."
+cd ..
+
+# 6. Create frontend .env
+if [ ! -f "frontend/.env" ]; then
+    cp frontend/.env.example frontend/.env
+    echo "frontend/.env created"
+else
+    echo "frontend/.env already exists - skipping"
+fi
+
+# 7. Start PostgreSQL via Docker
 echo "Starting PostgreSQL..."
 docker compose up -d
 echo "PostgreSQL running on port 5432."
 
 echo ""
 echo "=== Setup complete ==="
-echo "To activate your venv each session: source backend/venv/bin/activate"
+echo "To start the app: ./start.sh"
