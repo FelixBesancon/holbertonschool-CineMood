@@ -1,30 +1,46 @@
-# Python - virtual environment
+# ========================
+# Python / Backend
+# ========================
 backend/venv/
-
-# Python - bytecode automatically compiled by Python
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-
-# Environment variables
+__pycache__/
+*.py[cod]
+*.pyo
 .env
-
-# Alembic - auto-generated files
-alembic/versions/*.pyc
-backend/alembic/versions/*.py
-
-# IDE - local editor settings
-.vscode/
-.idea/
-
-# OS - hidden files automatically created by macOS/Linux
-.DS_Store
-**/.DS_Store
-
-# Tests - locally generated code coverage reports
-.coverage
+*.egg-info/
+dist/
+build/
+.pytest_cache/
 htmlcov/
+.coverage
 
-# Node
+# ========================
+# Node / Frontend
+# ========================
 frontend/node_modules/
-frontend/.env
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ========================
+# Editor / OS
+# ========================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
