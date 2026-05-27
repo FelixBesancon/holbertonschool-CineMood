@@ -11,6 +11,7 @@ backend/venv/
 
 # Alembic - auto-generated files
 alembic/versions/*.pyc
+backend/alembic/versions/*.py
 
 # IDE - local editor settings
 .vscode/
