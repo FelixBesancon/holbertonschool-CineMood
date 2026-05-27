@@ -27,7 +27,17 @@ pip install -r requirements.txt
 echo "Backend ready."
 cd ..
 
-# 3. Run PostgreSQL via Docker
+# 3. Create .env from .env.example and generate SECRET_KEY
+if [ ! -f "backend/.env" ]; then
+    cp backend/.env.example backend/.env
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+    sed -i "s/your_jwt_secret_key/$SECRET_KEY/" backend/.env
+    echo ".env created with a generated SECRET_KEY"
+else
+    echo ".env already exists - skipping"
+fi
+
+# 4. Run PostgreSQL via Docker
 echo "Starting PostgreSQL..."
 docker compose up -d
 echo "PostgreSQL running on port 5432."
