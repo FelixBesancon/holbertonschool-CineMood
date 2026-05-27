@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One-time setup script for CinéMood development environment
 
+# Stop the script if a command fails
 set -e
 
 echo "=== CinéMood Setup ==="
@@ -29,7 +30,39 @@ if [ "$NODE_VERSION" -lt 18 ]; then
     exit 1
 fi
 
-# 3. Setup backend
+# 3. Check for Docker
+if ! command -v docker &> /dev/null; then
+    echo "Docker not found."
+    echo ""
+    echo "On Ubuntu, install Docker Engine and Docker Compose with:"
+    echo "    sudo apt update"
+    echo "    sudo apt install ca-certificates curl -y"
+    echo "    curl -fsSL https://get.docker.com | sudo sh"
+    echo "    sudo usermod -aG docker \$USER"
+    echo ""
+    echo "Then log out and log back in, or restart your terminal session."
+    echo "After that, run ./setup.sh again."
+    echo ""
+    echo "Official docs: https://docs.docker.com/engine/install/ubuntu/"
+    exit 1
+fi
+
+# 4. Check for Docker Compose v2
+if ! docker compose version &> /dev/null; then
+    echo "Docker Compose v2 plugin not found."
+    echo ""
+    echo "On Ubuntu, install it with:"
+    echo "    sudo apt update"
+    echo "    sudo apt install docker-compose-plugin -y"
+    echo ""
+    echo "Then check with:"
+    echo "    docker compose version"
+    echo ""
+    echo "Official docs: https://docs.docker.com/compose/install/linux/"
+    exit 1
+fi
+
+# 5. Setup backend
 echo "Setting up backend..."
 cd backend
 python3 -m venv venv
@@ -39,7 +72,7 @@ pip install -r requirements.txt
 echo "Backend ready."
 cd ..
 
-# 4. Create backend .env
+# 6. Create backend .env
 if [ ! -f "backend/.env" ]; then
     cp backend/.env.example backend/.env
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
@@ -49,14 +82,14 @@ else
     echo "backend/.env already exists - skipping"
 fi
 
-# 5. Setup frontend
+# 7. Setup frontend
 echo "Setting up frontend..."
 cd frontend
 npm install
 echo "Frontend ready."
 cd ..
 
-# 6. Create frontend .env
+# 8. Create frontend .env
 if [ ! -f "frontend/.env" ]; then
     cp frontend/.env.example frontend/.env
     echo "frontend/.env created"
@@ -64,11 +97,14 @@ else
     echo "frontend/.env already exists - skipping"
 fi
 
-# 7. Start PostgreSQL via Docker
+# 9. Start PostgreSQL via Docker
 echo "Starting PostgreSQL..."
 docker compose up -d
 echo "PostgreSQL running on port 5432."
 
 echo ""
 echo "=== Setup complete ==="
-echo "To start the app: ./start.sh"
+echo "To activate your virtual environment:"
+echo "    source backend/venv/bin/activate"
+echo "To start the app:"
+echo "    ./start.sh"

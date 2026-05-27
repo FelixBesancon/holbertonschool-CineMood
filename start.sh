@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Start the CinéMood development servers
 
+# Stop the script if a command fails
 set -e
 
 echo "=== Starting CinéMood ==="

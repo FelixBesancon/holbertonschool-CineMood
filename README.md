@@ -29,7 +29,8 @@
   - [7.2. One time installation](#one-time-installation)
     - [7.2.1. Clone the repository](#clone-the-repository)
     - [7.2.2. Run the setup script](#run-the-setup-script)
-  - [7.3 Each working session](#each-working-session)
+  - [7.3. Each working session](#each-working-session)
+  - [7.4. Cleaning the project](#cleaning-the-project)
 - [8. API Overview](#api-overview)
 - [9. Git Workflow](#git-workflow)
   - [9.1. Branch Strategy](#branch-strategy)
@@ -149,6 +150,7 @@ CinéMood uses PostgreSQL as its relational database. Film metadata is not store
 holbertonschool-CineMood/
 ├── README.md
 ├── docker-compose.yml
+├── clean.sh
 ├── setup.sh
 ├── start.sh
 ├── docs/
@@ -199,10 +201,29 @@ holbertonschool-CineMood/
 
 ### Prerequisites
 
+Before running the setup script, make sure the following tools are installed:
+
 - Python >= 3.11
-- Docker >= 20.10
+- Node.js >= 18
+- Docker Engine with Docker Compose v2
 - A [TMDB API key](https://www.themoviedb.org/settings/api) *(required from Sprint 2)*
 - A [Mistral AI API key](https://console.mistral.ai/) *(required from Sprint 5)*
+
+> The setup script checks that Python, Node.js, Docker, and Docker Compose are available.  
+> It also creates the virtual environment, installs project dependencies, creates local `.env` files, and starts the PostgreSQL container.
+
+If Docker is not installed on Ubuntu, you can install it with:
+```bash
+sudo apt update
+sudo apt install ca-certificates curl -y
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+```
+
+Then log out and log back in before running:
+```bash
+./setup.sh
+```
 
 ### One time installation
 
@@ -217,34 +238,58 @@ cd holbertonschool-CineMood
 
 Run **`setup.sh`** to initialize the project in one command.<br>
 This script handles everything in one command, for Frontend and Backend initialization:
-- Checks Python 3.11+ is installed
-- Creates the virtual environment
+- Checks Python 3.11+, Node.js 18+, Docker, and Docker Compose are available
+- Creates the Python virtual environment into backend directory
 - Installs all backend dependencies
-- Creates your `.env` file from `.env.example` with a generated `SECRET_KEY`
+- Installs all frontend dependencies
+- Creates your `.env` files from `.env.example`
 - Starts the PostgreSQL container via Docker
 
 ```bash
 ./setup.sh
 ```
 
-#### Each working session
+### Each working session
 
-Activate your environment, then run **`start.sh`** to start the backend:
-
+- **Activate the virtual environment**
 ```bash
-# Activate the virtual environment
 source backend/venv/bin/activate
+```
 
-# Start PostgreSQL if not already running
-docker compose up -d
-
-# Start the backend
+- **Start both servers (frontend + backend)**
+```bash
 ./start.sh
 ```
 
 The app will be available at `http://localhost:5173` *(frontend - Sprint 2)*
 The API will be available at `http://localhost:8000`
 The API documentation (Swagger UI) will be available at `http://localhost:8000/docs`
+
+### Cleaning the project
+
+From time to time, you can run the clean script to remove generated files and temporary caches:
+```bash
+./clean.sh
+```
+
+This script removes common development artifacts such as:
+- Python cache files (`__pycache__`, `.pyc`, `.pyo`)
+- pytest cache and coverage reports
+- frontend build artifacts (`dist`, `dist-ssr`)
+- OS-generated files such as (`.DS_Store`, `Thumbs.db`)
+
+For a complete reset of the local development environment, use:
+```bash
+./clean.sh --hard
+```
+
+**Caution: hard mode removes reinstallable local files**:
+- `backend/venv`
+- `frontend/node_modules`
+- backend and frontend `.env` files
+
+> ⚠️ **Note:** Do not run `./clean.sh --hard` while the virtual environment is active.<br>
+Run `deactivate` first.
 
 ---
 
