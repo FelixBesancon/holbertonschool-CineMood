@@ -1,0 +1,30 @@
+# Python - virtual environment
+backend/venv/
+
+# Python - bytecode automatically compiled by Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Environment variables
+.env
+
+# Alembic - auto-generated files
+alembic/versions/*.pyc
+backend/alembic/versions/*.py
+
+# IDE - local editor settings
+.vscode/
+.idea/
+
+# OS - hidden files automatically created by macOS/Linux
+.DS_Store
+**/.DS_Store
+
+# Tests - locally generated code coverage reports
+.coverage
+htmlcov/
+
+# Node
+frontend/node_modules/
+frontend/.env
