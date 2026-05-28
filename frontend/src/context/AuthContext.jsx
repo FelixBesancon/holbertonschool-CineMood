@@ -5,7 +5,7 @@ const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [token, setToken] = useState(null)
+  const [token, setToken] = useState(() => sessionStorage.getItem('token'))
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password })
