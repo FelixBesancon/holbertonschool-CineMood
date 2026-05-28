@@ -6,6 +6,22 @@ set -e
 
 echo "=== Starting CinéMood ==="
 
+# Check that the virtual environment exists
+if [ ! -f "backend/venv/bin/activate" ]; then
+    echo "Error: virtual environment not found."
+    echo "Run this command first to initialize the project:"
+    echo "    ./setup.sh"
+    exit 1
+fi
+
+# Check that node_modules exists
+if [ ! -d "frontend/node_modules" ]; then
+    echo "Error: frontend dependencies not found."
+    echo "Run this command first to initialize the project."
+    echo "    ./setup.sh"
+    exit 1
+fi
+
 # Start the backend in the background
 echo "Starting backend..."
 cd backend

@@ -12,9 +12,10 @@ if ! command -v python3 &> /dev/null; then
     sudo apt update && sudo apt install python3 python3-venv python3-pip -y
 fi
 
-PYTHON_VERSION=$(python3 -c 'import sys; print(sys.version_info.minor)')
-if [ "$PYTHON_VERSION" -lt 11 ]; then
-    echo "Python 3.11+ required. Found 3.$PYTHON_VERSION"
+PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
+PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
+if [ "$PYTHON_MAJOR" -lt 3 ] || { [ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 11 ]; }; then
+    echo "Python 3.11+ required. Found $PYTHON_MAJOR.$PYTHON_MINOR"
     exit 1
 fi
 

@@ -6,8 +6,8 @@
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal?logo=fastapi)
-![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql)
+![React](https://img.shields.io/badge/React-19+-61DAFB?logo=react)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?logo=postgresql)
 ![Holberton](https://img.shields.io/badge/Holberton-Bordeaux-red)
 
 ---
@@ -34,7 +34,7 @@
 - [8. API Overview](#api-overview)
 - [9. Git Workflow](#git-workflow)
   - [9.1. Branch Strategy](#branch-strategy)
-  - [9.2. Step-by-step workflow for each issue]("#step-by-step-workflow-for-each-issue)
+  - [9.2. Step-by-step workflow for each issue](#step-by-step-workflow-for-each-issue)
     - [9.2.1. Start a new issue](#start-a-new-issue)
     - [9.2.2. Work and commit regularly](#work-and-commit-regularly)
     - [9.2.3. Before opening a Pull Request](#before-opening-a-pull-request)
@@ -115,10 +115,10 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 
 | Layer | Technology | Role |
 |---|---|---|
-| Frontend | React 18 + Tailwind CSS | Component-based UI, responsive design |
+| Frontend | React 19 + Tailwind CSS | Component-based UI, responsive design |
 | Routing | React Router | Client-side navigation |
 | Backend | Python 3.11 + FastAPI | REST API, business logic, async support |
-| Database | PostgreSQL 15 | Relational data persistence |
+| Database | PostgreSQL 16 | Relational data persistence |
 | Authentication | JWT | Stateless user authentication |
 | Film data | TMDB API | Film metadata, posters, streaming availability |
 | AI recommendations | Mistral AI | Mood-based LLM recommendation engine |
