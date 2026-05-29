@@ -6,8 +6,6 @@ SQLAlchemy models in the CinéMood application.
 
 It centralises the three attributes shared by every entity:
 a UUID primary key, a creation timestamp, and a last-updated timestamp.
-It also declares the save() and delete() utility methods that will be
-implemented once the session management pattern is established.
 """
 
 from app.database import Base
@@ -24,9 +22,7 @@ class BaseModel(Base):
     Inherited by: User, WatchlistEntry, ViewingHistoryEntry.
 
     This class provides the three attributes shared by every entity,
-    avoiding duplication across the codebase. It also declares two
-    lifecycle methods (save and delete) that will be implemented
-    once the session management pattern is established.
+    avoiding duplication across the codebase.
 
     Attributes:
         id (UUID): Primary key, generated automatically by PostgreSQL
