@@ -55,26 +55,3 @@ class BaseModel(Base):
         onupdate=lambda: datetime.now(tz=timezone.utc)
     )
 
-    def save(self):
-        """
-        Refresh the updated_at timestamp and persist the current state.
-
-        This method will be implemented once the SQLAlchemy session
-        management pattern is established. It will call db.add(self)
-        and db.commit() on the active session.
-        """
-        pass
-
-    def delete(self):
-        """
-        Permanently remove this entity from the database.
-
-        This method will be implemented once the SQLAlchemy session
-        management pattern is established. It will call db.delete(self)
-        and db.commit() on the active session.
-
-        PostgreSQL cascade constraints will automatically remove all
-        related records (e.g. deleting a User removes their watchlist
-        and viewing history entries).
-        """
-        pass

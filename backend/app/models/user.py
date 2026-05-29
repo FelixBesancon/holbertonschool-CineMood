@@ -9,7 +9,7 @@ preferences. Passwords are never stored in plain text - hashing is handled
 by the authentication service before this model is populated.
 """
 
-from app.models.base_model import BaseModel
+from app.models import BaseModel
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Boolean, Integer
 from typing import Optional
