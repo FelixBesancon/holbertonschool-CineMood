@@ -9,6 +9,7 @@ SQLAlchemy models, which handle database persistence.
 
 Schemas defined here:
     - UserCreate: validates incoming registration data
+    - UserLogin: validates incoming login data
     - UserResponse: shapes the user data returned in API responses
     - AuthResponse: wraps UserResponse with a JWT token on registration
       and login
@@ -47,7 +48,8 @@ def validate_first_name_format(value: str) -> str:
     Validate the length of a first name.
 
     Args:
-        value (str): First name, already confirmed as a string by BeforeValidator.
+        value (str): First name, already confirmed as a string
+        by BeforeValidator.
 
     Returns:
         str: The validated first name, unchanged.
@@ -64,7 +66,8 @@ def validate_last_name_format(value: str) -> str:
     Validate the length of a last name.
 
     Args:
-        value (str): Last name, already confirmed as a string by BeforeValidator.
+        value (str): Last name, already confirmed as a string
+        by BeforeValidator.
 
     Returns:
         str: The validated last name, unchanged.
@@ -81,7 +84,8 @@ def validate_email_format(value: str) -> str:
     Validate the format of an email address.
 
     Args:
-        value (str): Email address, already confirmed as a string by BeforeValidator.
+        value (str): Email address, already confirmed as a string
+        by BeforeValidator.
 
     Returns:
         str: The validated email address, unchanged.
@@ -216,3 +220,23 @@ class AuthResponse(BaseModel):
     """
     user: UserResponse
     token: str
+
+
+class UserLogin(BaseModel):
+    """
+    Schema for incoming user login data.
+
+    Validates the payload sent to POST /auth/login.
+    Only email and password are required - no other fields
+    are needed to authenticate an existing user.
+
+    Email format is validated. Password is not checked for complexity
+    at login - only the bcrypt comparison against the stored hash matters.
+
+    Attributes:
+        email (str): User's registered email address.
+        password (str): Plain-text password to verify against
+            the stored bcrypt hash.
+    """
+    email: ValidEmail
+    password: str

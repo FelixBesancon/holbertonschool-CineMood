@@ -50,4 +50,3 @@ class BaseModel(Base):
         server_default=func.now(),
         onupdate=lambda: datetime.now(tz=timezone.utc)
     )
-
