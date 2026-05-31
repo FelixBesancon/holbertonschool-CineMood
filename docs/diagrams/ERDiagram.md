@@ -28,6 +28,7 @@ erDiagram
         uuid id PK
         varchar first_name
         varchar last_name
+        varchar username
         varchar email UK
         varchar hashed_password
         boolean is_admin
@@ -115,6 +116,9 @@ erDiagram
 ---
 
 ## Design Notes
+
+**Why is `username` stored as a column and not computed from `first_name + last_name`?**
+`username` is stored as an independent field to support user privacy and future modification (Won't Have user story). A user may want a display name that differs from their real name, and must be able to change it without affecting authentication data. Storing it separately keeps it independent from identity fields.
 
 **Why there is no `films` table?**
 CinéMood does not store film metadata locally. Film details such as title, poster, synopsis, cast, runtime, and streaming platforms are fetched from TMDB.

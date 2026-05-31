@@ -1,43 +1,50 @@
-from app.database import Base
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 from dotenv import load_dotenv
 import os
 
-# loads all variables to the environment and
-# store them into Python variables with the os library.
+# Load environment variables before any app import
 load_dotenv()
 
-# This is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Alembic Config object - provides access to values in alembic.ini
 config = context.config
 
-# Injects the URL from .env into the Alembic configuration
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+# Inject DATABASE_URL from .env into Alembic config
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", ""))
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Set up Python logging from alembic.ini
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Base and models must be imported so Alembic can detect table definitions
-import app.models  # noqa: F401 – side-effect import: registers models into Base.metadata
 
-target_metadata = Base.metadata
+def _load_app_models():
+    """
+    Import Base and all models inside a function to ensure load_dotenv()
+    and DATABASE_URL injection run first.
+
+    Importing app.database triggers the SQLAlchemy engine creation, which
+    reads DATABASE_URL. If this import happens at module level, it runs
+    before load_dotenv() and the URL is not yet available.
+
+    The noqa: F401 comment suppresses the 'imported but unused' warning
+    for app.models - this import is intentional, it registers all model
+    classes into Base.metadata so Alembic can detect them for autogenerate.
+    """
+    from app.database import Base
+    import app.models  # noqa: F401
+    return Base.metadata
+
+
+target_metadata = _load_app_models()
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """
+    Run migrations in offline mode.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
+    Configures the context with just a URL, without creating an Engine.
+    Useful for generating SQL scripts without a live database connection.
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -52,11 +59,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """
+    Run migrations in online mode.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
+    Creates an Engine and associates a connection with the Alembic context.
+    This is the standard mode used during development.
     """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
@@ -66,7 +73,8 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata
         )
 
         with context.begin_transaction():

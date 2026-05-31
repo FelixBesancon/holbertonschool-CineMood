@@ -17,7 +17,9 @@ load_dotenv()
 # Database URL is read from the environment - never hardcoded
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL environment variable is not set. Check your .env file.")
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not set. Check your .env file."
+        )
 
 # SQLAlchemy engine - manages the connection pool to PostgreSQL
 engine = create_engine(DATABASE_URL)
@@ -37,7 +39,8 @@ class Base(DeclarativeBase):
 def get_db():
     """
     FastAPI dependency that provides a database session per request.
-    Ensures the session is always closed after the request, even if an error occurs.
+    Ensures the session is always closed after the request,
+    even if an error occurs.
     """
     db = SessionLocal()
     try:

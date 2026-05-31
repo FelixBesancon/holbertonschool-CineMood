@@ -89,6 +89,7 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 |---|---|---|---|---|
 | `-` | `first_name` | str | - | Stored separately from last name for flexible display and sorting. |
 | `-` | `last_name` | str | - | Stored separately from first name. |
+| `+` | `username` | str | - | Display name stored independently from first/last name to support privacy and future user modification (Won't Have). Generated from `first_name + last_name` at registration. |
 | `-` | `email` | str | - | Unique login identifier. Validated for format and uniqueness before saving. |
 | `-` | `hashed_password` | str | - | The password is never stored in plain text. It is hashed using bcrypt before storage. |
 | `-` | `is_admin` | bool | False | Boolean flag. Defaults to False. Reserved for future admin features. |
@@ -99,15 +100,12 @@ Represents a registered user of CinéMood. Handles authentication, profile data,
 
 | Visibility | Name | Return type | Description |
 |---|---|---|---|
-| `+` | `username()` | str | Computed property returning `first_name + last_name`. Not stored in the database. |
-| `+` | `validate_name()` | None | Checks that first and last names are non-empty strings within defined character limits. |
-| `+` | `validate_email()` | None | Checks email format (regex) and uniqueness in the database. Raises an error if already taken. |
-| `+` | `validate_password()` | None | Checks password complexity: minimum length and required character types. |
-| `+` | `hash_password()` | None | Transforms the plain-text password into a bcrypt hash. Called before `save()` on creation or password update. |
 | `+` | `verify_password()` | bool | Compares a plain-text input against the stored bcrypt hash. Returns True if valid. Used at login. |
 | `+` | `get_watchlist()` | List[WatchlistEntry] | Queries the database and returns all WatchlistEntry records belonging to this user. |
 | `+` | `get_viewing_history()` | List[ViewingHistoryEntry] | Queries the database and returns all ViewingHistoryEntry records belonging to this user. |
 | `+` | `get_platforms()` | List[Platform] | Returns all Platform objects linked to this user via the user_platforms join table. |
+
+> *Note: Input validation (name length, email format, password complexity) is handled by Pydantic schemas upstream, not by model methods. Password hashing is handled by the authentication service.*
 
 ---
 
@@ -264,23 +262,17 @@ class BaseModel {
     #id: UUID4
     #created_at: datetime
     #updated_at: datetime
-    +save()
-    +delete()
 }
 
 class User {
     <<entity>>
     -first_name: str
     -last_name: str
+    +username: str
     -email: str
     -hashed_password: str
     -is_admin: bool = False
     +age: int
-    +username() str
-    +validate_name()
-    +validate_email()
-    +validate_password()
-    +hash_password()
     +verify_password()
     +get_watchlist()
     +get_viewing_history()
@@ -386,8 +378,11 @@ ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
 **Why no Film table in the database?**
 CinéMood uses TMDB as its single source of truth for film metadata. Storing film data locally would duplicate information that TMDB already maintains, adding complexity without benefit for the MVP. The `tmdb_id` stored in each entry is sufficient to retrieve full film details on demand. A local film cache may be considered post-MVP to support collaborative filtering features.
 
+**Why is `username` stored as a column rather than computed from `first_name + last_name`?**
+`username` is stored as an independent field to support user privacy and a future modification feature (Won't Have user story). A user may want a display name that differs from their real name, and must be able to change it without affecting authentication data (`first_name`, `last_name`, `email`). Generated from `first_name + last_name` at registration, it can be updated independently afterwards.
+
 **Why do `Tag` and `Platform` not inherit from `BaseModel`?**
-`BaseModel` is designed for user-owned entities: it provides a UUID primary key, `created_at` and `updated_at` timestamps, and `save()` / `delete()` lifecycle methods. `Tag` and `Platform` are application-managed reference tables - their records are seeded at initialisation and never created, modified, or deleted by users at runtime.
+`BaseModel` is designed for user-owned entities: it provides a UUID primary key, `created_at` and `updated_at` timestamps. `Tag` and `Platform` are application-managed reference tables - their records are seeded at initialisation and never created, modified, or deleted by users at runtime.
 They therefore have no need for UUIDs (predictable integer IDs are simpler and faster for join operations), no need for audit timestamps, and no need for instance-level persistence methods.
 Inheriting from `BaseModel` would add unnecessary complexity and misrepresent their nature in the schema.
 

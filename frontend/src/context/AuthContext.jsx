@@ -9,10 +9,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password })
-    const { jwt_token, user_id } = response.data
-    setToken(jwt_token)
-    setUser({ id: user_id })
-    sessionStorage.setItem('token', jwt_token)
+    const { user, token } = response.data
+    setToken(token)
+    setUser(user)
+    sessionStorage.setItem('token', token)
   }
 
   const logout = () => {
