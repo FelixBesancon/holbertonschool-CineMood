@@ -6,6 +6,8 @@ the root health check endpoint.
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import auth
 
 # FastAPI application instance.
 # This object registers all routes and is served by uvicorn.
@@ -15,6 +17,20 @@ app = FastAPI(
     description="Personal film diary and AI-powered recommendation engine",
     version="0.1.0"
 )
+
+# CORS configuration for development.
+# allow_origins=["*"] accepts requests from any origin — fine for local dev.
+# allow_credentials is NOT set: it is only needed for cookie-based auth.
+# CinéMood uses JWT in the Authorization header, not cookies, so Axios never
+# sends credentials cross-origin and this option is not required.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 
 @app.get("/")

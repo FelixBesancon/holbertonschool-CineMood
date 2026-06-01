@@ -6,8 +6,8 @@
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal?logo=fastapi)
-![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql)
+![React](https://img.shields.io/badge/React-19+-61DAFB?logo=react)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?logo=postgresql)
 ![Holberton](https://img.shields.io/badge/Holberton-Bordeaux-red)
 
 ---
@@ -26,15 +26,22 @@
 - [6. Project Structure](#project-structure)
 - [7. Getting Started](#getting-started)
   - [7.1. Prerequisites](#prerequisites)
-  - [7.2. Installation](#installation)
-    - [7.2.1. Backend](#backend)
-    - [7.2.2. Frontend](#frontend)
+  - [7.2. One time installation](#one-time-installation)
+    - [7.2.1. Clone the repository](#clone-the-repository)
+    - [7.2.2. Run the setup script](#run-the-setup-script)
+  - [7.3. Each working session](#each-working-session)
+  - [7.4. Cleaning the project](#cleaning-the-project)
 - [8. API Overview](#api-overview)
 - [9. Git Workflow](#git-workflow)
   - [9.1. Branch Strategy](#branch-strategy)
-  - [9.2. Commit Convention](#commit-convention)
-  - [9.3. Closing Issues via Commits](#closing-issues-via-commits)
-  - [9.4. Pull Request Process](#pull-request-process)
+  - [9.2. Step-by-step workflow for each issue](#step-by-step-workflow-for-each-issue)
+    - [9.2.1. Start a new issue](#start-a-new-issue)
+    - [9.2.2. Work and commit regularly](#work-and-commit-regularly)
+    - [9.2.3. Before opening a Pull Request](#before-opening-a-pull-request)
+    - [9.2.4. Open a Pull Request on GitHub](#open-a-pull-request-on-github)
+    - [9.2.5. After the merge](#after-the-merge)
+  - [9.3. Commit Convention](#commit-convention)
+  - [9.4. Closing Issues via Commits](#closing-issues-via-commits)
 - [10. Testing](#testing)
 - [11. Documentation](#documentation)
   - [11.1. Portfolio Project Progress Reports](#portfolio-project-progress-reports)
@@ -108,10 +115,10 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 
 | Layer | Technology | Role |
 |---|---|---|
-| Frontend | React 18 + Tailwind CSS | Component-based UI, responsive design |
+| Frontend | React 19 + Tailwind CSS | Component-based UI, responsive design |
 | Routing | React Router | Client-side navigation |
 | Backend | Python 3.11 + FastAPI | REST API, business logic, async support |
-| Database | PostgreSQL 15 | Relational data persistence |
+| Database | PostgreSQL 16 | Relational data persistence |
 | Authentication | JWT | Stateless user authentication |
 | Film data | TMDB API | Film metadata, posters, streaming availability |
 | AI recommendations | Mistral AI | Mood-based LLM recommendation engine |
@@ -142,6 +149,10 @@ CinéMood uses PostgreSQL as its relational database. Film metadata is not store
 ```
 holbertonschool-CineMood/
 ├── README.md
+├── docker-compose.yml
+├── clean.sh
+├── setup.sh
+├── start.sh
 ├── docs/
 │   ├── diagrams/
 │   │   ├── Architecture.md
@@ -152,7 +163,7 @@ holbertonschool-CineMood/
 │   ├── Stage 1 Report - Team Formation, Brainstorming and MVP.pdf
 │   ├── Stage 2 Report - Project Planning.pdf
 │   └── Stage 3 Report - Technical Documentation.pdf
-├── frontend/
+└── frontend/               ← Sprint 2
 │   ├── public/
 │   └── src/
 │       ├── components/
@@ -171,61 +182,114 @@ holbertonschool-CineMood/
 │       └── services/
 │           └── api.js
 └── backend/
+    ├── alembic/
     ├── app/
+    │   ├── main.py
+    │   ├── database.py
     │   ├── models/
     │   ├── routes/
     │   ├── services/
     │   └── repositories/
-    └── tests/
-        ├── test_auth.py
-        ├── test_films.py
-        ├── test_users.py
-        └── test_recommendations.py
+    ├── tests/
+    ├── requirements.txt
+    └── .env.example
 ```
 
 ---
 
 ## Getting Started
 
-> The project is currently in the documentation and planning phase (Stage 3).<br>
-> This section will be updated once development begins.
-
 ### Prerequisites
 
-- Node.js >= 18
-- Python >= 3.11
-- PostgreSQL >= 15
-- A [TMDB API key](https://www.themoviedb.org/settings/api)
-- A [Mistral AI API key](https://console.mistral.ai/)
+Before running the setup script, make sure the following tools are installed:
 
-### Installation
+- Python >= 3.11
+- Node.js >= 18
+- Docker Engine with Docker Compose v2
+- A [TMDB API key](https://www.themoviedb.org/settings/api) *(required from Sprint 2)*
+- A [Mistral AI API key](https://console.mistral.ai/) *(required from Sprint 5)*
+
+> The setup script checks that Python, Node.js, Docker, and Docker Compose are available.  
+> It also creates the virtual environment, installs project dependencies, creates local `.env` files, and starts the PostgreSQL container.
+
+If Docker is not installed on Ubuntu, you can install it with:
+```bash
+sudo apt update
+sudo apt install ca-certificates curl -y
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+```
+
+Then log out and log back in before running:
+```bash
+./setup.sh
+```
+
+### One time installation
+
+#### Clone the repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/FelixBesancon/holbertonschool-CineMood.git
 cd holbertonschool-CineMood
 ```
 
-#### Backend
+#### Run the setup script
+
+Run **`setup.sh`** to initialize the project in one command.<br>
+This script handles everything in one command, for Frontend and Backend initialization:
+- Checks Python 3.11+, Node.js 18+, Docker, and Docker Compose are available
+- Creates the Python virtual environment into backend directory
+- Installs all backend dependencies
+- Installs all frontend dependencies
+- Creates your `.env` files from `.env.example`
+- Starts the PostgreSQL container via Docker
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+./setup.sh
 ```
 
-#### Frontend
+### Each working session
 
+- **Activate the virtual environment**
 ```bash
-cd frontend
-npm install
-npm run dev
+source backend/venv/bin/activate
 ```
 
-The app will be available at `http://localhost:5173`
+- **Start both servers (frontend + backend)**
+```bash
+./start.sh
+```
+
+The app will be available at `http://localhost:5173` *(frontend - Sprint 2)*
 The API will be available at `http://localhost:8000`
 The API documentation (Swagger UI) will be available at `http://localhost:8000/docs`
+
+### Cleaning the project
+
+From time to time, you can run the clean script to remove generated files and temporary caches:
+```bash
+./clean.sh
+```
+
+This script removes common development artifacts such as:
+- Python cache files (`__pycache__`, `.pyc`, `.pyo`)
+- pytest cache and coverage reports
+- frontend build artifacts (`dist`, `dist-ssr`)
+- OS-generated files such as (`.DS_Store`, `Thumbs.db`)
+
+For a complete reset of the local development environment, use:
+```bash
+./clean.sh --hard
+```
+
+**Caution: hard mode removes reinstallable local files**:
+- `backend/venv`
+- `frontend/node_modules`
+- backend and frontend `.env` files
+
+> ⚠️ **Note:** Do not run `./clean.sh --hard` while the virtual environment is active.<br>
+Run `deactivate` first.
 
 ---
 
@@ -261,10 +325,71 @@ The API documentation (Swagger UI) will be available at `http://localhost:8000/d
 ### Branch Strategy
 
 ```
-main          → stable, production-ready code
-develop       → integration branch
-feature/s1-1-backend-setup      → one branch per issue
-fix/s6-1-auth-bug               → bug fixes
+main        → stable, production-ready code
+develop     → integration branch
+feature/*   → one branch per issue, created from develop
+fix/*       → bug fixes, created from develop
+```
+
+### Step-by-step workflow for each issue
+
+#### Start a new issue
+
+Always start from an up-to-date develop:
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/s1-2-frontend-setup
+```
+
+#### Work and commit regularly
+
+```bash
+# Stage your changes
+git add .
+
+# Commit with a conventional message
+git commit -m "chore(frontend): initialize React project with Vite"
+```
+
+#### Before opening a Pull Request
+
+Sync with develop to catch any changes made in the meantime:
+
+```bash
+git fetch origin
+git merge origin/develop
+# If nano opens for the merge commit message: Ctrl+X then Enter
+```
+
+Then push your branch:
+
+```bash
+git push origin feature/s1-2-frontend-setup
+```
+
+#### Open a Pull Request on GitHub
+
+- Go to your repository on GitHub
+- Click **New Pull Request**
+- Set `base: develop` ← `compare: feature/s1-2-frontend-setup`
+- Add a title and description
+- Click **Merge Pull Request**
+
+#### After the merge
+
+Back in your terminal — never merge locally, always pull:
+
+```bash
+git checkout develop
+git pull origin develop
+
+# Delete the feature branch locally
+git branch -d feature/s1-2-frontend-setup
+
+# Delete it on GitHub
+git push origin --delete feature/s1-2-frontend-setup
 ```
 
 ### Commit Convention
@@ -283,7 +408,7 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 | `test` | Adding or updating tests |
 | `refactor` | Code change without feature or fix |
 | `chore` | Setup, config, dependencies |
-| `style` | Formatting, missing semicolons, etc. |
+| `style` | Formatting, missing semicolons, etc... |
 
 **Examples:**
 ```bash
@@ -303,13 +428,6 @@ git commit -m "feat(auth): add user registration endpoint (closes #3)"
 ```
 
 This automatically closes the issue and moves it to `Done` on the GitHub Projects board.
-
-### Pull Request Process
-
-All merges into `develop` go through a pull request with:
-- A description of what was implemented
-- Reference to the related issue
-- Confirmation that tests pass
 
 ---
 
@@ -367,7 +485,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 
 ### MVP (current scope)
 - [x] Project planning and technical documentation
-- [ ] User authentication (Sprint 1)
+- [x] User authentication (Sprint 1)
 - [ ] Film search and logging with tags (Sprint 2)
 - [ ] Watchlist and personal dashboard (Sprint 3)
 - [ ] Mood questionnaire and swipe interface (Sprint 4)
