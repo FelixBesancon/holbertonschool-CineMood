@@ -11,7 +11,7 @@ a UUID primary key, a creation timestamp, and a last-updated timestamp.
 from app.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import func
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime, timezone
 
 
@@ -25,8 +25,8 @@ class BaseModel(Base):
     avoiding duplication across the codebase.
 
     Attributes:
-        id (UUID): Primary key, generated automatically by PostgreSQL
-            via gen_random_uuid(). Never modified after creation.
+        id (UUID): Primary key, generated automatically by Python
+            via uuid4(). Never modified after creation.
         created_at (datetime): Timestamp set by PostgreSQL at insertion.
             Never modified after creation.
         updated_at (datetime): Timestamp set by PostgreSQL at insertion,
@@ -41,7 +41,7 @@ class BaseModel(Base):
 
     id: Mapped[UUID] = mapped_column(
         primary_key=True,
-        server_default=func.gen_random_uuid()
+        default=uuid4
     )
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now()
