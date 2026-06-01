@@ -22,6 +22,11 @@ if [ ! -d "frontend/node_modules" ]; then
     exit 1
 fi
 
+# Start PostgreSQL via Docker (safe to call if already running)
+echo "Starting PostgreSQL..."
+docker compose up -d
+echo "PostgreSQL ready."
+
 # Start the backend in the background
 echo "Starting backend..."
 cd backend

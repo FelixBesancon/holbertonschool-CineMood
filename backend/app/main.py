@@ -18,10 +18,14 @@ app = FastAPI(
     version="0.1.0"
 )
 
+# CORS configuration for development.
+# allow_origins=["*"] accepts requests from any origin — fine for local dev.
+# allow_credentials is NOT set: it is only needed for cookie-based auth.
+# CinéMood uses JWT in the Authorization header, not cookies, so Axios never
+# sends credentials cross-origin and this option is not required.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
