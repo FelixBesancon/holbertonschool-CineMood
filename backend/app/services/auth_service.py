@@ -15,9 +15,8 @@ Functions:
     - login_user: handle the user login flow
 """
 
-from dotenv import load_dotenv
-import os
 from sqlalchemy.orm import Session
+from app.config import settings  # centralized environment configuration
 from app.repositories import user_repository
 from app.schemas.user import (
     UserCreate, UserLogin, UserResponse, AuthResponse
@@ -27,15 +26,8 @@ import bcrypt
 import jwt
 from fastapi import HTTPException, status
 
-
-load_dotenv()
-SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-if not SECRET_KEY:
-    raise RuntimeError(
-        "SECRET_KEY environment variable is not set.\n"
-        + "Check your .env file or run:\n"
-        + "    ./start.sh"
-    )
+# SECRET_KEY is validated at startup by pydantic_settings — guaranteed non-empty
+SECRET_KEY: str = settings.SECRET_KEY
 
 
 def register_user(db: Session, payload: UserCreate) -> AuthResponse:

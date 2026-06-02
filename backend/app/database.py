@@ -8,21 +8,10 @@ routes to access the database session.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Database URL is read from the environment - never hardcoded
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL environment variable is not set. Check your .env file."
-        )
+from app.config import settings  # centralized environment configuration
 
 # SQLAlchemy engine - manages the connection pool to PostgreSQL
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.DATABASE_URL)
 
 # Session factory - each request gets its own session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
