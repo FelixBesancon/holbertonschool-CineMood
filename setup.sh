@@ -101,7 +101,25 @@ fi
 # 9. Start PostgreSQL via Docker
 echo "Starting PostgreSQL..."
 docker compose up -d
+
+echo "Waiting for PostgreSQL to be ready..."
+until docker exec cinemood_db pg_isready -U cinemood -d cinemood > /dev/null 2>&1; do
+    sleep 1
+done
 echo "PostgreSQL running on port 5432."
+
+# 10. Run database migrations
+echo "Running database migrations..."
+cd backend
+source venv/bin/activate
+alembic upgrade head
+echo "Migrations applied."
+
+# 11. Seed reference data (tags)
+echo "Seeding tags..."
+python seeds/seed_tag.py
+echo "Tags seeded."
+cd ..
 
 echo ""
 echo "=== Setup complete ==="
