@@ -17,6 +17,9 @@ Functions:
 
 from typing import Any
 import re
+from pydantic import EmailStr, TypeAdapter
+
+_email_adapter = TypeAdapter(EmailStr)
 
 
 def is_string(value: Any, name: str) -> None:
@@ -57,20 +60,22 @@ def is_between(value: int, name: str, min_value: int, max_value: int) -> None:
 
 def email_format(value: str) -> None:
     """
-    Validate that a string matches a basic email format.
+    Validate that a string is a well-formed email address.
 
-    Checks for the presence of a local part, an @ symbol, a domain,
-    and a top-level domain. Does not perform DNS resolution.
+    Delegates to Pydantic's EmailStr via TypeAdapter, which uses the
+    email-validator library for RFC-compliant validation including
+    local part, domain, and TLD checks. Does not perform DNS resolution.
 
     Args:
         value (str): Email address to validate.
 
     Raises:
-        ValueError: If the string does not match the expected pattern.
+        ValueError: If the string is not a valid email address.
     """
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+    try:
+        _email_adapter.validate_python(value)
+    except Exception:
         raise ValueError("Invalid Email format")
-    return
 
 
 def password_strength(value: str) -> None:
