@@ -47,7 +47,7 @@ def _get_headers() -> dict:
     }
 
 
-def search_movie(query: str) -> list[dict]:
+async def search_movie(query: str) -> list[dict]:
     """
     Search the TMDB catalog by movie title.
 
@@ -72,7 +72,7 @@ def search_movie(query: str) -> list[dict]:
         httpx.RequestError: If the request cannot be sent (network error,
             timeout, etc.).
     """
-    with httpx.Client() as client:
+    async with httpx.AsyncClient() as client:
         headers = _get_headers()
         params = {
             'query': query,
@@ -80,12 +80,12 @@ def search_movie(query: str) -> list[dict]:
             'language': "en-US"
         }
         url = TMDB_BASE_URL + "/search/movie"
-        response = client.get(url, headers=headers, params=params)
+        response = await client.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json().get("results", [])
 
 
-def get_movie_details(tmdb_id: int) -> dict:
+async def get_movie_details(tmdb_id: int) -> dict:
     """
     Fetch full metadata for a single movie by its TMDB identifier.
 
@@ -106,19 +106,19 @@ def get_movie_details(tmdb_id: int) -> dict:
             (e.g. 404 if the tmdb_id does not exist).
         httpx.RequestError: If the request cannot be sent.
     """
-    with httpx.Client() as client:
+    async with httpx.AsyncClient() as client:
         headers = _get_headers()
         params = {
             'language': "en-US",
             'append_to_response': "credits"
         }
         url = TMDB_BASE_URL + f"/movie/{tmdb_id}"
-        response = client.get(url, headers=headers, params=params)
+        response = await client.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json()
 
 
-def get_watch_providers(tmdb_id: int, country: str = "FR") -> dict:
+async def get_watch_providers(tmdb_id: int, country: str = "FR") -> dict:
     """
     Fetch streaming availability for a movie in a given country.
 
@@ -143,9 +143,9 @@ def get_watch_providers(tmdb_id: int, country: str = "FR") -> dict:
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
         httpx.RequestError: If the request cannot be sent.
     """
-    with httpx.Client() as client:
+    async with httpx.AsyncClient() as client:
         headers = _get_headers()
         url = TMDB_BASE_URL + f"/movie/{tmdb_id}/watch/providers"
-        response = client.get(url, headers=headers)
+        response = await client.get(url, headers=headers)
         response.raise_for_status()
         return response.json().get("results", {}).get(country, {})
