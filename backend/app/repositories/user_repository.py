@@ -17,6 +17,7 @@ Functions:
 from app.models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from uuid import UUID
 
 
 def get_by_email(db: Session, email: str) -> User | None:
@@ -45,19 +46,26 @@ def get_by_id(db: Session, user_id: str) -> User | None:
 
     Used by the authentication dependency to load the current user
     from the JWT subject claim. The id is received as a string because
-    JWT payloads are always strings; SQLAlchemy handles the comparison
-    with the UUID column transparently.
+    JWT payloads are always strings. It is explicitly converted to a
+    UUID object before the comparison so the query works correctly with
+    both PostgreSQL and SQLite (SQLite's UUID type requires a UUID object,
+    not a raw string).
 
     Args:
         db (Session): SQLAlchemy database session.
         user_id (str): UUID of the user as a string.
 
     Returns:
-        User: The matching user instance, or None if not found.
+        User: The matching user instance, or None if not found or
+            if user_id is not a valid UUID string.
     """
+    try:
+        uid = UUID(user_id)
+    except (ValueError, AttributeError):
+        return None
     return db.execute(
         select(User)
-        .where(User.id == user_id)
+        .where(User.id == uid)
     ).scalar_one_or_none()
 
 
