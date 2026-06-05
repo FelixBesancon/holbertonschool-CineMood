@@ -10,6 +10,8 @@ from TMDB before returning it to the frontend.
 
 Schemas defined here:
     - Film: represents the full metadata of a single movie
+    - FilmWithStatus: wraps Film with a flag indicating whether the
+      authenticated user has already logged this film
 """
 from pydantic import BaseModel
 
@@ -55,3 +57,19 @@ class Film(BaseModel):
     cast: list[str] | None = None
     runtime: int | None = None
     streaming_platforms: list[str] | None = None
+
+
+class FilmWithStatus(BaseModel):
+    """
+    Schema wrapping a Film with the authenticated user's history status.
+
+    Returned by GET /films/{tmdb_id} so the frontend can render the
+    correct action button (log vs. remove) without a second request.
+
+    Attributes:
+        film (Film): Full metadata of the movie.
+        in_history (bool): True if the current user has already logged
+            this film in their viewing history.
+    """
+    film: Film
+    in_history: bool

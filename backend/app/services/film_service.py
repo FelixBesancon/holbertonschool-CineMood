@@ -12,10 +12,15 @@ directly.
 Functions:
     - search_films: search the TMDB catalog and return a list of Films
     - get_film_details: fetch full metadata for a single film
+    - get_film_with_status: fetch full metadata and indicate if the film
+      is already in the authenticated user's viewing history
 """
 
-from app.schemas.film import Film
+from sqlalchemy.orm import Session
+from app.schemas.film import Film, FilmWithStatus
 from app.external import tmdb_client
+from app.repositories import viewing_history_repository
+from app.models.user import User
 
 # Base URL for TMDB poster images — w500 is a good balance for the frontend
 POSTER_PATH_BASE_URL = "https://image.tmdb.org/t/p/w500"
@@ -128,3 +133,34 @@ async def get_film_details(tmdb_id: int) -> Film:
         runtime=details.get("runtime") or None,
         streaming_platforms=streaming_platforms or None,
     )
+
+
+async def get_film_with_status(
+    db: Session, user: User, tmdb_id: int
+) -> FilmWithStatus:
+    """
+    Fetch full metadata for a single film and indicate its history status.
+
+    Combines get_film_details() with a database lookup to tell the frontend
+    whether the authenticated user has already logged this film. This allows
+    the film detail page to render the correct UI state (log vs. remove)
+    in a single request.
+
+    Args:
+        db (Session): SQLAlchemy database session, injected by FastAPI.
+        user (User): The authenticated user, injected by get_current_user.
+        tmdb_id (int): TMDB unique identifier of the movie.
+
+    Returns:
+        FilmWithStatus: The fully populated Film object alongside
+            in_history (True if the user has logged this film).
+
+    Raises:
+        httpx.HTTPStatusError: If TMDB returns a non-2xx response.
+        httpx.RequestError: If the request cannot be sent.
+    """
+    film = await get_film_details(tmdb_id)
+    in_history = viewing_history_repository.get_by_user_and_tmdb(
+        db, user.id, tmdb_id
+    ) is not None
+    return FilmWithStatus(film=film, in_history=in_history)
