@@ -76,6 +76,10 @@ class ViewingHistoryEntryResponse(BaseModel):
         created_at (datetime): Timestamp of entry creation.
         updated_at (datetime): Timestamp of entry's last modification.
         tmdb_id (int): TMDB identifier of the logged film.
+        title (str, optional): Film title cached at log time. Avoids a
+            TMDB call when displaying the history list.
+        poster_url (str, optional): Full poster URL cached at log time.
+            None if TMDB had no poster for this film.
         tags (list[TagResponse]): Tags attached to this entry.
         prestige_tier (PrestigeTier, optional): Rating assigned to the film.
         personal_note (str, optional): Free-text note from the user.
@@ -86,6 +90,8 @@ class ViewingHistoryEntryResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     tmdb_id: int
+    title: str | None = None
+    poster_url: str | None = None
     tags: list[TagResponse]
     prestige_tier: PrestigeTier | None = None
     personal_note: str | None = None

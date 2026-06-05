@@ -9,6 +9,7 @@ All functions receive a SQLAlchemy Session as their first argument,
 injected by FastAPI via the get_db() dependency.
 
 Functions:
+    - get_all_tags: fetch all available tags
     - get_tags_by_ids: fetch Tag objects from a list of IDs
     - create: persist a new entry and return the created instance
     - get_by_user: retrieve all entries for a given user
@@ -21,6 +22,24 @@ from app.models.tag import Tag
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
+
+
+def get_all_tags(db: Session) -> list[Tag]:
+    """
+    Fetch all tags available in the application.
+
+    Used by GET /tags to let the frontend display the full list of
+    mood/quality labels a user can attach to a viewing history entry.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        list[Tag]: All Tag instances ordered by id.
+    """
+    return db.execute(
+        select(Tag).order_by(Tag.id)
+    ).scalars().all()
 
 
 def get_tags_by_ids(db: Session, tag_ids: list[int]) -> list[Tag]:
@@ -88,10 +107,13 @@ def get_by_user(db: Session, user_id: UUID) -> list[ViewingHistoryEntry]:
         list[ViewingHistoryEntry]: All entries belonging to the user.
             Returns an empty list if the user has no history.
     """
+    # unique() is required when lazy="joined" is used on a collection relationship.
+    # The JOIN produces one row per tag, so SQLAlchemy 2.0 requires explicit
+    # deduplication before converting to a Python list.
     return db.execute(
         select(ViewingHistoryEntry)
         .where(ViewingHistoryEntry.user_id == user_id)
-    ).scalars().all()
+    ).unique().scalars().all()
 
 
 def get_by_user_and_tmdb(
@@ -112,11 +134,14 @@ def get_by_user_and_tmdb(
     Returns:
         ViewingHistoryEntry: The matching entry, or None if not found.
     """
+    # unique() required for the same reason as get_by_user: lazy="joined"
+    # on tags can produce multiple rows for a single entry.
+    # scalar_one_or_none() doesn't accept unique(), so we chain through scalars().
     return db.execute(
         select(ViewingHistoryEntry)
         .where(ViewingHistoryEntry.user_id == user_id)
         .where(ViewingHistoryEntry.tmdb_id == tmdb_id)
-    ).scalar_one_or_none()
+    ).unique().scalars().one_or_none()
 
 
 def remove(db: Session, user_id: UUID, tmdb_id: int) -> bool:

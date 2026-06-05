@@ -126,7 +126,7 @@ async def get_film(
         )
 
 @router.post("/log", response_model=ViewingHistoryEntryResponse, status_code=status.HTTP_201_CREATED)
-def log_film(
+async def log_film(
     payload: ViewingHistoryEntryCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -134,19 +134,23 @@ def log_film(
     """
     Log a film in the authenticated user's viewing history.
 
+    Fetches title and poster from TMDB at log time so the history list
+    can be displayed without additional API calls.
+
     Args:
         payload (ViewingHistoryEntryCreate): tmdb_id, optional tag_ids,
             optional prestige_tier, and optional personal_note.
 
     Returns:
         ViewingHistoryEntryResponse: The created entry with all fields
-            populated, including resolved tag objects.
+            populated, including title, poster_url, and resolved tags.
 
     Raises:
         HTTPException 401: If the request is not authenticated.
         HTTPException 422: If the payload fails validation.
+        HTTPException 503: If TMDB is unreachable.
     """
-    return viewing_history_service.create_entry(db, current_user, payload)
+    return await viewing_history_service.create_entry(db, current_user, payload)
 
 
 @router.delete("/log/{tmdb_id}", status_code=status.HTTP_200_OK)

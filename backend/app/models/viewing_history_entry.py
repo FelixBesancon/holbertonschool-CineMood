@@ -44,6 +44,10 @@ class ViewingHistoryEntry(BaseModel):
         user_id (UUID): Foreign key to the user who logged this entry.
         tmdb_id (int): TMDB identifier of the film. Not a foreign key —
             film metadata is fetched on demand from TMDB, never stored.
+        title (str, optional): Film title cached at log time to avoid
+            a TMDB call when displaying the history list.
+        poster_url (str, optional): Full poster URL cached at log time
+            for the same reason. None if TMDB had no poster.
         tags (list[Tag]): Mood/quality labels chosen by the user.
             Loaded eagerly (lazy="joined") since tags are always needed
             when displaying a history entry.
@@ -62,13 +66,22 @@ class ViewingHistoryEntry(BaseModel):
     tmdb_id: Mapped[int] = mapped_column(
         nullable=False
     )
+    title: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
+    poster_url: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
     tags: Mapped[list["Tag"]] = relationship(
         "Tag",
         secondary=viewing_history_tags,
         lazy="joined"
     )
     prestige_tier: Mapped[PrestigeTier | None] = mapped_column(
-        Enum(PrestigeTier),
+        # values_callable tells SQLAlchemy to store the VALUE string ("Platinum")
+        # instead of the Python member name ("PLATINUM"). This must match the
+        # PostgreSQL enum type created by the migration, which uses the values.
+        Enum(PrestigeTier, values_callable=lambda e: [x.value for x in e]),
         nullable=True
     )
     personal_note: Mapped[str | None] = mapped_column(

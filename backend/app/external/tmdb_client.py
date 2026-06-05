@@ -8,8 +8,6 @@ the API directly.
 
 TMDB is used as the single source of truth for film metadata: titles,
 posters, synopses, cast, runtime, genres, and streaming availability.
-No film data is stored locally — only the tmdb_id is persisted in the
-database, and full details are fetched on demand.
 
 Authentication uses a Read Access Token (Bearer token), loaded from the
 environment via pydantic_settings. The token is injected automatically
@@ -17,6 +15,12 @@ into every request by _get_headers().
 
 Base URL: https://api.themoviedb.org/3
 Documentation: https://developer.themoviedb.org/reference/intro/getting-started
+
+Functions:
+    - search_movie: search the TMDB catalog by title
+    - get_movie_basic: fetch title and poster for a single film (lightweight)
+    - get_movie_details: fetch full metadata including credits
+    - get_watch_providers: fetch streaming availability by country
 """
 
 import httpx
@@ -83,6 +87,34 @@ async def search_movie(query: str) -> list[dict]:
         response = await client.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json().get("results", [])
+
+
+async def get_movie_basic(tmdb_id: int) -> dict:
+    """
+    Fetch the title and poster_path for a single film.
+
+    Lighter alternative to get_movie_details() — does not request
+    credits, so it is faster and should be used when only title and
+    poster are needed (e.g. at viewing history log time).
+
+    Args:
+        tmdb_id (int): The TMDB unique identifier of the movie.
+
+    Returns:
+        dict: TMDB movie object containing at minimum title and
+            poster_path. poster_path may be None if unavailable.
+
+    Raises:
+        httpx.HTTPStatusError: If TMDB returns a non-2xx response.
+        httpx.RequestError: If the request cannot be sent.
+    """
+    async with httpx.AsyncClient() as client:
+        headers = _get_headers()
+        params = {'language': "en-US"}
+        url = TMDB_BASE_URL + f"/movie/{tmdb_id}"
+        response = await client.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json()
 
 
 async def get_movie_details(tmdb_id: int) -> dict:

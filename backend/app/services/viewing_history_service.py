@@ -9,6 +9,7 @@ Input validation is handled upstream by Pydantic schemas, and data
 persistence is delegated to the viewing history repository.
 
 Functions:
+    - get_all_tags: return all available tags
     - create_entry: log a new film in the user's viewing history
     - get_history: retrieve the full viewing history of a user
     - remove_entry: remove a film from the user's viewing history
@@ -17,20 +18,44 @@ Functions:
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.repositories import viewing_history_repository
-from app.schemas.viewing_history import ViewingHistoryEntryCreate, ViewingHistoryEntryResponse
+from app.schemas.viewing_history import (
+    TagResponse, ViewingHistoryEntryCreate, ViewingHistoryEntryResponse
+)
 from app.models.viewing_history_entry import ViewingHistoryEntry
 from app.models.user import User
+from app.external import tmdb_client
+
+# Reuse the same image base URL as film_service
+_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 
-def create_entry(
+def get_all_tags(db: Session) -> list[TagResponse]:
+    """
+    Return all available tags as TagResponse objects.
+
+    Used by GET /tags so the frontend can display the full list of
+    mood/quality labels before the user creates a viewing history entry.
+
+    Args:
+        db (Session): SQLAlchemy database session, injected by FastAPI.
+
+    Returns:
+        list[TagResponse]: All tags ordered by id.
+    """
+    tags = viewing_history_repository.get_all_tags(db)
+    return [TagResponse.model_validate(tag) for tag in tags]
+
+
+async def create_entry(
     db: Session, user: User, payload: ViewingHistoryEntryCreate
 ) -> ViewingHistoryEntryResponse:
     """
     Log a new film in the user's viewing history.
 
-    Resolves tag IDs to Tag instances, constructs the ViewingHistoryEntry,
-    and delegates persistence to the repository. SQLAlchemy manages the
-    viewing_history_tags join table automatically on commit.
+    Fetches the film title and poster from TMDB at log time so the
+    history list can be displayed without additional API calls later.
+    Resolves tag IDs to Tag instances and delegates persistence to
+    the repository.
 
     Args:
         db (Session): SQLAlchemy database session, injected by FastAPI.
@@ -40,12 +65,23 @@ def create_entry(
 
     Returns:
         ViewingHistoryEntryResponse: The created entry with all fields
-            populated, including resolved tag objects.
+            populated, including title, poster_url, and resolved tags.
+
+    Raises:
+        httpx.HTTPStatusError: If TMDB returns a non-2xx response.
+        httpx.RequestError: If the TMDB request cannot be sent.
     """
+    film_data = await tmdb_client.get_movie_basic(payload.tmdb_id)
+    title = film_data.get("title")
+    poster_path = film_data.get("poster_path")
+    poster_url = _POSTER_BASE_URL + poster_path if poster_path else None
+
     tags = viewing_history_repository.get_tags_by_ids(db, payload.tag_ids)
     entry = ViewingHistoryEntry(
         user_id=user.id,
         tmdb_id=payload.tmdb_id,
+        title=title,
+        poster_url=poster_url,
         tags=tags,
         prestige_tier=payload.prestige_tier,
         personal_note=payload.personal_note
