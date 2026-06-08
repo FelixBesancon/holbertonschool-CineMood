@@ -15,7 +15,10 @@ Schemas defined here:
       and login
 """
 
-from pydantic import BaseModel, BeforeValidator, AfterValidator
+from pydantic import (
+    BaseModel, BeforeValidator,
+    AfterValidator, ConfigDict
+    )
 from typing import Any, Optional, Annotated
 from uuid import UUID
 from datetime import datetime
@@ -196,7 +199,7 @@ class UserResponse(BaseModel):
         username (str): User's display name.
         email (str): User's email address.
     """
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     created_at: datetime

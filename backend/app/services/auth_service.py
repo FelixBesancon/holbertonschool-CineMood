@@ -15,9 +15,8 @@ Functions:
     - login_user: handle the user login flow
 """
 
-from dotenv import load_dotenv
-import os
 from sqlalchemy.orm import Session
+from app.config import settings  # centralized environment configuration
 from app.repositories import user_repository
 from app.schemas.user import (
     UserCreate, UserLogin, UserResponse, AuthResponse
@@ -25,17 +24,17 @@ from app.schemas.user import (
 from app.models.user import User
 import bcrypt
 import jwt
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 
+# SECRET_KEY is validated at startup by pydantic_settings — guaranteed non-empty
+SECRET_KEY: str = settings.SECRET_KEY
 
-load_dotenv()
-SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-if not SECRET_KEY:
-    raise RuntimeError(
-        "SECRET_KEY environment variable is not set.\n"
-        + "Check your .env file or run:\n"
-        + "    ./start.sh"
-    )
+# Signing algorithm used for all JWT tokens issued by this service
+ALGORITHM = "HS256"
+
+# Access token lifetime — short enough to limit the damage of a stolen token
+TOKEN_EXPIRY_HOURS = 24
 
 
 def register_user(db: Session, payload: UserCreate) -> AuthResponse:
@@ -87,9 +86,12 @@ def register_user(db: Session, payload: UserCreate) -> AuthResponse:
     return AuthResponse(
         user=UserResponse.model_validate(created_user),
         token=jwt.encode(
-            {"sub": str(created_user.id)},
+            {
+                "sub": str(created_user.id),
+                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=TOKEN_EXPIRY_HOURS)
+            },
             SECRET_KEY,
-            algorithm="HS256"
+            ALGORITHM
         )
     )
 
@@ -135,8 +137,11 @@ def login_user(db: Session, payload: UserLogin) -> AuthResponse:
     return AuthResponse(
         user=UserResponse.model_validate(existing_user),
         token=jwt.encode(
-            {"sub": str(existing_user.id)},
+            {
+                "sub": str(existing_user.id),
+                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=TOKEN_EXPIRY_HOURS)
+            },
             SECRET_KEY,
-            algorithm="HS256"
+            ALGORITHM
         )
     )

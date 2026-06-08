@@ -18,7 +18,7 @@ from app.schemas.user import (
     )
 from app.services import auth_service
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
