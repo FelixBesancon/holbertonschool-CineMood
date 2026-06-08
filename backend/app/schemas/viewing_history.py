@@ -13,7 +13,7 @@ Schemas defined here:
     - ViewingHistoryEntryResponse: shapes an entry returned in API responses
 """
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime
 from app.models.prestige_tier import PrestigeTier
@@ -53,11 +53,12 @@ class ViewingHistoryEntryCreate(BaseModel):
             Defaults to an empty list (no tags).
         prestige_tier (PrestigeTier, optional): Rating assigned to the film.
         personal_note (str, optional): Free-text note from the user.
+            Maximum 500 characters.
     """
     tmdb_id: int
     tag_ids: list[int] = []
     prestige_tier: PrestigeTier | None = None
-    personal_note: str | None = None
+    personal_note: str | None = Field(default=None, max_length=500)
 
 
 class ViewingHistoryEntryResponse(BaseModel):

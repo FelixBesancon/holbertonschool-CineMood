@@ -70,6 +70,9 @@ class FilmWithStatus(BaseModel):
         film (Film): Full metadata of the movie.
         in_history (bool): True if the current user has already logged
             this film in their viewing history.
+        in_watchlist (bool): True if the current user has already added
+            this film in their watchlist.
     """
     film: Film
     in_history: bool
+    in_watchlist: bool

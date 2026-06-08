@@ -17,7 +17,7 @@ from app.database import Base
 from app.models.base_model import BaseModel
 from app.models.prestige_tier import PrestigeTier
 from app.models.tag import Tag
-from sqlalchemy import Table, Column, ForeignKey, Text, Enum
+from sqlalchemy import Table, Column, ForeignKey, Text, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID
 
@@ -58,6 +58,9 @@ class ViewingHistoryEntry(BaseModel):
     """
 
     __tablename__ = "viewing_history_entries"
+    __table_args__ = (
+        UniqueConstraint("user_id", "tmdb_id", name="uq_history_user_film"),
+    )
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
