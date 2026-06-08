@@ -150,7 +150,23 @@ async def log_film(
         HTTPException 422: If the payload fails validation.
         HTTPException 503: If TMDB is unreachable.
     """
-    return await viewing_history_service.create_entry(db, current_user, payload)
+    try:
+        return await viewing_history_service.create_entry(db, current_user, payload)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Film {payload.tmdb_id} not found."
+            )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Film service temporarily unavailable."
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not reach the film database. Please try again later."
+        )
 
 
 @router.delete("/log/{tmdb_id}", status_code=status.HTTP_200_OK)
