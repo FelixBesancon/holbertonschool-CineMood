@@ -19,11 +19,11 @@ Functions:
 from sqlalchemy.orm import Session
 from app.schemas.film import Film, FilmWithStatus
 from app.external import tmdb_client
-from app.repositories import viewing_history_repository
+from app.repositories import viewing_history_repository, watchlist_repository
 from app.models.user import User
 
 # Base URL for TMDB poster images — w500 is a good balance for the frontend
-POSTER_PATH_BASE_URL = "https://image.tmdb.org/t/p/w500"
+_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 # Number of cast members included in film detail responses
 CAST_LIMIT = 5
@@ -40,7 +40,7 @@ def _build_poster_url(poster_path: str | None) -> str | None:
     """Return the full poster URL from a TMDB poster_path, or None."""
     if poster_path is None:
         return None
-    return POSTER_PATH_BASE_URL + poster_path
+    return _POSTER_BASE_URL + poster_path
 
 
 async def search_films(query: str) -> list[Film]:
@@ -153,7 +153,8 @@ async def get_film_with_status(
 
     Returns:
         FilmWithStatus: The fully populated Film object alongside
-            in_history (True if the user has logged this film).
+            in_history (True if the user has logged this film) and
+            in_watchlist (True if the user has saved this film to watch).
 
     Raises:
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
@@ -163,4 +164,7 @@ async def get_film_with_status(
     in_history = viewing_history_repository.get_by_user_and_tmdb(
         db, user.id, tmdb_id
     ) is not None
-    return FilmWithStatus(film=film, in_history=in_history)
+    in_watchlist = watchlist_repository.get_by_user_and_tmdb(
+        db, user.id, tmdb_id
+    ) is not None
+    return FilmWithStatus(film=film, in_history=in_history, in_watchlist=in_watchlist)
