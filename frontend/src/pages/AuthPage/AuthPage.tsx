@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
+import { AxiosError } from 'axios'
+
+interface ApiErrorDetail {
+  msg: string
+}
 
 /**
  * Parse an Axios error into a human-readable string.
@@ -15,11 +20,8 @@ import api from '../../services/api'
  *       { "detail": [{ "msg": "Value error, ...", "loc": [...] }] }  ← array
  *
  *   - No response at all: network error or backend not running.
- *
- * @param {Error} err - The Axios error caught in the try/catch block.
- * @returns {string} A displayable error message.
  */
-function parseApiError(err) {
+function parseApiError(err: AxiosError<{ detail?: string | ApiErrorDetail[] }>): string {
   if (!err.response) {
     return 'Unable to reach the server. Make sure the backend is running.'
   }
@@ -32,11 +34,10 @@ function parseApiError(err) {
   }
 
   // Pydantic validation error — detail is an array of error objects.
-  // Each object has a "msg" field like "Value error, Invalid Email format".
   // We strip the "Value error, " prefix added by Pydantic v2.
   if (Array.isArray(detail)) {
     return detail
-      .map(e => e.msg.replace('Value error, ', ''))
+      .map((e) => e.msg.replace('Value error, ', ''))
       .join(' — ')
   }
 
@@ -55,35 +56,23 @@ function parseApiError(err) {
  *   - Register: POST /auth/register → then auto-login → redirect to /dashboard
  */
 function AuthPage() {
-  // 'login' or 'register' — controls the form layout and submit behaviour
-  const [mode, setMode] = useState('login')
-
-  // Controlled inputs — one state per field
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [age, setAge] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-
-  // Holds the error message to display below the form, if any
   const [error, setError] = useState('')
 
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  /**
-   * Handle form submission for both login and registration.
-   * Prevents the default browser form submission, calls the
-   * appropriate API endpoint, then redirects to the dashboard.
-   */
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
 
     try {
       if (mode === 'register') {
-        // Register the new account first.
-        // Age is optional — parse to integer if provided, null otherwise.
         await api.post('/auth/register', {
           first_name: firstName,
           last_name: lastName,
@@ -91,17 +80,14 @@ function AuthPage() {
           password: password,
           age: age ? parseInt(age, 10) : null
         })
-        // Auto-login immediately after successful registration
         await login(email, password)
       } else {
-        // Login directly with existing credentials
         await login(email, password)
       }
 
       navigate('/dashboard')
     } catch (err) {
-      // Display the detail message from the API, or a generic fallback
-      setError(parseApiError(err))
+      setError(parseApiError(err as AxiosError<{ detail?: string | ApiErrorDetail[] }>))
     }
   }
 
@@ -110,8 +96,6 @@ function AuthPage() {
       <h1>{mode === 'login' ? 'Login' : 'Register'}</h1>
 
       <form onSubmit={handleSubmit}>
-
-        {/* Registration-only fields — hidden in login mode */}
         {mode === 'register' && (
           <>
             <input
@@ -133,7 +117,6 @@ function AuthPage() {
           </>
         )}
 
-        {/* Common fields — always visible */}
         <input
           type="email"
           placeholder="Email"
@@ -152,10 +135,8 @@ function AuthPage() {
         </button>
       </form>
 
-      {/* Error message — only rendered when non-empty */}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* Toggle between login and register modes */}
       <button onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
         {mode === 'login'
           ? "Don't have an account? Register first."
