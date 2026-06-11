@@ -1,3 +1,20 @@
+/**
+ * AuthContext — Real authentication context (backend-connected).
+ *
+ * Manages JWT-based auth state:
+ *   - login(email, password): calls POST /auth/login, stores the returned
+ *     token in sessionStorage, sets user and token state.
+ *   - logout(): clears token from sessionStorage and resets state.
+ *   - isAuthenticated: derived from whether a token is present.
+ *
+ * The Axios interceptor in src/services/api.ts reads the token from
+ * sessionStorage on every request, so new tabs inherit the session.
+ * A 401 response in the interceptor clears the token and redirects to /.
+ *
+ * NOTE: this file is not used yet — the app currently uses the mock
+ * implementation at src/components/auth-context.tsx. Swap the import
+ * in src/components/cinemood-app.tsx when the backend is ready.
+ */
 import { createContext, useContext, useState, ReactNode } from 'react'
 import api from '../services/api'
 

@@ -25,6 +25,11 @@ fi
 # Start PostgreSQL via Docker (safe to call if already running)
 echo "Starting PostgreSQL..."
 docker compose up -d
+
+echo "Waiting for PostgreSQL to be ready..."
+until docker exec cinemood_db pg_isready -U cinemood -d cinemood > /dev/null 2>&1; do
+    sleep 1
+done
 echo "PostgreSQL ready."
 
 # Start the backend in the background

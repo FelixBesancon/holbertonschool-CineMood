@@ -19,3 +19,4 @@ echo "Running tests..."
 cd backend
 source venv/bin/activate
 pytest tests/ -v --cov=app --cov-report=term-missing
+cd ..
