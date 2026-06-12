@@ -16,7 +16,7 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/components/auth-context"
+import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

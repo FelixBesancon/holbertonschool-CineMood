@@ -15,7 +15,7 @@
  */
 import { Link } from "react-router-dom"
 import { Search, Wand2, Check, ArrowRight } from "lucide-react"
-import { useAuth } from "@/components/auth-context"
+import { useAuth } from "@/context/AuthContext"
 import { useLibrary } from "@/components/library-context"
 import { FilmCard } from "@/components/film-card"
 import { Button } from "@/components/ui/button"

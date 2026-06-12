@@ -11,10 +11,10 @@
  *   - Register tab → await register(firstName, email, password)  (POST /auth/register)
  * Surface validation errors (422) and network errors inline.
  */
-import { useState, type FormEvent } from "react"
+import { useState, SyntheticEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react"
-import { useAuth } from "@/components/auth-context"
+import { Mail, Lock, User as UserIcon, ArrowRight, Calendar } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,12 +28,16 @@ function Field({
   type,
   placeholder,
   icon: Icon,
+  value,
+  onChange
 }: {
   id: string
   label: string
   type: string
   placeholder: string
   icon: typeof Mail
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -44,6 +48,8 @@ function Field({
           id={id}
           type={type}
           placeholder={placeholder}
+          value={value}
+          onChange={onChange}
           className="h-11 pl-9 focus-visible:border-primary focus-visible:ring-primary/25"
         />
       </div>
@@ -53,13 +59,40 @@ function Field({
 
 export function AuthPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, register } = useAuth()
   const [tab, setTab] = useState("login")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [age, setAge] = useState("")
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault()
-    login()
-    navigate("/dashboard")
+    try {
+      await login(email, password)
+      navigate("/dashboard")
+    } catch (err) {
+      setError("Invalid email or password")
+    }
+  }
+
+  const handleRegister = async (e: SyntheticEvent) => {
+    e.preventDefault()
+    try {
+      await register(firstName, lastName, email, password, parseInt(age))
+      navigate("/dashboard")
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      if (typeof detail === 'string') {
+        setError(detail)
+      } else if (Array.isArray(detail) && detail.length > 0) {
+        setError((detail as Array<{ msg: string }>).map(d => d.msg).join(' '))
+      } else {
+        setError("Registration failed")
+      }
+    }
   }
 
   return (
@@ -76,15 +109,34 @@ export function AuthPage() {
         <Card className="border-border shadow-lg">
           <CardContent className="p-6">
             <Tabs value={tab} onValueChange={setTab}>
-              <TabsList variant="default" className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Log in</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="pt-6">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  <Field id="login-email" label="Email" type="email" placeholder="felix@cinemood.app" icon={Mail} />
-                  <Field id="login-password" label="Password" type="password" placeholder="••••••••" icon={Lock} />
+                  <Field
+                    id="login-email"
+                    label="Email"
+                    type="email"
+                    placeholder="example@cinemood.com"
+                    icon={Mail}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Field
+                    id="login-password"
+                    label="Password"
+                    type="password"
+                    placeholder="••••••••"
+                    icon={Lock}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {error && (
+                    <p className="text-sm text-destructive">{error}</p>
+                  )}
                   <Button type="submit" size="lg" className="mt-2 h-11 w-full gap-2 text-sm">
                     Log in
                     <ArrowRight className="h-4 w-4" />
@@ -93,10 +145,55 @@ export function AuthPage() {
               </TabsContent>
 
               <TabsContent value="register" className="pt-6">
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  <Field id="reg-name" label="First name" type="text" placeholder="Félix" icon={UserIcon} />
-                  <Field id="reg-email" label="Email" type="email" placeholder="felix@cinemood.app" icon={Mail} />
-                  <Field id="reg-password" label="Password" type="password" placeholder="••••••••" icon={Lock} />
+                <form onSubmit={handleRegister} className="flex flex-col gap-4">
+                  <Field
+                    id="reg-firstName"
+                    label="First Name"
+                    type="text"
+                    placeholder="First Name"
+                    icon={UserIcon}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                  <Field
+                    id="reg-lastName"
+                    label="Last Name"
+                    type="text"
+                    placeholder="Last Name"
+                    icon={UserIcon}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                  <Field
+                    id="reg-email"
+                    label="Email"
+                    type="email"
+                    placeholder="example@cinemood.com"
+                    icon={Mail}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Field
+                    id="reg-password"
+                    label="Password"
+                    type="password"
+                    placeholder="••••••••"
+                    icon={Lock}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Field
+                    id="reg-age"
+                    label="Age"
+                    type="text"
+                    placeholder="Age (optionnal)"
+                    icon={Calendar}
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                  />
+                  {error && (
+                    <p className="text-sm text-destructive">{error}</p>
+                  )}
                   <Button type="submit" size="lg" className="mt-2 h-11 w-full gap-2 text-sm">
                     Create account
                     <ArrowRight className="h-4 w-4" />

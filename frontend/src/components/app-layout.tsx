@@ -16,7 +16,7 @@ import type { ReactNode } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { ChevronDown, LogOut, User as UserIcon } from "lucide-react"
 import { Logo } from "@/components/logo"
-import { useAuth } from "@/components/auth-context"
+import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {

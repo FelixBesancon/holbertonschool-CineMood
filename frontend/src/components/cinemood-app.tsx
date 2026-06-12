@@ -17,7 +17,7 @@
  */
 import { useEffect, useState } from "react"
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
-import { AuthProvider, useAuth } from "@/components/auth-context"
+import { AuthProvider, useAuth } from "@/context/AuthContext"
 import { LibraryProvider } from "@/components/library-context"
 import { AppLayout } from "@/components/app-layout"
 import { AuthPage } from "@/components/pages/auth-page"
