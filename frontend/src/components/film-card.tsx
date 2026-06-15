@@ -15,7 +15,13 @@
  */
 import { Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
-import { PRESTIGE_TIERS, type Film, type PrestigeTier } from "@/lib/mock-data"
+import type { Tag } from "@/types/api"
+
+interface Film {
+  tmdb_id: number
+  title: string | null
+  poster_url: string | null
+}
 
 const TAG_COLORS: Record<string, string> = {
   "Mind blowing": "bg-accent text-primary",
@@ -40,12 +46,12 @@ export function TagChip({ label, className }: { label: string; className?: strin
 
 // Continuously scrolls tags to the left with faded edges, like a carousel.
 // Tags are duplicated so the loop is seamless. Falls back to a static chip for a single tag.
-export function ScrollingTags({ tags }: { tags: string[] }) {
+export function ScrollingTags({ tags }: { tags: Tag[] }) {
   if (tags.length === 0) return null
   if (tags.length === 1) {
     return (
       <div className="flex min-h-[20px]">
-        <TagChip label={tags[0]} />
+        <TagChip label={tags[0].name} />
       </div>
     )
   }
@@ -62,15 +68,22 @@ export function ScrollingTags({ tags }: { tags: string[] }) {
         style={{ animation: "tag-marquee 14s linear infinite" }}
       >
         {[...tags, ...tags].map((t, i) => (
-          <TagChip key={`${t}-${i}`} label={t} className="mr-1 shrink-0" />
+          <TagChip key={`${t.id}-${i}`} label={t.name} className="mr-1 shrink-0" />
         ))}
       </div>
     </div>
   )
 }
 
-function PrestigeBadge({ prestige }: { prestige: PrestigeTier }) {
-  const tier = PRESTIGE_TIERS.find((p) => p.id === prestige)
+function PrestigeBadge({ prestige }: { prestige: string }) {
+  const TIERS: Record<string, { emoji: string; label: string }> = {
+    platinum: { emoji: "💎", label: "Platinum" },
+    gold: { emoji: "🥇", label: "Gold" },
+    silver: { emoji: "🥈", label: "Silver" },
+    bronze: { emoji: "🥉", label: "Bronze" },
+    trash: { emoji: "🗑️", label: "Trash" },
+  }
+  const tier = TIERS[prestige]
   if (!tier) return null
   return (
     <span
@@ -95,8 +108,8 @@ export function PosterFrame({
   return (
     <div className={cn("relative aspect-[2/3] overflow-hidden rounded-lg bg-muted", className)}>
       <img
-        src={film.poster || "/placeholder.svg"}
-        alt={`${film.title} poster`}
+        src={film.poster_url || "/placeholder.svg"}
+        alt={`${film.title ?? ""} poster`}
         crossOrigin="anonymous"
         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
@@ -114,16 +127,16 @@ export function FilmCard({
   className,
 }: {
   film: Film
-  tags?: string[]
+  tags?: Tag[]        // plus string[], maintenant objets Tag
+  prestige?: string | null
   cycleTags?: boolean
-  prestige?: PrestigeTier | null
   footer?: React.ReactNode
   className?: string
 }) {
   return (
     <div className={cn("group flex flex-col gap-2", className)}>
       <Link
-        to={`/films/${film.id}`}
+        to={`/films/${film.tmdb_id}`}
         className="group/card block cursor-pointer rounded-lg transition-all duration-200"
       >
         <PosterFrame
@@ -136,7 +149,6 @@ export function FilmCard({
           <span className="font-heading text-sm font-semibold leading-tight transition-colors group-hover/card:text-primary">
             {film.title}
           </span>
-          <span className="text-xs text-muted-foreground">{film.year}</span>
           {tags && tags.length > 0 && (
             <div className="mt-0.5">
               {cycleTags ? (
@@ -144,7 +156,7 @@ export function FilmCard({
               ) : (
                 <div className="flex min-h-[20px] flex-wrap gap-1">
                   {tags.map((t) => (
-                    <TagChip key={t} label={t} />
+                     <TagChip key={t.id} label={t.name} />
                   ))}
                 </div>
               )}

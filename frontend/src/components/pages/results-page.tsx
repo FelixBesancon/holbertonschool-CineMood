@@ -19,7 +19,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { Plus, RotateCcw, Home, Bookmark, Check, Film, Sparkles, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useLibrary } from "@/components/library-context"
+import { useLibrary } from "@/context/LibraryContext"
 import { getFilm, PLATFORM_CHIP, type Recommendation } from "@/lib/mock-data"
 
 export function ResultsPage() {

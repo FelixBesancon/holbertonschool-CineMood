@@ -16,10 +16,9 @@
 import { Link } from "react-router-dom"
 import { Search, Wand2, Check, ArrowRight } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
-import { useLibrary } from "@/components/library-context"
+import { useLibrary } from "@/context/LibraryContext"
 import { FilmCard } from "@/components/film-card"
 import { Button } from "@/components/ui/button"
-import { getFilm } from "@/lib/mock-data"
 
 function FilmRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-5">{children}</div>
@@ -30,8 +29,8 @@ export function DashboardPage() {
   const { history, watchlist, logFilm } = useLibrary()
 
   // Most recently added first
-  const recentHistory = [...history].sort((a, b) => b.watchedAt.localeCompare(a.watchedAt))
-  const recentWatchlist = [...watchlist].sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+  const recentHistory = [...history].sort((a, b) => b.created_at.localeCompare(a.created_at))
+  const recentWatchlist = [...watchlist].sort((a, b) => b.created_at.localeCompare(a.created_at))
 
   return (
     <div>
@@ -39,7 +38,7 @@ export function DashboardPage() {
       <section className="hero-gradient">
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Welcome back, {user?.firstName}!
+            Welcome back, {user?.first_name}!
           </h1>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground">
             Ready for tonight&apos;s film? Pick up where you left off or let us find the perfect match for your mood.
@@ -86,11 +85,15 @@ export function DashboardPage() {
             </Link>
           </div>
           <FilmRow>
-            {recentHistory.slice(0, 5).map((entry) => {
-              const film = getFilm(entry.filmId)
-              if (!film) return null
-              return <FilmCard key={entry.filmId} film={film} tags={entry.tags} prestige={entry.prestige} cycleTags />
-            })}
+            {recentHistory.slice(0, 5).map((entry) => (
+              <FilmCard
+                key={entry.tmdb_id}
+                film={entry}
+                tags={entry.tags}
+                prestige={entry.prestige_tier}
+                cycleTags
+              />
+            ))}
           </FilmRow>
         </section>
 
@@ -103,27 +106,21 @@ export function DashboardPage() {
             </Link>
           </div>
           <FilmRow>
-            {recentWatchlist.slice(0, 5).map((entry) => {
-              const film = getFilm(entry.filmId)
-              if (!film) return null
-              return (
-                <FilmCard
-                  key={entry.filmId}
-                  film={film}
-                  footer={
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-1.5 w-full gap-1"
-                      onClick={() => logFilm(film.id, { tags: [], prestige: null, note: "" })}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      Mark as watched
-                    </Button>
-                  }
-                />
-              )
-            })}
+            {recentWatchlist.slice(0, 5).map((entry) => (
+              <FilmCard
+                key={entry.tmdb_id}
+                film={entry}
+                footer={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1.5 w-full gap-1"
+                    onClick={() => logFilm(entry.tmdb_id)}>
+                  Mark as watched
+                </Button>
+              }
+            />
+          ))}
           </FilmRow>
         </section>
       </div>

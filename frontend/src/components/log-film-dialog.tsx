@@ -16,7 +16,8 @@
  * POST /history (new log) or PUT /history/{id} (update existing).
  * The prestige and note fields map directly to the ViewingHistoryEntry schema.
  */
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import api from "@/services/api"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -27,7 +28,21 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { MOOD_TAGS, PRESTIGE_TIERS, type Film, type LogEntry } from "@/lib/mock-data"
+import type { Film, Tag } from "@/types/api"
+
+interface LogEntry {
+  tags: number[]        // IDs des tags
+  prestige_tier: string | null
+  personal_note: string
+}
+
+const PRESTIGE_TIERS = [
+  { id: "platinum", emoji: "💎", label: "Platinum" },
+  { id: "gold", emoji: "🥇", label: "Gold" },
+  { id: "silver", emoji: "🥈", label: "Silver" },
+  { id: "bronze", emoji: "🥉", label: "Bronze" },
+  { id: "trash", emoji: "🗑️", label: "Trash" },
+]
 
 export function LogFilmDialog({
   film,
@@ -42,13 +57,18 @@ export function LogFilmDialog({
   initial?: LogEntry
   onConfirm?: (entry: LogEntry) => void
 }) {
-  const [tags, setTags] = useState<string[]>(initial?.tags ?? [])
-  const [prestige, setPrestige] = useState<string | null>(initial?.prestige ?? null)
-  const [note, setNote] = useState(initial?.note ?? "")
+  const [tags, setTags] = useState<number[]>(initial?.tags ?? [])
+  const [prestige, setPrestige] = useState<string | null>(initial?.prestige_tier ?? null)
+  const [note, setNote] = useState(initial?.personal_note ?? "")
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
+
+  useEffect(() => {
+    api.get('/tags').then(res => setAvailableTags(res.data))
+  }, [])
 
   if (!film) return null
 
-  const toggleTag = (t: string) =>
+  const toggleTag = (t: number) =>
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
 
   return (
@@ -57,7 +77,7 @@ export function LogFilmDialog({
         <DialogHeader>
           <div className="flex items-center gap-3">
             <img
-              src={film.poster || "/placeholder.svg"}
+              src={film.poster_url || "/placeholder.svg"}
               alt=""
               crossOrigin="anonymous"
               className="h-20 w-14 shrink-0 rounded-md object-cover ring-1 ring-border"
@@ -77,13 +97,13 @@ export function LogFilmDialog({
           <div className="flex flex-col gap-2">
             <Label>How was it?</Label>
             <div className="flex flex-wrap gap-2">
-              {MOOD_TAGS.map((t) => {
-                const active = tags.includes(t)
+              {availableTags.map((t) => {
+                const active = tags.includes(t.id)
                 return (
                   <button
-                    key={t}
+                    key={t.id}
                     type="button"
-                    onClick={() => toggleTag(t)}
+                    onClick={() => toggleTag(t.id)}
                     className={cn(
                       "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
                       active
@@ -91,7 +111,7 @@ export function LogFilmDialog({
                         : "border-border bg-background text-foreground hover:border-primary/40",
                     )}
                   >
-                    {t}
+                    {t.name}
                   </button>
                 )
               })}
@@ -140,7 +160,9 @@ export function LogFilmDialog({
             size="lg"
             className="h-11 w-full"
             onClick={() => {
-              onConfirm?.({ tags, prestige: prestige as LogEntry["prestige"], note })
+              onConfirm?.({
+                tags, prestige_tier: prestige, personal_note: note
+              })
               onOpenChange(false)
             }}
           >

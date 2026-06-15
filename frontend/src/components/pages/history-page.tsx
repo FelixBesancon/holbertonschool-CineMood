@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { PosterFrame, TagChip } from "@/components/film-card"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { useLibrary } from "@/components/library-context"
+import { useLibrary } from "@/context/LibraryContext"
 import { getFilm, PRESTIGE_TIERS, PRESTIGE_RANK, type Film } from "@/lib/mock-data"
 
 const prestigeOf = (id: string) => PRESTIGE_TIERS.find((p) => p.id === id)
