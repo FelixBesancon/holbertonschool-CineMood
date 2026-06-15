@@ -8,7 +8,7 @@ the root health check endpoint.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import (
-    auth, film, tag, viewing_history, watchlist
+    auth, film, tag, viewing_history, watchlist, library
     )
 
 # FastAPI application instance.
@@ -37,6 +37,7 @@ app.include_router(film.router)
 app.include_router(tag.router)
 app.include_router(viewing_history.router)
 app.include_router(watchlist.router)
+app.include_router(library.router)
 
 
 @app.get("/")

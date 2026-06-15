@@ -20,10 +20,11 @@ find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 find . -name ".coverage" -delete 2>/dev/null || true
 
-# 3. Vite build artifacts
+# 3. Vite build and cache artifacts
 echo "Cleaning frontend build artifacts..."
 rm -rf frontend/dist 2>/dev/null || true
 rm -rf frontend/dist-ssr 2>/dev/null || true
+rm -rf frontend/.vite 2>/dev/null || true
 
 # 4. OS files
 echo "Cleaning OS artifacts..."
@@ -53,6 +54,7 @@ if [ "$HARD" = true ]; then
     # Remove .env files
     rm -f backend/.env 2>/dev/null || true
     rm -f frontend/.env 2>/dev/null || true
+    rm -f frontend/.env.local 2>/dev/null || true
     echo "  .env files deleted"
 
     echo ""

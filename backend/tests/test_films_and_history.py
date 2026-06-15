@@ -5,9 +5,9 @@ Covers:
     - GET  /tags
     - GET  /films/search
     - GET  /films/{tmdb_id}
-    - POST /films/log
-    - GET  /films/history
-    - DELETE /films/log/{tmdb_id}
+    - POST /history
+    - GET  /history
+    - DELETE /history/{tmdb_id}
     - JWT authentication edge cases (expired, invalid, unknown user)
 
 TMDB API calls are mocked with AsyncMock — no real network calls are made.
@@ -39,13 +39,6 @@ MOCK_SEARCH_RESULTS = [
         "overview": "A thief who steals corporate secrets through dream-sharing.",
     }
 ]
-
-MOCK_MOVIE_BASIC = {
-    "id": TMDB_ID,
-    "title": "Inception",
-    "release_date": "2010-07-16",
-    "poster_path": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-}
 
 MOCK_MOVIE_DETAILS = {
     "id": TMDB_ID,
@@ -134,9 +127,9 @@ def seeded_tags(db_session):
 @pytest.fixture()
 def logged_film(client, auth_headers):
     """Log Inception for user A and return the response body."""
-    with patch("app.external.tmdb_client.get_movie_basic",
-               new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-        res = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
+    with patch("app.external.tmdb_client.get_movie_details",
+               new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+        res = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
     return res.json()
 
 
@@ -300,40 +293,49 @@ class TestGetFilmDetail:
 # ---------------------------------------------------------------------------
 
 class TestLogFilm:
-    """Requires auth. Calls get_movie_basic — mocked."""
+    """POST /history — Requires auth. Calls get_movie_details — mocked."""
 
     def test_no_token_returns_403(self, client):
-        assert client.post("/films/log", json={"tmdb_id": TMDB_ID}).status_code == status.HTTP_403_FORBIDDEN
+        assert client.post("/history", json={"tmdb_id": TMDB_ID}).status_code == status.HTTP_403_FORBIDDEN
 
     def test_missing_tmdb_id_returns_422(self, client, auth_headers):
-        assert client.post("/films/log", json={}, headers=auth_headers).status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert client.post("/history", json={}, headers=auth_headers).status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_success_minimal_payload(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            res = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            res = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
         assert res.status_code == status.HTTP_201_CREATED
 
     def test_caches_title_and_poster(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers).json()
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers).json()
         assert body["title"] == "Inception"
         assert body["poster_url"].startswith("https://image.tmdb.org")
 
+    def test_caches_enriched_metadata(self, client, auth_headers):
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers).json()
+        assert body["year"] == 2010
+        assert body["director"] == "Christopher Nolan"
+        assert "Action" in body["genres"]
+        assert body["runtime"] == 148
+
     def test_response_has_timestamps_and_id(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers).json()
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers).json()
         assert "id" in body
         assert "created_at" in body
         assert "updated_at" in body
 
     def test_with_tags(self, client, auth_headers, seeded_tags):
         tag_ids = [seeded_tags[0].id, seeded_tags[1].id]
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log",
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history",
                                json={"tmdb_id": TMDB_ID, "tag_ids": tag_ids},
                                headers=auth_headers).json()
         assert len(body["tags"]) == 2
@@ -341,17 +343,17 @@ class TestLogFilm:
         assert seeded_tags[0].name in tag_names
 
     def test_with_prestige_tier(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log",
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history",
                                json={"tmdb_id": TMDB_ID, "prestige_tier": "Gold"},
                                headers=auth_headers).json()
         assert body["prestige_tier"] == "Gold"
 
     def test_with_personal_note(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log",
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history",
                                json={"tmdb_id": TMDB_ID, "personal_note": "Best film ever"},
                                headers=auth_headers).json()
         assert body["personal_note"] == "Best film ever"
@@ -363,29 +365,29 @@ class TestLogFilm:
             "prestige_tier": "Platinum",
             "personal_note": "A masterpiece.",
         }
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            body = client.post("/films/log", json=payload, headers=auth_headers).json()
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            body = client.post("/history", json=payload, headers=auth_headers).json()
         assert body["prestige_tier"] == "Platinum"
         assert body["personal_note"] == "A masterpiece."
         assert len(body["tags"]) == 1
 
     def test_invalid_tmdb_id_returns_404(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
+        with patch("app.external.tmdb_client.get_movie_details",
                    new=AsyncMock(side_effect=make_http_error(404))):
-            res = client.post("/films/log", json={"tmdb_id": 999999999}, headers=auth_headers)
+            res = client.post("/history", json={"tmdb_id": 999999999}, headers=auth_headers)
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
     def test_tmdb_error_returns_503(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
+        with patch("app.external.tmdb_client.get_movie_details",
                    new=AsyncMock(side_effect=make_http_error(500))):
-            res = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
+            res = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
         assert res.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
     def test_tmdb_network_error_returns_503(self, client, auth_headers):
-        with patch("app.external.tmdb_client.get_movie_basic",
+        with patch("app.external.tmdb_client.get_movie_details",
                    new=AsyncMock(side_effect=httpx.RequestError("timeout"))):
-            res = client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
+            res = client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
         assert res.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
 
@@ -396,50 +398,50 @@ class TestLogFilm:
 class TestGetHistory:
 
     def test_no_token_returns_403(self, client):
-        assert client.get("/films/history").status_code == status.HTTP_403_FORBIDDEN
+        assert client.get("/history").status_code == status.HTTP_403_FORBIDDEN
 
     def test_empty_history(self, client, auth_headers):
-        res = client.get("/films/history", headers=auth_headers)
+        res = client.get("/history", headers=auth_headers)
         assert res.status_code == status.HTTP_200_OK
         assert res.json() == []
 
     def test_contains_logged_film(self, client, auth_headers, logged_film):
-        entries = client.get("/films/history", headers=auth_headers).json()
+        entries = client.get("/history", headers=auth_headers).json()
         assert len(entries) == 1
         assert entries[0]["tmdb_id"] == TMDB_ID
 
     def test_entry_has_title_and_poster(self, client, auth_headers, logged_film):
-        entry = client.get("/films/history", headers=auth_headers).json()[0]
+        entry = client.get("/history", headers=auth_headers).json()[0]
         assert entry["title"] == "Inception"
         assert entry["poster_url"].startswith("https://image.tmdb.org")
 
     def test_entry_has_empty_tags_by_default(self, client, auth_headers, logged_film):
-        entry = client.get("/films/history", headers=auth_headers).json()[0]
+        entry = client.get("/history", headers=auth_headers).json()[0]
         assert entry["tags"] == []
 
     def test_entry_includes_tags_when_logged_with_tags(self, client, auth_headers, seeded_tags):
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            client.post("/films/log",
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            client.post("/history",
                         json={"tmdb_id": TMDB_ID, "tag_ids": [seeded_tags[0].id]},
                         headers=auth_headers)
-        entry = client.get("/films/history", headers=auth_headers).json()[0]
+        entry = client.get("/history", headers=auth_headers).json()[0]
         assert len(entry["tags"]) == 1
         assert entry["tags"][0]["name"] == seeded_tags[0].name
 
     def test_isolated_per_user(self, client, auth_headers, other_auth_headers, logged_film):
         """User B must not see user A's history."""
-        assert client.get("/films/history", headers=other_auth_headers).json() == []
+        assert client.get("/history", headers=other_auth_headers).json() == []
 
     def test_multiple_films(self, client, auth_headers):
-        other = {**MOCK_MOVIE_BASIC, "id": 550, "title": "Fight Club"}
-        with patch("app.external.tmdb_client.get_movie_basic",
-                   new=AsyncMock(return_value=MOCK_MOVIE_BASIC)):
-            client.post("/films/log", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
-        with patch("app.external.tmdb_client.get_movie_basic",
+        other = {**MOCK_MOVIE_DETAILS, "id": 550, "title": "Fight Club"}
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)):
+            client.post("/history", json={"tmdb_id": TMDB_ID}, headers=auth_headers)
+        with patch("app.external.tmdb_client.get_movie_details",
                    new=AsyncMock(return_value=other)):
-            client.post("/films/log", json={"tmdb_id": 550}, headers=auth_headers)
-        assert len(client.get("/films/history", headers=auth_headers).json()) == 2
+            client.post("/history", json={"tmdb_id": 550}, headers=auth_headers)
+        assert len(client.get("/history", headers=auth_headers).json()) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -449,34 +451,34 @@ class TestGetHistory:
 class TestRemoveFilm:
 
     def test_no_token_returns_403(self, client):
-        assert client.delete(f"/films/log/{TMDB_ID}").status_code == status.HTTP_403_FORBIDDEN
+        assert client.delete(f"/history/{TMDB_ID}").status_code == status.HTTP_403_FORBIDDEN
 
     def test_success_returns_200(self, client, auth_headers, logged_film):
-        res = client.delete(f"/films/log/{TMDB_ID}", headers=auth_headers)
+        res = client.delete(f"/history/{TMDB_ID}", headers=auth_headers)
         assert res.status_code == status.HTTP_200_OK
 
     def test_success_returns_confirmation_message(self, client, auth_headers, logged_film):
-        res = client.delete(f"/films/log/{TMDB_ID}", headers=auth_headers)
+        res = client.delete(f"/history/{TMDB_ID}", headers=auth_headers)
         assert "detail" in res.json()
 
     def test_entry_gone_from_history_after_remove(self, client, auth_headers, logged_film):
-        client.delete(f"/films/log/{TMDB_ID}", headers=auth_headers)
-        assert client.get("/films/history", headers=auth_headers).json() == []
+        client.delete(f"/history/{TMDB_ID}", headers=auth_headers)
+        assert client.get("/history", headers=auth_headers).json() == []
 
     def test_film_not_logged_returns_404(self, client, auth_headers):
-        res = client.delete(f"/films/log/{TMDB_ID}", headers=auth_headers)
+        res = client.delete(f"/history/{TMDB_ID}", headers=auth_headers)
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
     def test_cannot_remove_another_users_entry(self, client, auth_headers,
                                                 other_auth_headers, logged_film):
         """User B must get 404 when trying to remove user A's entry."""
-        res = client.delete(f"/films/log/{TMDB_ID}", headers=other_auth_headers)
+        res = client.delete(f"/history/{TMDB_ID}", headers=other_auth_headers)
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
     def test_other_users_entry_still_exists_after_failed_remove(
             self, client, auth_headers, other_auth_headers, logged_film):
-        client.delete(f"/films/log/{TMDB_ID}", headers=other_auth_headers)
-        assert len(client.get("/films/history", headers=auth_headers).json()) == 1
+        client.delete(f"/history/{TMDB_ID}", headers=other_auth_headers)
+        assert len(client.get("/history", headers=auth_headers).json()) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -484,11 +486,11 @@ class TestRemoveFilm:
 # ---------------------------------------------------------------------------
 
 class TestAuthentication:
-    """Tested through GET /films/history as a representative protected route."""
+    """Tested through GET /history as a representative protected route."""
 
     def test_no_header_returns_403(self, client):
         """HTTPBearer returns 403 when the Authorization header is absent."""
-        assert client.get("/films/history").status_code == status.HTTP_403_FORBIDDEN
+        assert client.get("/history").status_code == status.HTTP_403_FORBIDDEN
 
     def test_expired_token_returns_401(self, client, auth_headers):
         expired = jwt.encode(
@@ -499,12 +501,12 @@ class TestAuthentication:
             settings.SECRET_KEY,
             algorithm="HS256",
         )
-        res = client.get("/films/history", headers={"Authorization": f"Bearer {expired}"})
+        res = client.get("/history", headers={"Authorization": f"Bearer {expired}"})
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
         assert res.json()["detail"] == "Token expired"
 
     def test_invalid_token_returns_401(self, client):
-        res = client.get("/films/history", headers={"Authorization": "Bearer notavalidtoken"})
+        res = client.get("/history", headers={"Authorization": "Bearer notavalidtoken"})
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
         assert res.json()["detail"] == "Invalid token"
 
@@ -514,7 +516,7 @@ class TestAuthentication:
             "wrong-secret",
             algorithm="HS256",
         )
-        res = client.get("/films/history", headers={"Authorization": f"Bearer {bad_token}"})
+        res = client.get("/history", headers={"Authorization": f"Bearer {bad_token}"})
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_token_unknown_user_returns_401(self, client):
@@ -527,6 +529,6 @@ class TestAuthentication:
             settings.SECRET_KEY,
             algorithm="HS256",
         )
-        res = client.get("/films/history", headers={"Authorization": f"Bearer {token}"})
+        res = client.get("/history", headers={"Authorization": f"Bearer {token}"})
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
         assert res.json()["detail"] == "User not found"
