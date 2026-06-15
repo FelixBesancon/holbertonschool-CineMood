@@ -7,18 +7,18 @@
  *   - My Watchlist: last 5 watchlist entries, each with a "Mark as watched"
  *     quick-action button (calls logFilm with empty tags/prestige).
  *
- * All data comes from LibraryContext (mock). Clicking a film card links to
- * /films/:id for the full detail view.
- *
- * TODO: when connecting to the backend, the initial data load will move into
- * LibraryContext (GET /history and GET /watchlist on mount).
+ * All data comes from LibraryContext (GET /history and GET /watchlist).
+ * Clicking a film card links to /films/:id for the full detail view.
  */
+import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Search, Wand2, Check, ArrowRight } from "lucide-react"
+import { Search, Wand2, ArrowRight } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { useLibrary } from "@/context/LibraryContext"
 import { FilmCard } from "@/components/film-card"
+import { LogFilmDialog } from "@/components/log-film-dialog"
 import { Button } from "@/components/ui/button"
+import type { WatchlistEntry } from "@/types/api"
 
 function FilmRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-5">{children}</div>
@@ -27,6 +27,7 @@ function FilmRow({ children }: { children: React.ReactNode }) {
 export function DashboardPage() {
   const { user } = useAuth()
   const { history, watchlist, logFilm } = useLibrary()
+  const [logTarget, setLogTarget] = useState<WatchlistEntry | null>(null)
 
   // Most recently added first
   const recentHistory = [...history].sort((a, b) => b.created_at.localeCompare(a.created_at))
@@ -38,7 +39,7 @@ export function DashboardPage() {
       <section className="hero-gradient">
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 sm:px-6">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Welcome back, {user?.first_name}!
+            Welcome back, {user?.username}!
           </h1>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground">
             Ready for tonight&apos;s film? Pick up where you left off or let us find the perfect match for your mood.
@@ -115,15 +116,34 @@ export function DashboardPage() {
                     variant="outline"
                     size="sm"
                     className="mt-1.5 w-full gap-1"
-                    onClick={() => logFilm(entry.tmdb_id)}>
-                  Mark as watched
-                </Button>
+                    onClick={() => setLogTarget(entry)}
+                  >
+                    Mark as watched
+                  </Button>
               }
             />
           ))}
           </FilmRow>
         </section>
       </div>
+
+      <LogFilmDialog
+        film={logTarget ? {
+          tmdb_id: logTarget.tmdb_id,
+          title: logTarget.title ?? "",
+          poster_url: logTarget.poster_url,
+          year: logTarget.year,
+          director: logTarget.director,
+          synopsis: logTarget.synopsis,
+          genres: logTarget.genres,
+          cast: null,
+          runtime: logTarget.runtime,
+          streaming_platforms: null,
+        } : null}
+        open={logTarget !== null}
+        onOpenChange={(isOpen) => !isOpen && setLogTarget(null)}
+        onConfirm={(entry) => logTarget && logFilm(logTarget.tmdb_id, entry)}
+      />
     </div>
   )
 }

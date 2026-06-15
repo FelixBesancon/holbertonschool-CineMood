@@ -1,8 +1,7 @@
 /**
  * ResultsPage — Recommendation results (step 3 of the recommendation flow).
  *
- * Displays the recommendations from LibraryContext (films not yet in history),
- * sorted by match score descending, then split into three visual sections:
+ * Displays mock recommendations sorted by match score descending, split into:
  *   - "Your Perfect Match": highest-scoring film — hero card with gold shimmer.
  *   - "You Might Also Like": films with match >= 85% — standard row cards.
  *   - "Give It a Try…": films with match < 85% — muted, smaller row cards.
@@ -20,19 +19,19 @@ import { Plus, RotateCcw, Home, Bookmark, Check, Film, Sparkles, Star } from "lu
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useLibrary } from "@/context/LibraryContext"
-import { getFilm, PLATFORM_CHIP, type Recommendation } from "@/lib/mock-data"
+import { getFilm, PLATFORM_CHIP, RECOMMENDATIONS, type Recommendation } from "@/lib/mock-data"
 
 export function ResultsPage() {
   const navigate = useNavigate()
-  const { recommendations, getStatus, addToWatchlist } = useLibrary()
+  const { getStatus, addToWatchlist } = useLibrary()
 
   // Highest match score first so the very best pick becomes the hero.
-  const ranked = [...recommendations].sort((a, b) => b.match - a.match)
+  const ranked = [...RECOMMENDATIONS].sort((a, b) => b.match - a.match)
   const [perfectMatch, ...rest] = ranked
 
   // Split the remainder by prominence: strong matches vs. wildcards.
-  const alsoLike = rest.filter((r) => r.match >= 85)
-  const giveItATry = rest.filter((r) => r.match < 85)
+  const alsoLike = rest.filter((rec) => rec.match >= 85)
+  const giveItATry = rest.filter((rec) => rec.match < 85)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -63,8 +62,8 @@ export function ResultsPage() {
           </div>
           <PerfectMatchCard
             rec={perfectMatch}
-            inWatchlist={getStatus(perfectMatch.filmId) === "watchlist"}
-            onAdd={() => addToWatchlist(perfectMatch.filmId)}
+            inWatchlist={getStatus(perfectMatch.filmId as unknown as number) === "watchlist"}
+            onAdd={() => addToWatchlist(perfectMatch.filmId as unknown as number)}
           />
         </section>
       )}
@@ -77,8 +76,8 @@ export function ResultsPage() {
               <RecRow
                 key={rec.filmId}
                 rec={rec}
-                inWatchlist={getStatus(rec.filmId) === "watchlist"}
-                onAdd={() => addToWatchlist(rec.filmId)}
+                inWatchlist={getStatus(rec.filmId as unknown as number) === "watchlist"}
+                onAdd={() => addToWatchlist(rec.filmId as unknown as number)}
               />
             ))}
           </div>
@@ -96,8 +95,8 @@ export function ResultsPage() {
                 key={rec.filmId}
                 rec={rec}
                 muted
-                inWatchlist={getStatus(rec.filmId) === "watchlist"}
-                onAdd={() => addToWatchlist(rec.filmId)}
+                inWatchlist={getStatus(rec.filmId as unknown as number) === "watchlist"}
+                onAdd={() => addToWatchlist(rec.filmId as unknown as number)}
               />
             ))}
           </div>

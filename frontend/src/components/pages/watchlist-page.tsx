@@ -1,15 +1,13 @@
 /**
  * WatchlistPage — Films saved for later viewing.
  *
- * Displays all watchlist entries as cards: poster, title, synopsis excerpt,
+ * Displays all watchlist entries as cards: poster, title, year/director,
  * and genre badges. Sorting options: Date added (default) | A–Z.
  * Clicking a card opens the LogFilmDialog — confirming logs the film and
  * removes it from the watchlist (mark-as-watched flow via logFilm).
  * The trash button opens a ConfirmDialog before calling removeFromWatchlist.
  *
- * Data comes from LibraryContext (mock). TODO: replace with GET /watchlist,
- * POST /watchlist/{tmdb_id}/watched (mark as watched), and
- * DELETE /watchlist/{tmdb_id} when connecting to the backend.
+ * Data comes from LibraryContext (GET /watchlist).
  */
 import { useMemo, useState } from "react"
 import { Info, Bookmark, PenLine, Trash2 } from "lucide-react"
@@ -18,8 +16,23 @@ import { Badge } from "@/components/ui/badge"
 import { PosterFrame } from "@/components/film-card"
 import { LogFilmDialog } from "@/components/log-film-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { useLibrary } from "@/components/library-context"
-import { getFilm, type Film, type LogEntry } from "@/lib/mock-data"
+import { useLibrary } from "@/context/LibraryContext"
+import type { WatchlistEntry, Film } from "@/types/api"
+
+function entryAsFilm(entry: WatchlistEntry): Film {
+  return {
+    tmdb_id: entry.tmdb_id,
+    title: entry.title ?? "",
+    poster_url: entry.poster_url,
+    year: entry.year ?? null,
+    director: entry.director ?? null,
+    synopsis: entry.synopsis ?? null,
+    genres: entry.genres ?? null,
+    runtime: entry.runtime ?? null,
+    cast: null,
+    streaming_platforms: null,
+  }
+}
 
 type SortKey = "date" | "alpha"
 
@@ -30,17 +43,17 @@ const SORTS: { key: SortKey; label: string }[] = [
 
 export function WatchlistPage() {
   const { watchlist, removeFromWatchlist, logFilm } = useLibrary()
-  const [logTarget, setLogTarget] = useState<Film | null>(null)
+  const [logTarget, setLogTarget] = useState<WatchlistEntry | null>(null)
   const [open, setOpen] = useState(false)
-  const [removeTarget, setRemoveTarget] = useState<Film | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<WatchlistEntry | null>(null)
   const [sort, setSort] = useState<SortKey>("date")
 
   const entries = useMemo(() => {
     const list = [...watchlist]
     if (sort === "alpha") {
-      list.sort((a, b) => (getFilm(a.filmId)?.title ?? "").localeCompare(getFilm(b.filmId)?.title ?? ""))
+      list.sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""))
     } else {
-      list.sort((a, b) => +new Date(b.addedAt) - +new Date(a.addedAt))
+      list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
     }
     return list
   }, [watchlist, sort])
@@ -77,50 +90,42 @@ export function WatchlistPage() {
 
       <div className="mt-6 flex flex-col gap-4">
         {entries.map((entry) => {
-          const film = getFilm(entry.filmId)
-          if (!film) return null
           return (
             <div
-              key={entry.filmId}
+              key={entry.tmdb_id}
               className="group relative flex gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
             >
               {/* Whole-card log trigger */}
               <button
                 type="button"
-                aria-label={`Log ${film.title}`}
+                aria-label={`Log ${entry.title}`}
                 onClick={() => {
-                  setLogTarget(film)
+                  setLogTarget(entry)
                   setOpen(true)
                 }}
                 className="absolute inset-0 z-0 cursor-pointer"
               />
 
               <div className="pointer-events-none relative z-10 block w-20 shrink-0 sm:w-24">
-                <PosterFrame film={film} className="ring-1 ring-border" />
+                <PosterFrame film={entry} className="ring-1 ring-border" />
               </div>
 
               <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col">
                 <span className="font-heading text-base font-bold leading-tight transition-colors group-hover:text-primary">
-                  {film.title}
+                  {entry.title}
                 </span>
-                <p className="text-xs text-muted-foreground">
-                  {film.year} · {film.director}
-                </p>
-                <p className="mt-2 line-clamp-2 text-pretty text-sm text-muted-foreground">{film.synopsis}</p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {film.genres.slice(0, 3).map((g) => (
-                    <Badge key={g} variant="outline" className="font-normal">
-                      {g}
-                    </Badge>
-                  ))}
-                </div>
+                {(entry.year || entry.director) && (
+                  <p className="text-xs text-muted-foreground">
+                    {[entry.year, entry.director].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </div>
 
               {/* Remove from watchlist */}
               <button
                 type="button"
-                aria-label={`Remove ${film.title} from watchlist`}
-                onClick={() => setRemoveTarget(film)}
+                aria-label={`Remove ${entry.title} from watchlist`}
+                onClick={() => setRemoveTarget(entry)}
                 className="relative z-10 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
@@ -146,15 +151,15 @@ export function WatchlistPage() {
       )}
 
       <LogFilmDialog
-        film={logTarget}
+        film={logTarget ? entryAsFilm(logTarget) : null}
         open={open}
         onOpenChange={setOpen}
-        onConfirm={(entry: LogEntry) => logTarget && logFilm(logTarget.id, entry)}
+        onConfirm={(entry) => logTarget && logFilm(logTarget.tmdb_id, entry)}
       />
 
       <ConfirmDialog
         open={removeTarget !== null}
-        onOpenChange={(v) => !v && setRemoveTarget(null)}
+        onOpenChange={(isOpen) => !isOpen && setRemoveTarget(null)}
         title="Remove from watchlist?"
         description={
           <>
@@ -163,7 +168,7 @@ export function WatchlistPage() {
           </>
         }
         confirmLabel="Remove"
-        onConfirm={() => removeTarget && removeFromWatchlist(removeTarget.id)}
+        onConfirm={() => removeTarget && removeFromWatchlist(removeTarget.tmdb_id)}
       />
     </div>
   )

@@ -42,10 +42,13 @@ class WatchlistEntryResponse(BaseModel):
         created_at (datetime): Timestamp of entry creation.
         updated_at (datetime): Timestamp of entry's last modification.
         tmdb_id (int): TMDB identifier of the saved film.
-        title (str, optional): Film title cached at save time. Avoids a
-            TMDB call when displaying the watchlist.
+        title (str, optional): Film title cached at save time.
         poster_url (str, optional): Full poster URL cached at save time.
-            None if TMDB had no poster for this film.
+        year (int, optional): Release year. None if TMDB did not provide it.
+        director (str, optional): Director name(s). None if unavailable.
+        synopsis (str, optional): Film overview from TMDB.
+        genres (list[str], optional): Genre names from TMDB.
+        runtime (int, optional): Duration in minutes from TMDB.
     """
     model_config = ConfigDict(from_attributes=True)
 
@@ -55,3 +58,8 @@ class WatchlistEntryResponse(BaseModel):
     tmdb_id: int
     title: str | None = None
     poster_url: str | None = None
+    year: int | None = None
+    director: str | None = None
+    synopsis: str | None = None
+    genres: list[str] | None = None
+    runtime: int | None = None

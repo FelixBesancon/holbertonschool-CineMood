@@ -13,8 +13,6 @@
  * Back button calls navigate(-1) to preserve the scroll position of the previous page
  * (important when returning from the recommendation results list).
  *
- * TODO: replace getFilm() with GET /films/{tmdb_id} and library reads with
- * GET /history / GET /watchlist when connecting to the backend.
  */
 import { useState, useEffect } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
@@ -26,16 +24,10 @@ import { TagChip } from "@/components/film-card"
 import { LogFilmDialog } from "@/components/log-film-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLibrary } from "@/context/LibraryContext"
+import { PRESTIGE_RECORD } from "@/lib/constants"
+import { cn, formatRuntime } from "@/lib/utils"
 import type { FilmWithStatus } from "@/types/api"
 import api from "@/services/api"
-
-const PRESTIGE_TIERS: Record<string, { emoji: string; label: string }> = {
-  platinum: { emoji: "💎", label: "Platinum" },
-  gold: { emoji: "🥇", label: "Gold" },
-  silver: { emoji: "🥈", label: "Silver" },
-  bronze: { emoji: "🥉", label: "Bronze" },
-  trash: { emoji: "🗑️", label: "Trash" },
-}
 
 export function FilmDetailPage() {
   const { id } = useParams()
@@ -45,7 +37,7 @@ export function FilmDetailPage() {
   const [loading, setLoading] = useState(true)
   const {
     getStatus, getHistoryEntry, addToWatchlist,
-    removeFromWatchlist, removeFromHistory, logFilm
+    removeFromWatchlist, removeFromHistory, logFilm, updateLog
   } = useLibrary()
   const [open, setOpen] = useState(false)
   const [confirm, setConfirm] = useState<"watchlist" | "history" | null>(null)
@@ -74,7 +66,7 @@ export function FilmDetailPage() {
 
   const status = getStatus(filmData.film.tmdb_id)
   const entry = getHistoryEntry(filmData.film.tmdb_id)
-  const prestige = entry?.prestige_tier ? PRESTIGE_TIERS[entry.prestige_tier] : null
+  const prestige = entry?.prestige_tier ? PRESTIGE_RECORD[entry.prestige_tier] : null
 
   // Go back to wherever the user came from (results, watchlist, dashboard, …)
   // so the recommendation list and its scroll position are preserved.
@@ -109,13 +101,13 @@ export function FilmDetailPage() {
               src={filmData.film.poster_url || "/placeholder.svg"}
               alt={`${filmData.film.title} poster`}
               crossOrigin="anonymous"
-              className="mx-auto w-44 shrink-0 rounded-xl shadow-xl ring-1 ring-border sm:mx-0"
+              className="mx-auto w-44 shrink-0 self-start rounded-xl shadow-xl ring-1 ring-border sm:mx-0"
             />
 
             <div className="flex flex-1 flex-col">
               <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{filmData.film.title}</h1>
               <p className="mt-1 text-muted-foreground">
-                {filmData.film.year} · Directed by {filmData.film.director} · {filmData.film.runtime}
+                {filmData.film.year} · Directed by {filmData.film.director} · {formatRuntime(filmData.film.runtime)}
               </p>
 
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -221,8 +213,8 @@ export function FilmDetailPage() {
 
                 {entry.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
-                    {entry.tags.map((t) => (
-                      <TagChip key={t.id} label={t.name} />
+                    {entry.tags.map((tag) => (
+                      <TagChip key={tag.id} label={tag.name} />
                     ))}
                   </div>
                 )}
@@ -247,12 +239,16 @@ export function FilmDetailPage() {
           prestige_tier: entry.prestige_tier,
           personal_note: entry.personal_note ?? ""
         } : undefined}
-        onConfirm={(e) => logFilm(filmData.film.tmdb_id, e)}
+        onConfirm={(entry) =>
+          status === "watched"
+            ? updateLog(filmData.film.tmdb_id, entry)
+            : logFilm(filmData.film.tmdb_id, entry)
+        }
       />
 
       <ConfirmDialog
         open={confirm !== null}
-        onOpenChange={(v) => !v && setConfirm(null)}
+        onOpenChange={(isOpen) => !isOpen && setConfirm(null)}
         title={confirm === "history" ? "Remove from history?" : "Remove from watchlist?"}
         description={
           confirm === "history" ? (

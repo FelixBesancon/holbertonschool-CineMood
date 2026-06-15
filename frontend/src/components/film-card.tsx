@@ -13,8 +13,10 @@
  * TAG_COLORS maps known mood tag labels to Tailwind colour classes.
  * Unmapped tags fall back to the neutral secondary palette.
  */
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { PRESTIGE_RECORD } from "@/lib/constants"
 import type { Tag } from "@/types/api"
 
 interface Film {
@@ -24,10 +26,56 @@ interface Film {
 }
 
 const TAG_COLORS: Record<string, string> = {
-  "Mind blowing": "bg-accent text-primary",
-  "Guilty pleasure": "bg-amber-100 text-amber-700",
-  "Would rewatch immediately": "bg-emerald-100 text-emerald-700",
-  "Emotional wreck": "bg-blue-100 text-blue-700",
+  "Feel-Good Movie":      "bg-green-100 text-green-700",
+  "Heartwarming":         "bg-pink-100 text-pink-700",
+  "Heartbreaking":        "bg-slate-100 text-slate-700",
+  "Hilarious":            "bg-yellow-100 text-yellow-700",
+  "Terrifying":           "bg-red-100 text-red-800",
+  "Fun Jump Scares":      "bg-orange-100 text-orange-700",
+  "Meh":                  "bg-zinc-100 text-zinc-500",
+  "All That for What?":   "bg-purple-100 text-purple-700",
+  "Epic":                 "bg-blue-200 text-blue-800",
+  "Cozy Watch":           "bg-amber-100 text-amber-700",
+  "Unsettling":           "bg-teal-100 text-teal-700",
+  "Bittersweet":          "bg-violet-100 text-violet-700",
+  "Mind-Blowing":         "bg-accent text-primary",
+  "Hidden Gem":           "bg-emerald-100 text-emerald-700",
+  "Cult Classic":         "bg-indigo-100 text-indigo-800",
+  "Must-See":             "bg-red-100 text-red-700",
+  "Nostalgia Hit":        "bg-amber-50 text-amber-800",
+  "Hasn't Aged Well":     "bg-stone-100 text-stone-500",
+  "Rewatchable":          "bg-lime-100 text-lime-700",
+  "Masterpiece":          "bg-yellow-200 text-yellow-800",
+  "I Can Die Now":        "bg-purple-200 text-purple-900",
+  "Guilty Pleasure":      "bg-fuchsia-100 text-fuchsia-700",
+  "So Stupid It's Good":  "bg-lime-200 text-lime-800",
+  "Perfect for a Date":   "bg-rose-100 text-rose-700",
+  "Crowd Pleaser":        "bg-sky-100 text-sky-700",
+  "Family Friendly":      "bg-blue-100 text-blue-600",
+  "Conversation Starter": "bg-cyan-100 text-cyan-700",
+  "Late-Night Watch":     "bg-indigo-200 text-indigo-900",
+  "Underrated":           "bg-emerald-200 text-emerald-800",
+  "Overrated":            "bg-orange-100 text-orange-700",
+  "Perfect Cast":         "bg-yellow-100 text-yellow-700",
+  "Amazing Script":       "bg-sky-200 text-sky-800",
+  "Visual Feast":         "bg-pink-200 text-pink-800",
+  "Great Soundtrack":     "bg-violet-200 text-violet-800",
+  "Comfort Movie":        "bg-amber-200 text-amber-800",
+  "Emotional Damage":     "bg-blue-100 text-blue-700",
+  "What Did I Just Watch?": "bg-fuchsia-200 text-fuchsia-900",
+  "Slow Burn":            "bg-orange-200 text-orange-800",
+  "Too Long":             "bg-slate-200 text-slate-600",
+  "Surprisingly Good":    "bg-green-200 text-green-800",
+  "Pure Chaos":           "bg-red-200 text-red-800",
+  "Badass":               "bg-zinc-200 text-zinc-800",
+  "Smart and Clever":     "bg-indigo-100 text-indigo-700",
+  "Beautifully Weird":    "bg-fuchsia-100 text-fuchsia-800",
+  "Instant Classic":      "bg-yellow-300 text-yellow-900",
+  "Not for Me":           "bg-stone-200 text-stone-600",
+  "Great Villain":        "bg-red-200 text-red-900",
+  "Strong Ending":        "bg-emerald-300 text-emerald-900",
+  "Weak Ending":          "bg-rose-200 text-rose-700",
+  "Vibe Over Plot":       "bg-violet-300 text-violet-900",
 }
 
 export function TagChip({ label, className }: { label: string; className?: string }) {
@@ -76,14 +124,7 @@ export function ScrollingTags({ tags }: { tags: Tag[] }) {
 }
 
 function PrestigeBadge({ prestige }: { prestige: string }) {
-  const TIERS: Record<string, { emoji: string; label: string }> = {
-    platinum: { emoji: "💎", label: "Platinum" },
-    gold: { emoji: "🥇", label: "Gold" },
-    silver: { emoji: "🥈", label: "Silver" },
-    bronze: { emoji: "🥉", label: "Bronze" },
-    trash: { emoji: "🗑️", label: "Trash" },
-  }
-  const tier = TIERS[prestige]
+  const tier = PRESTIGE_RECORD[prestige]
   if (!tier) return null
   return (
     <span
@@ -105,14 +146,25 @@ export function PosterFrame({
   className?: string
   children?: React.ReactNode
 }) {
+  const [imgError, setImgError] = useState(false)
+
   return (
-    <div className={cn("relative aspect-[2/3] overflow-hidden rounded-lg bg-muted", className)}>
-      <img
-        src={film.poster_url || "/placeholder.svg"}
-        alt={`${film.title ?? ""} poster`}
-        crossOrigin="anonymous"
-        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-      />
+    <div className={cn("relative aspect-[2/3] overflow-hidden rounded-lg bg-black", className)}>
+      {film.poster_url && !imgError ? (
+        <img
+          src={film.poster_url}
+          alt={`${film.title ?? ""} poster`}
+          crossOrigin="anonymous"
+          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center px-3 text-center">
+          <span className="font-heading text-base font-bold leading-tight text-red-500">
+            {film.title}
+          </span>
+        </div>
+      )}
       {children}
     </div>
   )

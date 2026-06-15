@@ -30,7 +30,7 @@ export function RecommendationPage() {
   const [specific, setSpecific] = useState("")
 
   // The highest step the user has unlocked. Each answered step reveals the next.
-  const revealed = answers.findIndex((a) => a === null)
+  const revealed = answers.findIndex((answer) => answer === null)
   const promptUnlocked = revealed === -1
   const visibleCount = promptUnlocked ? CHIP_STEPS : revealed + 1
 

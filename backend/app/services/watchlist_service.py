@@ -28,9 +28,7 @@ from app.models.watchlist_entry import WatchlistEntry
 from app.models.viewing_history_entry import ViewingHistoryEntry
 from app.models.user import User
 from app.external import tmdb_client
-
-# Reuse the same image base URL as film_service
-_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
+from app.services._tmdb_metadata import extract_metadata
 
 
 async def create_entry(
@@ -57,16 +55,13 @@ async def create_entry(
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
         httpx.RequestError: If the TMDB request cannot be sent.
     """
-    film_data = await tmdb_client.get_movie_basic(payload.tmdb_id)
-    title = film_data.get("title")
-    poster_path = film_data.get("poster_path")
-    poster_url = _POSTER_BASE_URL + poster_path if poster_path else None
+    film_data = await tmdb_client.get_movie_details(payload.tmdb_id)
+    meta = extract_metadata(film_data)
 
     entry = WatchlistEntry(
         user_id=user.id,
         tmdb_id=payload.tmdb_id,
-        title=title,
-        poster_url=poster_url,
+        **meta,
     )
     created = watchlist_repository.create(db, entry)
     return WatchlistEntryResponse.model_validate(created)
@@ -155,17 +150,14 @@ async def mark_as_watched(
             detail="No watchlist entry found for this film."
         )
 
-    film_data = await tmdb_client.get_movie_basic(payload.tmdb_id)
-    title = film_data.get("title")
-    poster_path = film_data.get("poster_path")
-    poster_url = _POSTER_BASE_URL + poster_path if poster_path else None
+    film_data = await tmdb_client.get_movie_details(payload.tmdb_id)
+    meta = extract_metadata(film_data)
 
     tags = viewing_history_repository.get_tags_by_ids(db, payload.tag_ids)
     history_entry = ViewingHistoryEntry(
         user_id=user.id,
         tmdb_id=payload.tmdb_id,
-        title=title,
-        poster_url=poster_url,
+        **meta,
         tags=tags,
         prestige_tier=payload.prestige_tier,
         personal_note=payload.personal_note

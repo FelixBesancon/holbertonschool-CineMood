@@ -2,7 +2,7 @@
  * LogFilmDialog — Modal for logging (or updating) a film entry.
  *
  * Lets the user pick:
- *   - Mood tags (multi-select toggle buttons from MOOD_TAGS)
+ *   - Mood tags (multi-select toggle buttons fetched from GET /tags)
  *   - Prestige tier (single-select toggle buttons from PRESTIGE_TIERS)
  *   - Personal note (free-text textarea)
  *
@@ -11,14 +11,11 @@
  *   - open / onOpenChange: controlled open state
  *   - initial: pre-populated values when editing an existing log entry
  *   - onConfirm: called with the final LogEntry when the user confirms
- *
- * TODO: when connecting to the backend, onConfirm should call
- * POST /history (new log) or PUT /history/{id} (update existing).
- * The prestige and note fields map directly to the ViewingHistoryEntry schema.
  */
 import { useState, useEffect } from "react"
 import api from "@/services/api"
 import { cn } from "@/lib/utils"
+import { PRESTIGE_TIERS } from "@/lib/constants"
 import {
   Dialog,
   DialogContent,
@@ -31,18 +28,10 @@ import { Label } from "@/components/ui/label"
 import type { Film, Tag } from "@/types/api"
 
 interface LogEntry {
-  tags: number[]        // IDs des tags
+  tags: number[]
   prestige_tier: string | null
   personal_note: string
 }
-
-const PRESTIGE_TIERS = [
-  { id: "platinum", emoji: "💎", label: "Platinum" },
-  { id: "gold", emoji: "🥇", label: "Gold" },
-  { id: "silver", emoji: "🥈", label: "Silver" },
-  { id: "bronze", emoji: "🥉", label: "Bronze" },
-  { id: "trash", emoji: "🗑️", label: "Trash" },
-]
 
 export function LogFilmDialog({
   film,
@@ -66,10 +55,20 @@ export function LogFilmDialog({
     api.get('/tags').then(res => setAvailableTags(res.data))
   }, [])
 
+  // Reset form values each time the dialog opens so stale state from a previous
+  // film doesn't bleed through when the dialog is reused for a different entry.
+  useEffect(() => {
+    if (open) {
+      setTags(initial?.tags ?? [])
+      setPrestige(initial?.prestige_tier ?? null)
+      setNote(initial?.personal_note ?? "")
+    }
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!film) return null
 
-  const toggleTag = (t: number) =>
-    setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
+  const toggleTag = (tagId: number) =>
+    setTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,13 +96,13 @@ export function LogFilmDialog({
           <div className="flex flex-col gap-2">
             <Label>How was it?</Label>
             <div className="flex flex-wrap gap-2">
-              {availableTags.map((t) => {
-                const active = tags.includes(t.id)
+              {availableTags.map((tag) => {
+                const active = tags.includes(tag.id)
                 return (
                   <button
-                    key={t.id}
+                    key={tag.id}
                     type="button"
-                    onClick={() => toggleTag(t.id)}
+                    onClick={() => toggleTag(tag.id)}
                     className={cn(
                       "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
                       active
@@ -111,7 +110,7 @@ export function LogFilmDialog({
                         : "border-border bg-background text-foreground hover:border-primary/40",
                     )}
                   >
-                    {t.name}
+                    {tag.name}
                   </button>
                 )
               })}
@@ -160,13 +159,11 @@ export function LogFilmDialog({
             size="lg"
             className="h-11 w-full"
             onClick={() => {
-              onConfirm?.({
-                tags, prestige_tier: prestige, personal_note: note
-              })
+              onConfirm?.({ tags, prestige_tier: prestige, personal_note: note })
               onOpenChange(false)
             }}
           >
-            Log this film
+            {initial ? "Save changes" : "Log this film"}
           </Button>
         </div>
       </DialogContent>

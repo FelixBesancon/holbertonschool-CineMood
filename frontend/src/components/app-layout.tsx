@@ -46,7 +46,7 @@ function NavBar() {
   const isActive = (to: string) =>
     location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to))
 
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : "U"
+  const initials = user ? `${user.first_name[0]}${user.last_name[0]}` : "U"
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
@@ -90,7 +90,7 @@ function NavBar() {
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">
-                      {user?.firstName} {user?.lastName}
+                      {user?.first_name} {user?.last_name}
                     </span>
                     <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
                   </div>

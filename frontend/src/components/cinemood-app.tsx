@@ -12,8 +12,7 @@
  * The `mounted` guard prevents a hydration flash by delaying render
  * until the component is mounted on the client.
  *
- * TODO: replace AuthProvider and LibraryProvider mock implementations
- * with real API-backed versions before connecting to the backend.
+ * AuthProvider and LibraryProvider are both connected to the real API.
  */
 import { useEffect, useState } from "react"
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"

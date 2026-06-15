@@ -2,15 +2,14 @@
  * HistoryPage — User's full viewing diary.
  *
  * Displays all history entries as rich cards: poster, prestige badge,
- * mood tags, personal note, and watched date. A platinum entry gets a
+ * mood tags, personal note, and viewing date. A Platinum entry gets a
  * golden shimmer animation (animate-platinum-glow / platinum-shine).
  *
  * Sorting options: Prestige tier (default) | A–Z | Viewing date.
- * Clicking a card navigates to /films/:id for editing the log entry.
+ * Clicking a card navigates to /films/:tmdb_id for editing the log entry.
  * The trash button opens a ConfirmDialog before calling removeFromHistory.
  *
- * Data comes from LibraryContext (mock). TODO: replace with GET /history
- * and DELETE /history/{tmdb_id} when connecting to the backend.
+ * Data comes from LibraryContext (GET /history).
  */
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -20,9 +19,8 @@ import { Badge } from "@/components/ui/badge"
 import { PosterFrame, TagChip } from "@/components/film-card"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLibrary } from "@/context/LibraryContext"
-import { getFilm, PRESTIGE_TIERS, PRESTIGE_RANK, type Film } from "@/lib/mock-data"
-
-const prestigeOf = (id: string) => PRESTIGE_TIERS.find((p) => p.id === id)
+import { PRESTIGE_RECORD, PRESTIGE_RANK } from "@/lib/constants"
+import type { HistoryEntry } from "@/types/api"
 
 type SortKey = "prestige" | "alpha" | "date"
 
@@ -32,33 +30,39 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "date", label: "Viewing date" },
 ]
 
-// Subtle per-tier accent styling for the card frame.
 const TIER_STYLE: Record<string, string> = {
-  platinum: "border-amber-300 bg-amber-50/40",
-  gold: "border-amber-200",
-  silver: "border-zinc-200",
-  bronze: "border-orange-200/70",
-  trash: "border-border opacity-90",
+  Platinum: "border-amber-300 bg-amber-50/40",
+  Gold:     "border-amber-200",
+  Silver:   "border-zinc-200",
+  Bronze:   "border-orange-200/70",
+  Coal:     "border-zinc-300 opacity-90",
+  Trash:    "border-border opacity-90",
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+  return new Date(iso).toLocaleDateString("en-US", {
+    day: "numeric", month: "short", year: "numeric",
+  })
 }
 
 export function HistoryPage() {
   const navigate = useNavigate()
   const { history, removeFromHistory } = useLibrary()
   const [sort, setSort] = useState<SortKey>("prestige")
-  const [removeTarget, setRemoveTarget] = useState<Film | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<HistoryEntry | null>(null)
 
   const entries = useMemo(() => {
     const list = [...history]
     if (sort === "alpha") {
-      list.sort((a, b) => (getFilm(a.filmId)?.title ?? "").localeCompare(getFilm(b.filmId)?.title ?? ""))
+      list.sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""))
     } else if (sort === "date") {
-      list.sort((a, b) => +new Date(b.watchedAt) - +new Date(a.watchedAt))
+      list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
     } else {
-      list.sort((a, b) => PRESTIGE_RANK[a.prestige] - PRESTIGE_RANK[b.prestige])
+      list.sort((a, b) => {
+        const ra = a.prestige_tier != null ? (PRESTIGE_RANK[a.prestige_tier] ?? 99) : 99
+        const rb = b.prestige_tier != null ? (PRESTIGE_RANK[b.prestige_tier] ?? 99) : 99
+        return ra - rb
+      })
     }
     return list
   }, [history, sort])
@@ -68,7 +72,6 @@ export function HistoryPage() {
       <h1 className="font-heading text-2xl font-bold sm:text-3xl">My History</h1>
       <p className="mt-1 text-sm text-muted-foreground">{history.length} films logged in your diary.</p>
 
-      {/* Controls + edit hint */}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1 shadow-sm">
           {SORTS.map((s) => (
@@ -95,40 +98,39 @@ export function HistoryPage() {
 
       <div className="mt-6 flex flex-col gap-4">
         {entries.map((entry) => {
-          const film = getFilm(entry.filmId)
-          if (!film) return null
-          const tier = prestigeOf(entry.prestige)
-          const isPlatinum = entry.prestige === "platinum"
+          const tier = entry.prestige_tier ? PRESTIGE_RECORD[entry.prestige_tier] : null
+          const isPlatinum = entry.prestige_tier === "Platinum"
           return (
             <div
-              key={entry.filmId}
+              key={entry.tmdb_id}
               className={cn(
                 "group relative flex gap-4 overflow-hidden rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
-                TIER_STYLE[entry.prestige] ?? "border-border",
+                entry.prestige_tier ? (TIER_STYLE[entry.prestige_tier] ?? "border-border") : "border-border",
                 isPlatinum && "animate-platinum-glow platinum-shine",
               )}
             >
-              {/* Whole-card edit trigger */}
               <button
                 type="button"
-                aria-label={`Edit log for ${film.title}`}
-                onClick={() => navigate(`/films/${film.id}`)}
+                aria-label={`Edit log for ${entry.title ?? "this film"}`}
+                onClick={() => navigate(`/films/${entry.tmdb_id}`)}
                 className="absolute inset-0 z-0 cursor-pointer"
               />
 
               <div className="pointer-events-none relative z-10 block w-20 shrink-0 sm:w-24">
-                <PosterFrame film={film} className="ring-1 ring-border" />
+                <PosterFrame film={entry} className="ring-1 ring-border" />
               </div>
 
               <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <span className="font-heading text-base font-bold leading-tight group-hover:text-primary">
-                      {film.title}
+                      {entry.title}
                     </span>
-                    <p className="text-xs text-muted-foreground">
-                      {film.year} · {film.director}
-                    </p>
+                    {(entry.year || entry.director) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[entry.year, entry.director].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
                   </div>
                   {tier && (
                     <Badge
@@ -141,32 +143,34 @@ export function HistoryPage() {
                   )}
                 </div>
 
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {entry.tags.map((t) => (
-                    <TagChip key={t} label={t} />
-                  ))}
-                </div>
+                {entry.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {entry.tags.map((tag) => (
+                      <TagChip key={tag.id} label={tag.name} />
+                    ))}
+                  </div>
+                )}
 
-                {entry.note && (
+                {entry.personal_note && (
                   <p className="mt-2 text-pretty text-sm italic text-muted-foreground">
-                    &ldquo;{entry.note}&rdquo;
+                    &ldquo;{entry.personal_note}&rdquo;
                   </p>
                 )}
 
-                <p className="mt-2 text-xs text-muted-foreground">Watched {formatDate(entry.watchedAt)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Watched {formatDate(entry.created_at)}
+                </p>
               </div>
 
-              {/* Remove from history */}
               <button
                 type="button"
-                aria-label={`Remove ${film.title} from history`}
-                onClick={() => setRemoveTarget(film)}
+                aria-label={`Remove ${entry.title ?? "this film"} from history`}
+                onClick={() => setRemoveTarget(entry)}
                 className="relative z-10 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
 
-              {/* Hover affordance — modern "click to edit" pill, pinned bottom-right */}
               <div className="pointer-events-none absolute bottom-3 right-3 z-10">
                 <span className="flex translate-y-1 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-0 shadow-md transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
                   <Pencil className="h-3.5 w-3.5" />
@@ -184,17 +188,17 @@ export function HistoryPage() {
 
       <ConfirmDialog
         open={removeTarget !== null}
-        onOpenChange={(v) => !v && setRemoveTarget(null)}
+        onOpenChange={(isOpen) => !isOpen && setRemoveTarget(null)}
         title="Remove from history?"
         description={
           <>
             This will permanently delete your log for{" "}
-            <span className="font-semibold text-foreground">{removeTarget?.title}</span>, including its prestige
-            tier, tags and note. This can&apos;t be undone.
+            <span className="font-semibold text-foreground">{removeTarget?.title}</span>, including its
+            prestige tier, tags and note. This can&apos;t be undone.
           </>
         }
         confirmLabel="Delete log"
-        onConfirm={() => removeTarget && removeFromHistory(removeTarget.id)}
+        onConfirm={() => removeTarget && removeFromHistory(removeTarget.tmdb_id)}
       />
     </div>
   )

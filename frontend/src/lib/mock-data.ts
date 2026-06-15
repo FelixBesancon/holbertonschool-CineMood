@@ -1,27 +1,17 @@
 /**
- * mock-data.ts — Static fixture data used during frontend development.
+ * mock-data.ts — Static fixture data for the recommendation flow.
  *
- * Provides:
- *   - Type definitions: Film, LogEntry, PrestigeTier, FilmStatus, Recommendation
- *   - FILMS: catalogue of 6 films with poster, backdrop, genres, etc.
- *   - MOOD_TAGS / PRESTIGE_TIERS: UI constants for the log-film dialog
- *   - RECENTLY_WATCHED / WATCHLIST: pre-seeded library state (consumed by LibraryContext)
- *   - RECOMMENDATIONS: ranked film picks used on the results page
- *   - MOOD_QUESTIONS: questionnaire for the recommendation swipe flow
- *   - Helper functions: getFilm(), getFilmStatus()
+ * The recommendation feature (questionnaire → swipe → results) is not yet
+ * connected to a backend endpoint. This file provides the mock catalogue and
+ * ranked picks used by swipe-page, results-page, and recommendation-page
+ * until a POST /recommendations endpoint is available.
  *
- * TODO: remove this file (or reduce it to type definitions) once the app
- * fetches real data from the backend. Replace FILMS with GET /films/search,
- * RECENTLY_WATCHED with GET /history, WATCHLIST with GET /watchlist, and
- * RECOMMENDATIONS with the future GET /recommendations endpoint.
+ * FILMS / getFilm: 6 curated films used by the swipe deck and results cards.
+ * MOOD_QUESTIONS: questionnaire steps for recommendation-page.
+ * PLATFORMS: streaming services shown in profile-page.
+ * RECOMMENDATIONS / PLATFORM_CHIP: ranked picks and platform badge colours
+ *     used by results-page.
  */
-export type PrestigeTier = "platinum" | "gold" | "silver" | "bronze" | "trash"
-
-export interface LogEntry {
-  tags: string[]
-  prestige: PrestigeTier | null
-  note: string
-}
 
 export interface Film {
   id: string
@@ -38,26 +28,7 @@ export interface Film {
   platform: "Netflix" | "Prime" | "Disney+"
 }
 
-export const MOOD_TAGS = [
-  "Great with a group",
-  "Guilty pleasure",
-  "Mind blowing",
-  "Needs full attention",
-  "Would rewatch immediately",
-  "Fell asleep",
-  "Emotional wreck",
-  "So stupid it's good",
-] as const
-
-export const PRESTIGE_TIERS: { id: PrestigeTier; label: string; emoji: string }[] = [
-  { id: "platinum", label: "Platinum", emoji: "🏆" },
-  { id: "gold", label: "Gold", emoji: "🥇" },
-  { id: "silver", label: "Silver", emoji: "🥈" },
-  { id: "bronze", label: "Bronze", emoji: "🥉" },
-  { id: "trash", label: "Trash", emoji: "🗑️" },
-]
-
-const poster = (id: string, txt: string) =>
+const poster = (id: string) =>
   `https://picsum.photos/seed/${id}/400/600`
 const backdrop = (id: string) => `https://picsum.photos/seed/${id}-bg/1200/675`
 const still = (id: string, n: number) => `https://picsum.photos/seed/${id}-s${n}/320/180`
@@ -72,7 +43,7 @@ export const FILMS: Film[] = [
     genres: ["Thriller", "Drama", "Dark Comedy"],
     synopsis:
       "A poor family schemes to become employed by a wealthy household by infiltrating their lives, until a shocking turn upends everyone's plans.",
-    poster: poster("parasite", "Parasite"),
+    poster: poster("parasite"),
     backdrop: backdrop("parasite"),
     stills: [still("parasite", 1), still("parasite", 2)],
     highlights: ["Won 4 Oscars", "Palme d'Or", "Mind-blowing ending"],
@@ -87,7 +58,7 @@ export const FILMS: Film[] = [
     genres: ["Action", "Crime", "Drama"],
     synopsis:
       "Batman faces the Joker, a criminal mastermind who plunges Gotham into anarchy and forces the Dark Knight closer to crossing the line.",
-    poster: poster("dark-knight", "The Dark Knight"),
+    poster: poster("dark-knight"),
     backdrop: backdrop("dark-knight"),
     stills: [still("dark-knight", 1), still("dark-knight", 2)],
     highlights: ["Cult classic", "Iconic villain", "Won 2 Oscars"],
@@ -102,7 +73,7 @@ export const FILMS: Film[] = [
     genres: ["Sci-Fi", "Comedy", "Adventure"],
     synopsis:
       "An overwhelmed laundromat owner discovers she must connect with versions of herself across the multiverse to stop a great threat.",
-    poster: poster("eeaao", "EEAAO"),
+    poster: poster("eeaao"),
     backdrop: backdrop("eeaao"),
     stills: [still("eeaao", 1), still("eeaao", 2)],
     highlights: ["Won 7 Oscars", "Mind-blowing", "Emotional wreck"],
@@ -117,7 +88,7 @@ export const FILMS: Film[] = [
     genres: ["Romance", "Comedy"],
     synopsis:
       "A shy Parisian waitress decides to secretly orchestrate the happiness of those around her, while discovering love of her own.",
-    poster: poster("amelie", "Amélie"),
+    poster: poster("amelie"),
     backdrop: backdrop("amelie"),
     stills: [still("amelie", 1), still("amelie", 2)],
     highlights: ["Cult classic", "Feel-good", "Visually stunning"],
@@ -132,7 +103,7 @@ export const FILMS: Film[] = [
     genres: ["Sci-Fi", "Drama", "Adventure"],
     synopsis:
       "A team of explorers travels through a wormhole in space in an attempt to ensure humanity's survival as Earth becomes uninhabitable.",
-    poster: poster("interstellar", "Interstellar"),
+    poster: poster("interstellar"),
     backdrop: backdrop("interstellar"),
     stills: [still("interstellar", 1), still("interstellar", 2)],
     highlights: ["Won 1 Oscar", "Mind-blowing ending", "Epic score"],
@@ -147,7 +118,7 @@ export const FILMS: Film[] = [
     genres: ["Comedy", "Adventure"],
     synopsis:
       "A legendary concierge and his trusted lobby boy become embroiled in the theft of a priceless painting and a battle for a vast fortune.",
-    poster: poster("grand-budapest", "Grand Budapest"),
+    poster: poster("grand-budapest"),
     backdrop: backdrop("grand-budapest"),
     stills: [still("grand-budapest", 1), still("grand-budapest", 2)],
     highlights: ["Won 4 Oscars", "Visually iconic", "Guilty pleasure"],
@@ -156,74 +127,7 @@ export const FILMS: Film[] = [
 ]
 
 export function getFilm(id: string) {
-  return FILMS.find((f) => f.id === id)
-}
-
-// Pre-seeded diary state (full viewing history)
-export const RECENTLY_WATCHED: {
-  filmId: string
-  tags: string[]
-  prestige: PrestigeTier
-  note?: string
-  watchedAt: string
-}[] = [
-  {
-    filmId: "parasite",
-    tags: ["Mind blowing", "Needs full attention", "Would rewatch immediately"],
-    prestige: "platinum",
-    note: "Watched it twice in a week. The tonal shifts are masterful — still thinking about that basement.",
-    watchedAt: "2024-06-02",
-  },
-  {
-    filmId: "dark-knight",
-    tags: ["Would rewatch immediately", "Mind blowing"],
-    prestige: "gold",
-    note: "Heath Ledger steals every scene. The interrogation still gives me chills.",
-    watchedAt: "2024-05-18",
-  },
-  {
-    filmId: "eeaao",
-    tags: ["Emotional wreck", "Mind blowing"],
-    prestige: "gold",
-    note: "Cried during the rocks scene. Did not expect that.",
-    watchedAt: "2024-06-09",
-  },
-]
-
-export const WATCHLIST: { filmId: string; addedAt: string }[] = [
-  { filmId: "interstellar", addedAt: "2024-06-08" },
-  { filmId: "grand-budapest", addedAt: "2024-05-21" },
-]
-
-// Rank used to sort/style prestige tiers (highest first)
-export const PRESTIGE_RANK: Record<PrestigeTier, number> = {
-  platinum: 0,
-  gold: 1,
-  silver: 2,
-  bronze: 3,
-  trash: 4,
-}
-
-export type FilmStatus = "watched" | "watchlist" | "none"
-
-export function getFilmStatus(id: string): FilmStatus {
-  if (RECENTLY_WATCHED.some((e) => e.filmId === id)) return "watched"
-  if (WATCHLIST.some((e) => e.filmId === id)) return "watchlist"
-  return "none"
-}
-
-// Logged films with full diary entries (for film detail history)
-export const LOGGED: Record<string, LogEntry> = {
-  parasite: {
-    tags: ["Mind blowing", "Needs full attention"],
-    prestige: "platinum",
-    note: "Watched it twice in a week. The tonal shifts are masterful — still thinking about that basement.",
-  },
-  eeaao: {
-    tags: ["Emotional wreck", "Mind blowing"],
-    prestige: "gold",
-    note: "Cried during the rocks scene. Did not expect that.",
-  },
+  return FILMS.find((film) => film.id === id)
 }
 
 export const PLATFORMS = [

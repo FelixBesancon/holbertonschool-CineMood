@@ -25,13 +25,13 @@ import { PLATFORMS } from "@/lib/mock-data"
 
 export function ProfilePage() {
   const { user } = useAuth()
-  const [first, setFirst] = useState(user?.firstName ?? "")
-  const [last, setLast] = useState(user?.lastName ?? "")
-  const [age, setAge] = useState(String(user?.age ?? ""))
+  const [first, setFirst] = useState(user?.first_name ?? "")
+  const [last, setLast] = useState(user?.last_name ?? "")
+  const [age, setAge] = useState("")
   const [selected, setSelected] = useState<string[]>(["netflix", "prime", "canal"])
 
-  const toggle = (id: string) =>
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  const toggle = (platformId: string) =>
+    setSelected((prev) => (prev.includes(platformId) ? prev.filter((existing) => existing !== platformId) : [...prev, platformId]))
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">

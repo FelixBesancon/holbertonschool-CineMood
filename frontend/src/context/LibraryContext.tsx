@@ -28,7 +28,10 @@ interface LibraryContextValue {
   removeFromHistory: (tmdb_id: number) => Promise<void>
   addToWatchlist: (tmdb_id: number) => Promise<void>
   logFilm: (tmdb_id: number, opts?: {
-    tags?: number[], prestige_tier?: string, personal_note?: string
+    tags?: number[], prestige_tier?: string | null, personal_note?: string | null
+  }) => Promise<void>
+  updateLog: (tmdb_id: number, opts: {
+    tags?: number[], prestige_tier?: string | null, personal_note?: string | null
   }) => Promise<void>
 }
 
@@ -103,10 +106,38 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   }
 
   const logFilm = async (tmdb_id: number, opts?: {
-    tags?: number[], prestige_tier?: string, personal_note?: string
+    tags?: number[], prestige_tier?: string | null, personal_note?: string | null
+  }) => {
+    const body = {
+      tmdb_id,
+      tag_ids: opts?.tags,
+      prestige_tier: opts?.prestige_tier,
+      personal_note: opts?.personal_note,
+    }
+    try {
+      // Use the atomic watchlist→history transition when the film is in the
+      // watchlist so it's removed and added in a single DB transaction.
+      const isInWatchlist = watchlist.some(e => e.tmdb_id === tmdb_id)
+      if (isInWatchlist) {
+        await api.post(`/watchlist/${tmdb_id}/watched`, body)
+      } else {
+        await api.post('/history', body)
+      }
+      await refresh()
+    } catch (err: unknown) {
+      throw (err)
+    }
+  }
+
+  const updateLog = async (tmdb_id: number, opts: {
+    tags?: number[], prestige_tier?: string | null, personal_note?: string | null
   }) => {
     try {
-      await api.post('/history', { tmdb_id, ...opts })
+      await api.patch(`/history/${tmdb_id}`, {
+        tag_ids: opts.tags,
+        prestige_tier: opts.prestige_tier,
+        personal_note: opts.personal_note,
+      })
       await refresh()
     } catch (err: unknown) {
       throw (err)
@@ -118,7 +149,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       history, watchlist, loading, error,
       refresh, getStatus, getHistoryEntry,
       removeFromWatchlist, removeFromHistory,
-      addToWatchlist, logFilm
+      addToWatchlist, logFilm, updateLog
       }}>
       {children}
     </LibraryContext.Provider>

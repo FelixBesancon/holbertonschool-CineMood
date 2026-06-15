@@ -29,7 +29,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (
     first_name: string, last_name: string,
-    email: string, password: string, age: number
+    email: string, password: string, age?: number
   ) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
@@ -38,7 +38,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = sessionStorage.getItem('user')
+    return stored ? (JSON.parse(stored) as User) : null
+  })
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem('token'))
 
   const login = async (
@@ -49,11 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token)
     setUser(user)
     sessionStorage.setItem('token', token)
+    sessionStorage.setItem('user', JSON.stringify(user))
   }
 
   const register = async (
     first_name: string, last_name: string,
-    email: string, password: string, age: number
+    email: string, password: string, age?: number
   ) => {
     const response = await api.post('/auth/register', {
       first_name, last_name, email, password, age
@@ -62,12 +66,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token)
     setUser(user)
     sessionStorage.setItem('token', token)
+    sessionStorage.setItem('user', JSON.stringify(user))
   }
 
   const logout = () => {
     setToken(null)
     setUser(null)
     sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
   }
 
   const isAuthenticated = !!token

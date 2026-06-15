@@ -9,6 +9,7 @@ viewing_history_service.
 Routes:
     - GET    /history:             retrieve the current user's viewing history
     - POST   /history:             log a film in the current user's history
+    - PATCH  /history/{tmdb_id}:   update tags/prestige/note on an existing entry
     - DELETE /history/{tmdb_id}:   remove a film from the current user's history
 """
 
@@ -22,7 +23,7 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.services import viewing_history_service
 from app.schemas.viewing_history import (
-    ViewingHistoryEntryCreate, ViewingHistoryEntryResponse
+    ViewingHistoryEntryCreate, ViewingHistoryEntryUpdate, ViewingHistoryEntryResponse
 )
 
 
@@ -96,6 +97,30 @@ async def log_film(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not reach the film database. Please try again later."
         )
+
+
+@router.patch("/{tmdb_id}", response_model=ViewingHistoryEntryResponse)
+def update_film(
+    tmdb_id: int,
+    payload: ViewingHistoryEntryUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update tags, prestige tier, and/or personal note on a history entry.
+
+    Args:
+        tmdb_id (int): TMDB identifier of the film to update.
+        payload (ViewingHistoryEntryUpdate): Fields to update.
+
+    Returns:
+        ViewingHistoryEntryResponse: The updated entry.
+
+    Raises:
+        HTTPException 401: If the request is not authenticated.
+        HTTPException 404: If the user has no history entry for this film.
+    """
+    return viewing_history_service.update_entry(db, current_user, tmdb_id, payload)
 
 
 @router.delete("/{tmdb_id}", status_code=status.HTTP_200_OK)

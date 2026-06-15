@@ -23,6 +23,16 @@ export interface HistoryEntry {
   title: string | null
   /** Absolute URL to the TMDB poster image; null if unavailable. */
   poster_url: string | null
+  /** Release year; null if TMDB did not provide it. */
+  year: number | null
+  /** Director name(s), comma-joined; null if unavailable. */
+  director: string | null
+  /** Film overview from TMDB; null if unavailable. */
+  synopsis: string | null
+  /** Genre names from TMDB; null if unavailable. */
+  genres: string[] | null
+  /** Duration in minutes from TMDB; null if unavailable. */
+  runtime: number | null
   tags: Tag[]
   /**
    * User's personal rating for this film.
@@ -45,6 +55,16 @@ export interface WatchlistEntry {
   title: string | null
   /** Absolute URL to the TMDB poster image; null if unavailable. */
   poster_url: string | null
+  /** Release year; null if TMDB did not provide it. */
+  year: number | null
+  /** Director name(s), comma-joined; null if unavailable. */
+  director: string | null
+  /** Film overview from TMDB; null if unavailable. */
+  synopsis: string | null
+  /** Genre names from TMDB; null if unavailable. */
+  genres: string[] | null
+  /** Duration in minutes from TMDB; null if unavailable. */
+  runtime: number | null
 }
 
 export interface Film {

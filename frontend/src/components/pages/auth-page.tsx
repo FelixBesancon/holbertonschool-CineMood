@@ -2,14 +2,8 @@
  * AuthPage — Public login / register page.
  *
  * A centered card with two tabs: "Log in" and "Register".
- * Both forms currently call the MOCK login() from auth-context.tsx,
- * which sets a hardcoded user and redirects to /dashboard.
- *
- * TODO: wire handleSubmit to the real auth flow once src/context/AuthContext.tsx
- * replaces the mock:
- *   - Login tab → await login(email, password)  (POST /auth/login)
- *   - Register tab → await register(firstName, email, password)  (POST /auth/register)
- * Surface validation errors (422) and network errors inline.
+ * Login tab calls POST /auth/login, register tab calls POST /auth/register.
+ * Validation errors (422) and network errors are surfaced inline.
  */
 import { useState, SyntheticEvent } from "react"
 import { useNavigate } from "react-router-dom"
@@ -61,6 +55,7 @@ export function AuthPage() {
   const navigate = useNavigate()
   const { login, register } = useAuth()
   const [tab, setTab] = useState("login")
+  const handleTabChange = (value: string) => { setTab(value); setError("") }
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [firstName, setFirstName] = useState("")
@@ -81,7 +76,7 @@ export function AuthPage() {
   const handleRegister = async (e: SyntheticEvent) => {
     e.preventDefault()
     try {
-      await register(firstName, lastName, email, password, parseInt(age))
+      await register(firstName, lastName, email, password, age ? parseInt(age, 10) : undefined)
       navigate("/dashboard")
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
@@ -108,7 +103,7 @@ export function AuthPage() {
 
         <Card className="border-border shadow-lg">
           <CardContent className="p-6">
-            <Tabs value={tab} onValueChange={setTab}>
+            <Tabs value={tab} onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Log in</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
