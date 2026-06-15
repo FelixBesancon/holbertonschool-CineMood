@@ -25,7 +25,7 @@ import { LogFilmDialog } from "@/components/log-film-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLibrary } from "@/context/LibraryContext"
 import { PRESTIGE_RECORD } from "@/lib/constants"
-import { cn, formatRuntime } from "@/lib/utils"
+import { formatRuntime } from "@/lib/utils"
 import type { FilmWithStatus } from "@/types/api"
 import api from "@/services/api"
 

@@ -14,7 +14,7 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Info, Pencil, Trash2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatRuntime } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { PosterFrame, TagChip } from "@/components/film-card"
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -126,9 +126,9 @@ export function HistoryPage() {
                     <span className="font-heading text-base font-bold leading-tight group-hover:text-primary">
                       {entry.title}
                     </span>
-                    {(entry.year || entry.director) && (
+                    {(entry.year || entry.director || entry.runtime) && (
                       <p className="text-xs text-muted-foreground">
-                        {[entry.year, entry.director].filter(Boolean).join(" · ")}
+                        {[entry.year, entry.director, formatRuntime(entry.runtime)].filter(Boolean).join(" · ")}
                       </p>
                     )}
                   </div>

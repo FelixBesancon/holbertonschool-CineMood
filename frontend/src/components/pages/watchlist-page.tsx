@@ -11,7 +11,7 @@
  */
 import { useMemo, useState } from "react"
 import { Info, Bookmark, PenLine, Trash2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatRuntime } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { PosterFrame } from "@/components/film-card"
 import { LogFilmDialog } from "@/components/log-film-dialog"
@@ -114,9 +114,26 @@ export function WatchlistPage() {
                 <span className="font-heading text-base font-bold leading-tight transition-colors group-hover:text-primary">
                   {entry.title}
                 </span>
-                {(entry.year || entry.director) && (
+
+                {(entry.year || entry.director || entry.runtime) && (
                   <p className="text-xs text-muted-foreground">
-                    {[entry.year, entry.director].filter(Boolean).join(" · ")}
+                    {[entry.year, entry.director, formatRuntime(entry.runtime)].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+
+                {entry.genres && entry.genres.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {entry.genres.slice(0, 3).map((g) => (
+                      <Badge key={g} variant="outline" className="font-normal">
+                        {g}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {entry.synopsis && (
+                  <p className="mt-2 line-clamp-3 text-pretty text-sm italic text-muted-foreground">
+                    {entry.synopsis}
                   </p>
                 )}
               </div>

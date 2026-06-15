@@ -93,7 +93,7 @@ This project is the end-of-year portfolio project for the Bachelor CDA program a
 | Would rewatch immediately | Says it all |
 | Instant classic | Timeless |
 
-Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
+Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Coal / Trash**
 
 ### Mood-Based Recommendation Engine
 
@@ -189,19 +189,21 @@ holbertonschool-CineMood/
 │   │   │   │   └── profile-page.tsx
 │   │   │   ├── cinemood-app.tsx         ← root component + routing
 │   │   │   ├── app-layout.tsx           ← navbar + page shell
-│   │   │   ├── auth-context.tsx         ← mock auth context (dev)
-│   │   │   ├── library-context.tsx      ← mock library state (dev)
-│   │   │   ├── film-card.tsx
-│   │   │   ├── log-film-dialog.tsx
+│   │   │   ├── film-card.tsx            ← PosterFrame, FilmCard, TagChip
+│   │   │   ├── log-film-dialog.tsx      ← tags + prestige + note modal
 │   │   │   ├── confirm-dialog.tsx
 │   │   │   └── logo.tsx
 │   │   ├── context/
-│   │   │   └── AuthContext.tsx          ← real auth context (backend-ready)
+│   │   │   ├── AuthContext.tsx          ← JWT auth, session persistence
+│   │   │   └── LibraryContext.tsx       ← history, watchlist, mutations
 │   │   ├── services/
 │   │   │   └── api.ts                   ← Axios instance + JWT interceptors
+│   │   ├── types/
+│   │   │   └── api.ts                   ← TypeScript interfaces (Film, HistoryEntry, …)
 │   │   └── lib/
-│   │       ├── mock-data.ts             ← fixture data (dev only)
-│   │       └── utils.ts                 ← cn() class helper
+│   │       ├── mock-data.ts             ← fixture data (recommendation flow, dev only)
+│   │       ├── constants.ts             ← PRESTIGE_RECORD, PRESTIGE_TIERS, PRESTIGE_RANK
+│   │       └── utils.ts                 ← cn(), formatRuntime()
 │   ├── tsconfig.json
 │   ├── vite.config.ts
 │   └── package.json
@@ -369,6 +371,7 @@ Run `deactivate` first.
 | GET | `/films/{tmdb_id}` | Get film details and user status | ✅ |
 | GET | `/history` | Retrieve the user's viewing history | ✅ |
 | POST | `/history` | Log a watched film with tags and prestige tier | ✅ |
+| PATCH | `/history/{tmdb_id}` | Update tags, prestige tier, or note on an existing entry | ✅ |
 | DELETE | `/history/{tmdb_id}` | Remove a film from history | ✅ |
 | GET | `/watchlist` | Retrieve the user's watchlist | ✅ |
 | POST | `/watchlist` | Add a film to the watchlist | ✅ |
@@ -564,7 +567,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 - [x] User authentication (Sprint 1)
 - [x] Film search and logging with tags (Sprint 2)
 - [x] Watchlist, mark-as-watched, and personal dashboard (Sprint 3)
-- [ ] Frontend connected to backend API (Sprint 4)
+- [x] Frontend fully connected to backend API (Sprint 4)
 - [ ] Mood questionnaire and AI-powered recommendations via Mistral AI (Sprint 5)
 
 ### Future versions

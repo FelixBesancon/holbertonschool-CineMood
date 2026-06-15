@@ -15,6 +15,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import api from "@/services/api"
 import type { HistoryEntry, WatchlistEntry } from "@/types/api"
+import { useAuth } from "@/context/AuthContext"
 
 interface LibraryContextValue {
   history: HistoryEntry[]
@@ -38,6 +39,7 @@ interface LibraryContextValue {
 const LibraryContext = createContext<LibraryContextValue | null>(null)
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth()
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [watchlist, setWatchlist] = useState<WatchlistEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,8 +65,14 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (isAuthenticated) {
+      fetchData()
+    } else {
+      setHistory([])
+      setWatchlist([])
+      setLoading(false)
+    }
+  }, [isAuthenticated, fetchData])
 
   const refresh = () => fetchData()
 
