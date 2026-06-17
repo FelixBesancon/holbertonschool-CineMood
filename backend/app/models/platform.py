@@ -42,3 +42,8 @@ class Platform(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     logo_path: Mapped[str] = mapped_column(String(255), nullable=False)
     is_free: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    @property
+    def logo_url(self) -> str:
+        """Full CDN URL built from the TMDB relative logo path."""
+        return f"https://image.tmdb.org/t/p/original{self.logo_path}"

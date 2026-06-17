@@ -89,12 +89,6 @@ PLATFORMS = [
         "is_free": False
     },
     {
-        "id": 10,
-        "name": "Amazon Video",
-        "logo_path": "/qR6FKvnPBx2O37FDg8PNM7efwF3.jpg",
-        "is_free": False
-    },
-    {
         "id": 234,
         "name": "Arte",
         "logo_path": "/vPZrjHe7wvALuwJEXT2kwYLi0gV.jpg",

@@ -8,11 +8,12 @@ Schemas handle data validation and shape - they are distinct from
 SQLAlchemy models, which handle database persistence.
 
 Schemas defined here:
-    - UserCreate: validates incoming registration data
-    - UserLogin: validates incoming login data
-    - UserResponse: shapes the user data returned in API responses
-    - AuthResponse: wraps UserResponse with a JWT token on registration
-      and login
+    - UserCreate:   validates incoming registration data (POST /auth/register)
+    - UserUpdate:   validates incoming profile update data (PATCH /users/me)
+    - UserResponse: shapes the user data returned in API responses; embeds
+                    PlatformResponse (imported from schemas.platform)
+    - AuthResponse: wraps UserResponse with a JWT token on registration and login
+    - UserLogin:    validates incoming login data (POST /auth/login)
 """
 
 from pydantic import (
@@ -23,6 +24,7 @@ from typing import Any, Optional, Annotated
 from uuid import UUID
 from datetime import datetime
 from app.schemas import validate
+from app.schemas.platform import PlatformResponse
 
 
 def _string_check(name: str):
@@ -79,6 +81,24 @@ def validate_last_name_format(value: str) -> str:
         ValueError: If the length is outside the 1-60 character range.
     """
     validate.is_between(len(value), "Last Name length", 1, 60)
+    return value
+
+
+def validate_username_format(value: str) -> str:
+    """
+    Validate the length of a username.
+
+    Args:
+        value (str): Username, already confirmed as a string
+        by BeforeValidator.
+
+    Returns:
+        str: The validated username, unchanged.
+
+    Raises:
+        ValueError: If the length is outside the 2-120 character range.
+    """
+    validate.is_between(len(value), "Username length", 2, 120)
     return value
 
 
@@ -148,34 +168,13 @@ ValidFirstName = Annotated[str, BeforeValidator(_string_check(
     "First Name")), AfterValidator(validate_first_name_format)]
 ValidLastName = Annotated[str, BeforeValidator(_string_check(
     "Last Name")), AfterValidator(validate_last_name_format)]
+ValidUsername = Annotated[str, BeforeValidator(_string_check(
+    "Username")), AfterValidator(validate_username_format)]
 ValidEmail = Annotated[str, BeforeValidator(
     _string_check("Email")), AfterValidator(validate_email_format)]
 ValidPassword = Annotated[str, BeforeValidator(_string_check(
     "Password")), AfterValidator(validate_password_strength)]
 ValidAge = Annotated[Optional[int], AfterValidator(validate_age)]
-
-
-class PlatformResponse(BaseModel):
-    """
-    Schema for a streaming platform entry returned by GET /platforms.
-
-    Serialized from the Platform ORM model. The ``logo_url`` field maps
-    the model's ``logo_path`` column (TMDB relative path) to a more
-    descriptive name for API consumers. The full CDN URL is built by
-    prepending ``https://image.tmdb.org/t/p/original`` to ``logo_url``.
-
-    Attributes:
-        id (int): TMDB watch-provider ID (e.g. 8 for Netflix).
-        name (str): Human-readable platform name.
-        logo_url (str): Relative path to the platform logo on the TMDB CDN.
-        is_free (bool): True if the platform requires no paid subscription.
-    """
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    logo_url: str
-    is_free: bool
 
 
 class UserCreate(BaseModel):
@@ -203,6 +202,44 @@ class UserCreate(BaseModel):
     age: ValidAge = None
 
 
+class PlatformResponse(BaseModel):
+    """
+    Schema for a streaming platform entry returned by GET /platforms.
+
+    Serialized from the Platform ORM model. The ``logo_url`` field maps
+    the model's ``logo_path`` column (TMDB relative path) to a more
+    descriptive name for API consumers. The full CDN URL is built by
+    prepending ``https://image.tmdb.org/t/p/original`` to ``logo_url``.
+
+    Attributes:
+        id (int): TMDB watch-provider ID (e.g. 8 for Netflix).
+        name (str): Human-readable platform name.
+        logo_url (str): Relative path to the platform logo on the TMDB CDN.
+        is_free (bool): True if the platform requires no paid subscription.
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    logo_url: str
+    is_free: bool
+
+
+class PlatformListUpdate(BaseModel):
+    """
+    Payload for PUT /users/me/platforms.
+
+    Replaces the user's entire platform list with the provided IDs.
+    Sending an empty list clears all platforms. Unknown IDs are silently
+    ignored at the service level (only valid seeded IDs are linked).
+
+    Attributes:
+        platform_ids (list[int]): TMDB watch-provider IDs of the platforms
+            to associate with the user. Defaults to an empty list.
+    """
+    platform_ids: list[int] = []
+
+
 class UserResponse(BaseModel):
     """
     Schema for outgoing user data in API responses.
@@ -221,6 +258,9 @@ class UserResponse(BaseModel):
         last_name (str): User's last name.
         username (str): User's display name.
         email (str): User's email address.
+        age (int | None): User's age, or None if not provided at registration.
+        platforms (list[PlatformResponse]): Streaming platforms selected by
+            the user on their profile. Empty list if none selected yet.
     """
     model_config = ConfigDict(from_attributes=True)
 
@@ -230,6 +270,29 @@ class UserResponse(BaseModel):
     last_name: str
     username: str
     email: str
+    age: Optional[int] = None
+    platforms: list[PlatformResponse]
+
+
+class UserUpdate(BaseModel):
+    """
+    Schema for incoming user profile update data (PATCH /users/me).
+
+    All fields are optional — only those present in the request body are
+    applied. Absent fields leave the corresponding database column unchanged,
+    using Pydantic's model_fields_set to distinguish "not sent" from "sent
+    as null".
+
+    Attributes:
+        first_name (str | None): New first name. 1-60 characters.
+        last_name (str | None): New last name. 1-60 characters.
+        username (str | None): New display name. 2-120 characters.
+        age (int | None): New age, or null to clear the field. 1-120.
+    """
+    first_name: Optional[ValidFirstName] = None
+    last_name: Optional[ValidLastName] = None
+    username: Optional[ValidUsername] = None
+    age: ValidAge = None
 
 
 class AuthResponse(BaseModel):

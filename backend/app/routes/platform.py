@@ -14,7 +14,7 @@ Routes:
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.user import PlatformResponse
+from app.schemas.platform import PlatformResponse
 from app.services import user_service
 
 router = APIRouter(prefix="/platforms", tags=["platforms"])

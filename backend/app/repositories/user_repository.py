@@ -9,10 +9,12 @@ All functions receive a SQLAlchemy Session as their first argument,
 injected by FastAPI via the get_db() dependency.
 
 Functions:
-    - get_all_platforms: return all seeded streaming platforms
-    - get_by_email: retrieve a user by email address
-    - get_by_id: retrieve a user by UUID (used by the auth dependency)
-    - create: persist a new user and return the created instance
+    - get_all_platforms:     return all seeded streaming platforms
+    - get_free_platforms:    return platforms that require no paid subscription
+    - get_platforms_by_ids:  return Platform rows for a given list of IDs
+    - get_by_email:          retrieve a user by email address
+    - get_by_id:             retrieve a user by UUID (used by the auth dependency)
+    - create:                persist a new user and return the created instance
 """
 
 from app.models.user import User
@@ -41,6 +43,47 @@ def get_all_platforms(db: Session) -> list[Platform]:
     ).scalars().all()
 
 
+def get_free_platforms(db: Session) -> list[Platform]:
+    """
+    Return all streaming platforms that require no paid subscription.
+
+    Called at user registration to auto-assign free platforms to new accounts,
+    so every user starts with a useful default set without any extra step.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        list[Platform]: Platform instances where is_free=True, ordered by name.
+    """
+    return db.execute(
+        select(Platform).where(Platform.is_free == True).order_by(Platform.name)
+    ).scalars().all()
+
+
+def get_platforms_by_ids(db: Session, platform_ids: list[int]) -> list[Platform]:
+    """
+    Return Platform rows whose IDs are in the provided list.
+
+    Used by the user service when replacing a user's platform list via
+    PUT /users/me/platforms. IDs that do not match any seeded platform
+    are silently absent from the result — no error is raised for unknown IDs.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        platform_ids (list[int]): TMDB watch-provider IDs to look up.
+
+    Returns:
+        list[Platform]: Matching Platform instances. May be shorter than
+            platform_ids if some IDs do not exist.
+    """
+    if not platform_ids:
+        return []
+    return db.execute(
+        select(Platform).where(Platform.id.in_(platform_ids))
+    ).scalars().all()
+
+
 def get_by_email(db: Session, email: str) -> User | None:
     """
     Retrieve a user by their email address.
@@ -58,7 +101,7 @@ def get_by_email(db: Session, email: str) -> User | None:
     return db.execute(
         select(User)
         .where(User.email == email)
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
 
 
 def get_by_id(db: Session, user_id: str) -> User | None:
