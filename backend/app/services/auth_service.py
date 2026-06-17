@@ -83,6 +83,11 @@ def register_user(db: Session, payload: UserCreate) -> AuthResponse:
 
     created_user = user_repository.create(db, new_user)
 
+    # Auto-assign all free platforms so the user immediately gets useful defaults
+    created_user.platforms = user_repository.get_free_platforms(db)
+    db.commit()
+    db.refresh(created_user)
+
     return AuthResponse(
         user=UserResponse.model_validate(created_user),
         token=jwt.encode(

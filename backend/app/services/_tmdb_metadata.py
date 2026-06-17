@@ -6,6 +6,9 @@ extraction logic lives in exactly one place.
 """
 
 _POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
+# Platform logos are fetched at original resolution — they're small PNGs
+# and TMDB doesn't offer useful intermediate sizes for logos.
+LOGO_BASE_URL = "https://image.tmdb.org/t/p/original"
 
 
 def extract_metadata(film_data: dict) -> dict:

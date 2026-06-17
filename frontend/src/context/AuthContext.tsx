@@ -2,9 +2,11 @@
  * AuthContext — Authentication context (backend-connected).
  *
  * Manages JWT-based auth state:
- *   - login(email, password): calls POST /auth/login, stores the returned
- *     token in sessionStorage, sets user and token state.
- *   - logout(): clears token from sessionStorage and resets state.
+ *   - login(email, password): calls POST /auth/login, stores user+token in sessionStorage.
+ *   - register(...): calls POST /auth/register, stores user+token in sessionStorage.
+ *   - logout(): clears token and user from sessionStorage and resets state.
+ *   - updateProfile(data): PATCH /users/me — partially updates profile fields.
+ *   - updatePlatforms(ids): PUT /users/me/platforms — replaces the user's platform list.
  *   - isAuthenticated: derived from whether a token is present.
  *
  * The Axios interceptor in src/services/api.ts reads the token from
@@ -13,15 +15,7 @@
  */
 import { createContext, useContext, useState, ReactNode } from 'react'
 import api from '../services/api'
-
-interface User {
-  id: string
-  first_name: string
-  last_name: string
-  username: string
-  email: string
-  created_at: string
-}
+import type { User, Platform } from '@/types/api'
 
 interface AuthContextType {
   user: User | null
@@ -32,6 +26,13 @@ interface AuthContextType {
     email: string, password: string, age?: number
   ) => Promise<void>
   logout: () => void
+  updateProfile: (data: {
+    first_name?: string
+    last_name?: string
+    username?: string
+    age?: number | null
+  }) => Promise<void>
+  updatePlatforms: (platformIds: number[]) => Promise<void>
   isAuthenticated: boolean
 }
 
@@ -44,9 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   })
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem('token'))
 
-  const login = async (
-    email: string, password: string
-  ) => {
+  const login = async (email: string, password: string) => {
     const response = await api.post('/auth/login', { email, password })
     const { user, token } = response.data
     setToken(token)
@@ -76,12 +75,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('user')
   }
 
+  const updateProfile = async (data: {
+    first_name?: string
+    last_name?: string
+    username?: string
+    age?: number | null
+  }) => {
+    const response = await api.patch('/users/me', data)
+    const updatedUser: User = response.data
+    setUser(updatedUser)
+    sessionStorage.setItem('user', JSON.stringify(updatedUser))
+  }
+
+  const updatePlatforms = async (platformIds: number[]) => {
+    const response = await api.put('/users/me/platforms', { platform_ids: platformIds })
+    const updatedPlatforms: Platform[] = response.data
+    if (user) {
+      const updatedUser = { ...user, platforms: updatedPlatforms }
+      setUser(updatedUser)
+      sessionStorage.setItem('user', JSON.stringify(updatedUser))
+    }
+  }
+
   const isAuthenticated = !!token
 
   return (
     <AuthContext.Provider value={{
-      user, token, login, register, logout, isAuthenticated
-      }}>
+      user, token, login, register, logout, updateProfile, updatePlatforms, isAuthenticated
+    }}>
       {children}
     </AuthContext.Provider>
   )

@@ -67,6 +67,24 @@ export interface WatchlistEntry {
   runtime: number | null
 }
 
+export interface Platform {
+  id: number
+  name: string
+  logo_url: string
+  is_free: boolean
+}
+
+export interface User {
+  id: string
+  first_name: string
+  last_name: string
+  username: string
+  email: string
+  created_at: string
+  age: number | null
+  platforms: Platform[]
+}
+
 export interface Film {
   tmdb_id: number
   title: string

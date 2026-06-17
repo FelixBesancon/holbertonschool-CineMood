@@ -77,7 +77,7 @@ export function AuthPage() {
     e.preventDefault()
     try {
       await register(firstName, lastName, email, password, age ? parseInt(age, 10) : undefined)
-      navigate("/dashboard")
+      navigate("/profile", { state: { onboarding: true } })
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
       if (typeof detail === 'string') {
