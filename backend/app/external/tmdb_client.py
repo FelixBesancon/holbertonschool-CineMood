@@ -80,7 +80,7 @@ async def search_movie(query: str) -> list[dict]:
         headers = _get_headers()
         params = {
             'query': query,
-            'adult': "false",
+            'include_adult': "false",
             'language': "en-US"
         }
         url = TMDB_BASE_URL + "/search/movie"
