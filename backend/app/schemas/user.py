@@ -155,6 +155,29 @@ ValidPassword = Annotated[str, BeforeValidator(_string_check(
 ValidAge = Annotated[Optional[int], AfterValidator(validate_age)]
 
 
+class PlatformResponse(BaseModel):
+    """
+    Schema for a streaming platform entry returned by GET /platforms.
+
+    Serialized from the Platform ORM model. The ``logo_url`` field maps
+    the model's ``logo_path`` column (TMDB relative path) to a more
+    descriptive name for API consumers. The full CDN URL is built by
+    prepending ``https://image.tmdb.org/t/p/original`` to ``logo_url``.
+
+    Attributes:
+        id (int): TMDB watch-provider ID (e.g. 8 for Netflix).
+        name (str): Human-readable platform name.
+        logo_url (str): Relative path to the platform logo on the TMDB CDN.
+        is_free (bool): True if the platform requires no paid subscription.
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    logo_url: str
+    is_free: bool
+
+
 class UserCreate(BaseModel):
     """
     Schema for incoming user registration data.

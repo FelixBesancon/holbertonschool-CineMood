@@ -1,23 +1,44 @@
 """
 User Repository
 
-This module provides data access functions for the User entity.
+This module provides data access functions for the User and Platform entities.
 It is the only layer in the application that communicates directly
-with the database for user-related operations.
+with the database for these operations.
 
 All functions receive a SQLAlchemy Session as their first argument,
 injected by FastAPI via the get_db() dependency.
 
 Functions:
+    - get_all_platforms: return all seeded streaming platforms
     - get_by_email: retrieve a user by email address
     - get_by_id: retrieve a user by UUID (used by the auth dependency)
     - create: persist a new user and return the created instance
 """
 
 from app.models.user import User
+from app.models.platform import Platform
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
+
+
+def get_all_platforms(db: Session) -> list[Platform]:
+    """
+    Return all streaming platforms ordered alphabetically by name.
+
+    Used by the platform service to populate the list shown on the
+    user profile page. Platforms are seeded once and are never created
+    or modified through the API.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        list[Platform]: All Platform instances, ordered by name ascending.
+    """
+    return db.execute(
+        select(Platform).order_by(Platform.name)
+    ).scalars().all()
 
 
 def get_by_email(db: Session, email: str) -> User | None:
@@ -63,10 +84,12 @@ def get_by_id(db: Session, user_id: str) -> User | None:
         uid = UUID(user_id)
     except (ValueError, AttributeError):
         return None
+    # .unique() is required because lazy="joined" on User.platforms produces
+    # multiple rows per user (one per platform) in the result set.
     return db.execute(
         select(User)
         .where(User.id == uid)
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
 
 
 def create(db: Session, user: User) -> User:

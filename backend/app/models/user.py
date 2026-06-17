@@ -9,11 +9,20 @@ preferences. Passwords are never stored in plain text - hashing is handled
 by the authentication service before this model is populated.
 """
 
+from app.database import Base
 from app.models.base_model import BaseModel
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Boolean, Integer
+from app.models.platform import Platform
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Table, Column, ForeignKey, String, Boolean, Integer
 from typing import Optional
 import bcrypt
+
+user_platforms = Table(
+    "user_platforms",
+    Base.metadata,
+    Column("user_id", ForeignKey("users.id"), primary_key=True),
+    Column("platform_id", ForeignKey("platforms.id"), primary_key=True),
+)
 
 
 class User(BaseModel):
@@ -39,6 +48,10 @@ class User(BaseModel):
             Reserved for future admin features.
         age (int): Optional. Used to filter recommendations by age rating
             (US-14, Could Have).
+        platforms (list[Platform]): Streaming platforms selected by the user
+            on their profile. Stored in the ``user_platforms`` association
+            table. Loaded eagerly (lazy="joined") so they are always
+            available alongside the User without an extra query.
 
     Notes:
         Validation of email format and password complexity is handled
@@ -77,6 +90,11 @@ class User(BaseModel):
     age: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True
+    )
+    platforms: Mapped[list["Platform"]] = relationship(
+        "Platform",
+        secondary=user_platforms,
+        lazy="joined"
     )
 
     def verify_password(self, plain_password: str) -> bool:
