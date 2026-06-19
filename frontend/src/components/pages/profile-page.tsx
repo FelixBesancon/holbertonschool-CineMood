@@ -1,5 +1,5 @@
 /**
- * ProfilePage — User profile and preferences editor.
+ * ProfilePage - User profile and preferences editor.
  *
  * Two sections:
  *   - My info: editable first name, last name, and age fields (PATCH /users/me).

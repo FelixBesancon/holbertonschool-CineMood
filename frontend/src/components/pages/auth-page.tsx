@@ -1,5 +1,5 @@
 /**
- * AuthPage — Public login / register page.
+ * AuthPage - Public login / register page.
  *
  * A centered card with two tabs: "Log in" and "Register".
  * Login tab calls POST /auth/login, register tab calls POST /auth/register.

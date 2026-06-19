@@ -1,9 +1,9 @@
 /**
- * WatchlistPage — Films saved for later viewing.
+ * WatchlistPage - Films saved for later viewing.
  *
  * Displays all watchlist entries as cards: poster, title, year/director,
  * and genre badges. Sorting options: Date added (default) | A–Z.
- * Clicking a card opens the LogFilmDialog — confirming logs the film and
+ * Clicking a card opens the LogFilmDialog - confirming logs the film and
  * removes it from the watchlist (mark-as-watched flow via logFilm).
  * The trash button opens a ConfirmDialog before calling removeFromWatchlist.
  *
@@ -148,7 +148,7 @@ export function WatchlistPage() {
                 <Trash2 className="h-4 w-4" />
               </button>
 
-              {/* Hover affordance — modern "click to log" pill, pinned bottom-right */}
+              {/* Hover affordance - modern "click to log" pill, pinned bottom-right */}
               <div className="pointer-events-none absolute bottom-3 right-3 z-10">
                 <span className="flex translate-y-1 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-0 shadow-md transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
                   <PenLine className="h-3.5 w-3.5" />

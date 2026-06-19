@@ -1,5 +1,5 @@
 /**
- * SearchPage — Film catalogue search.
+ * SearchPage - Film catalogue search.
  *
  * Two-state layout:
  *   - Empty state: centred search bar.
@@ -48,7 +48,7 @@ export function SearchPage() {
   const [open, setOpen] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<{ film: Film; from: "watchlist" | "history" } | null>(null)
 
-  // Fetch whenever query changes — also runs on mount to restore a URL-persisted search
+  // Fetch whenever query changes - also runs on mount to restore a URL-persisted search
   useEffect(() => {
     if (!query.trim()) { setResults([]); return }
     setSearching(true)
@@ -63,7 +63,7 @@ export function SearchPage() {
 
   const handleSearch = (q: string) => {
     setQuery(q)
-    // replace: true keeps browser history clean — one entry per search, not one per keystroke
+    // replace: true keeps browser history clean - one entry per search, not one per keystroke
     setSearchParams(q.trim() ? { query: q } : {}, { replace: true })
   }
 
@@ -77,7 +77,7 @@ export function SearchPage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col px-4 sm:px-6">
-      {/* Centred search bar — collapses to top once a search is active */}
+      {/* Centred search bar - collapses to top once a search is active */}
       <div
         className={
           hasSearched
@@ -128,7 +128,7 @@ export function SearchPage() {
           <p className="mb-6 text-sm text-muted-foreground">
             {searching
               ? "Searching…"
-              : `${results.length} result${results.length !== 1 ? "s" : ""} for "${query}"${totalPages > 1 ? ` — page ${page} of ${totalPages}` : ""}`}
+              : `${results.length} result${results.length !== 1 ? "s" : ""} for "${query}"${totalPages > 1 ? ` - page ${page} of ${totalPages}` : ""}`}
           </p>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -140,7 +140,7 @@ export function SearchPage() {
                    * group is on the Link so the hover trigger and hover target
                    * are the same element. The overlay is passed as children to
                    * PosterFrame so it lives inside the same div that gets the
-                   * translate animation — no alignment drift.
+                   * translate animation - no alignment drift.
                    */}
                   <Link to={`/films/${film.tmdb_id}`} className="group block">
                     <PosterFrame

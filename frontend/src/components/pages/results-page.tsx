@@ -1,10 +1,10 @@
 /**
- * ResultsPage — Recommendation results (step 3 of the recommendation flow).
+ * ResultsPage - Recommendation results (step 3 of the recommendation flow).
  *
  * Displays mock recommendations sorted by match score descending, split into:
- *   - "Your Perfect Match": highest-scoring film — hero card with gold shimmer.
- *   - "You Might Also Like": films with match >= 85% — standard row cards.
- *   - "Give It a Try…": films with match < 85% — muted, smaller row cards.
+ *   - "Your Perfect Match": highest-scoring film - hero card with gold shimmer.
+ *   - "You Might Also Like": films with match >= 85% - standard row cards.
+ *   - "Give It a Try…": films with match < 85% - muted, smaller row cards.
  *
  * Each card shows the reason text, match %, platform badge, and an
  * "Add to watchlist" button (or a disabled "Saved" state if already in watchlist).
@@ -115,7 +115,7 @@ export function ResultsPage() {
           </Button>
         </div>
         <p className="text-center text-xs text-muted-foreground">
-          Heading home closes this session — you won&apos;t be able to return to these recommendations.
+          Heading home closes this session - you won&apos;t be able to return to these recommendations.
         </p>
       </div>
     </div>

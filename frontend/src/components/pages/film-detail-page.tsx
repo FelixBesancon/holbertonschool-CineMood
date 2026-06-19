@@ -1,5 +1,5 @@
 /**
- * FilmDetailPage — Full film detail view, reachable from any card or search result.
+ * FilmDetailPage - Full film detail view, reachable from any card or search result.
  *
  * Hero section: blurred backdrop, poster, meta (year/director/runtime), genres,
  * synopsis, and context-sensitive action buttons that adapt to the film's status:
@@ -173,7 +173,7 @@ export function FilmDetailPage() {
               {status === "watchlist" && (
                 <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Bookmark className="h-3.5 w-3.5 text-primary" />
-                  In your watchlist — logging it will move it to your history.
+                  In your watchlist - logging it will move it to your history.
                 </p>
               )}
               {status === "watched" && (

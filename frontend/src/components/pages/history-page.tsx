@@ -1,5 +1,5 @@
 /**
- * HistoryPage — User's full viewing diary.
+ * HistoryPage - User's full viewing diary.
  *
  * Displays all history entries as rich cards: poster, prestige badge,
  * mood tags, personal note, and viewing date. A Platinum entry gets a

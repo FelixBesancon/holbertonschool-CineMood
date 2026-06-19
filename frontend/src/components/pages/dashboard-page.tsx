@@ -1,5 +1,5 @@
 /**
- * DashboardPage — Authenticated home screen.
+ * DashboardPage - Authenticated home screen.
  *
  * Shows a personalised welcome, two CTA cards (Browse Films / Recommendation),
  * and two preview rows:

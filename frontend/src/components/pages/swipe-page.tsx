@@ -1,8 +1,8 @@
 /**
- * SwipePage — Optional swipe-to-refine step (step 2 of the recommendation flow).
+ * SwipePage - Optional swipe-to-refine step (step 2 of the recommendation flow).
  *
  * Presents a deck of up to 6 films as swipeable cards. The user drags left
- * ("Not for me") or right ("Why not") — or uses the fallback buttons below.
+ * ("Not for me") or right ("Why not") - or uses the fallback buttons below.
  * After the last card, or after clicking "Skip this step", navigates to
  * /recommendation/results.
  *
@@ -174,7 +174,7 @@ export function SwipePage() {
       <div className="mb-3 w-full text-center">
         <h1 className="font-heading text-lg font-bold sm:text-xl">Refine the recommendation tool with swipes</h1>
         <p className="mx-auto mt-1 max-w-xs text-pretty text-sm text-muted-foreground">
-          Optional — react to a few films to sharpen your picks, or skip straight to your recommendations.
+          Optional - react to a few films to sharpen your picks, or skip straight to your recommendations.
         </p>
         <span className="mt-3 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground">
           {index + 1} / {DECK.length} films
@@ -231,7 +231,7 @@ export function SwipePage() {
         </div>
       </div>
 
-      {/* Skip — ends swiping and jumps straight to recommendations */}
+      {/* Skip - ends swiping and jumps straight to recommendations */}
       <Button
         variant="ghost"
         className="mt-6 gap-1.5 text-muted-foreground hover:text-foreground"
