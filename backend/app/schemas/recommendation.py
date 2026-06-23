@@ -77,17 +77,11 @@ class DiscoverRequest(QuizAnswers):
 
     Sent after the user completes the questionnaire. The service builds
     a Mistral prompt from the quiz answers plus server-side user context
-    (age, viewing history, watchlist, platform subscriptions) to suggest
-    6 diverse films for the swipe deck.
+    (age, viewing history, watchlist) to suggest 6 diverse films
+    for the swipe deck.
 
-    Attributes:
-        filter_platforms (bool): When True, the Mistral prompt instructs
-            the model to prioritize films available on the user's configured
-            streaming platforms. Platform availability is then verified
-            per film via TMDB's watch/providers endpoint.
-            Defaults to True.
     """
-    filter_platforms: bool = True
+    pass
 
 
 class RefineRequest(DiscoverRequest):
@@ -95,17 +89,24 @@ class RefineRequest(DiscoverRequest):
     Request body for POST /recommendations/refine.
 
     Sent after the user has swiped through the discover deck. Extends
-    DiscoverRequest with swipe signals so the service can build a richer
-    Mistral prompt: the original quiz answers are re-sent alongside the
+    DiscoverRequest with the user's platform subscriptions and the
+    swipe signals so the service can build a richer Mistral prompt:
+    the original quiz answers are re-sent alongside the
     IDs of liked and rejected films, allowing the model to infer taste
     more precisely and produce a tighter, higher-confidence shortlist.
 
     Attributes:
+        filter_platforms (bool): When True, the Mistral prompt instructs
+            the model to prioritize films available on the user's configured
+            streaming platforms. Platform availability is then verified
+            per film via TMDB's watch/providers endpoint.
+            Defaults to True.
         liked_tmdb_ids (list[int]): TMDB IDs of films the user swiped
             right on (accepted / interested).
         rejected_tmdb_ids (list[int]): TMDB IDs of films the user swiped
             left on (rejected / not interested).
     """
+    filter_platforms: bool = True
     liked_tmdb_ids: list[int]
     rejected_tmdb_ids: list[int]
 
@@ -118,7 +119,7 @@ class SwipeCard(Film):
     fields added by the service after Mistral and TMDB enrichment.
 
     Attributes:
-        reason (str): A 2–3 sentence explanation from Mistral of why this
+        reason (str): A 2-3 sentence explanation from Mistral of why this
             film matches the viewer's quiz answers.
         available_on_my_platforms (bool): True if the film is available
             on at least one of the user's configured streaming platforms,

@@ -49,8 +49,8 @@ async def chat_mistral_json(
         user_prompt (str): The actual request content built from the user's
             questionnaire answers and profile data.
         temperature (float): Sampling temperature between 0.0 and 1.0.
-            Lower values (0.0–0.3) give more deterministic output;
-            higher values (0.7–1.0) give more varied suggestions.
+            Lower values (0.0-0.3) give more deterministic output;
+            higher values (0.7-1.0) give more varied suggestions.
             Defaults to 0.7.
 
     Returns:
