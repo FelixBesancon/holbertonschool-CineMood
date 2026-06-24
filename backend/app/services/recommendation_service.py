@@ -25,8 +25,8 @@ Internal helpers (prefixed _) are pure functions where possible:
   _load_user_context   - DB I/O only, returns a _UserContext bundle
   _build_user_prompt   - pure string builder from quiz + user context
   _build_refine_prompt - extends _build_user_prompt with swipe signals
-  _resolve_film        - async: search_movie → filter → get_film_details
-  _build_swipe_card    - async: _resolve_film → SwipeCard (None on failure)
+  _resolve_id_to_label - async: tmdb_id → "Title (Year)" string for the refine prompt
+  _build_swipe_card    - async: search_and_get_film → SwipeCard (None on failure)
 """
 
 import asyncio
@@ -41,7 +41,7 @@ from app.schemas.recommendation import (
 )
 from app.models.user import User
 from app.repositories import viewing_history_repository, watchlist_repository
-from app.services.film_service import search_and_get_film
+from app.services.film_service import search_and_get_film, get_film_details
 
 
 # ── Internal Mistral response schemas ───────────────────────────────────────
@@ -72,7 +72,9 @@ class _MistralDiscoverResponse(BaseModel):
 
 class _MistralRefineResponse(BaseModel):
     """Wrapper for Mistral's refine response (scored film suggestions)."""
-    films: list[_MistralRefineFilm]
+    perfect_match: _MistralRefineFilm
+    new_suggestions: list[_MistralRefineFilm]
+    from_watchlist: list[_MistralRefineFilm] = []
 
 
 # ── User context bundle ──────────────────────────────────────────────────────
@@ -166,18 +168,55 @@ Rules:
 """.strip()
 
 _REFINE_SYSTEM_PROMPT = """
-You are a film recommendation expert. Using the viewer profile and their swipe
-feedback (liked and rejected films), suggest exactly 5 films they will love.
+You are a film recommendation expert.
+Your task is to produce a structured final recommendation by following
+these four steps in order:
 
-Respond ONLY with this JSON - no text before or after:
+STEP 1 — EVALUATE LIKED SWIPE CARDS
+You are given films the viewer swiped right on (LIKED FILMS).
+Select at most 3 that best match their profile.
+Use the REJECTED FILMS as a negative signal: if a liked film shares too much
+style, tone, or genre with the rejected ones, score it lower or skip it.
+
+STEP 2 — FIND 3 NEW SUGGESTIONS
+Suggest exactly 3 new films that:
+- Match ALL viewer criteria (mood, desire, preferences, deal breakers)
+- Are NOT in the viewing history
+- Are NOT in the watchlist
+- Are NOT in the rejected list
+- Are NOT already selected from LIKED FILMS
+Use rejected films as a negative taste signal — avoid what they imply the viewer dislikes.
+Use liked films as a positive taste signal — identify the common style, tone, era or theme.
+
+STEP 3 — PICK FROM WATCHLIST
+From the viewer's watchlist, select 0 to 2 films that genuinely fit tonight's mood.
+If none fit, or if the user has no watchlist, return an empty list — never force a match.
+
+STEP 4 — SCORE AND ASSEMBLE
+Assign a match_score (0–100) to every film selected in Steps 1, 2, and 3.
+Sort all films by match_score descending, then assemble the response:
+- perfect_match: the single highest-scoring film
+- suggestions: the next 2 to 4 highest-scoring films that are NOT from the watchlist
+  (if a liked film is already in the watchlist, place it in from_watchlist instead)
+- from_watchlist: all watchlist picks from Step 3, plus any liked film that was in the watchlist
+  (0 to 2 films maximum; can be empty)
+- If the pool exceeds the limit, drop the lowest-scoring non-watchlist film.
+
+IMPORTANT RULES:
+- Never suggest any film from REJECTED FILMS (hard exclusion).
+- All suggested films must be different, not repetitions.
+- Only suggest real theatrical films you are confident exist.
+- No TV series, TV movies, short films, or adult content.
+
+Respond ONLY with this JSON — no text before or after:
 {
-  "films": [
-    {
-      "title": "Se7en",
-      "year": 1995,
-      "reason": "Building on your love of dark thrillers...",
-      "match_score": 94
-    }
+  "perfect_match": {"title": "...", "year": 1999, "reason": "2-3 sentences to the viewer", "match_score": 97},
+  "new_suggestions": [
+    {"title": "...", "year": 2003, "reason": "...", "match_score": 88},
+    {"title": "...", "year": 2010, "reason": "...", "match_score": 82}
+  ],
+  "from_watchlist": [
+    {"title": "...", "year": 2005, "reason": "Why this watchlist film fits tonight's mood", "match_score": 75}
   ]
 }
 
@@ -187,12 +226,6 @@ Fields:
 - reason: 2-3 sentences addressed to the viewer explaining why this film is a
   strong match, referencing their swipe feedback where relevant
 - match_score: integer 0–100, how confidently this film matches the full profile
-
-Rules:
-- Only suggest real theatrical films you are confident exist
-- No TV series, TV movies, short films, or pornographic content
-- Sort by match_score descending
-- Never suggest a film from the viewer's viewing history or rejected swipes
 """.strip()
 
 
@@ -282,24 +315,32 @@ def _build_user_prompt(request: DiscoverRequest, ctx: _UserContext) -> str:
     return "\n".join(lines)
 
 
-def _build_refine_prompt(request: RefineRequest, ctx: _UserContext) -> str:
+def _build_refine_prompt(
+    request: RefineRequest,
+    ctx: _UserContext,
+    liked_labels: list[str],
+    rejected_labels: list[str],
+) -> str:
     """
     Build the refine prompt by extending _build_user_prompt with swipe signals.
 
     Adds a SWIPE FEEDBACK block so Mistral can infer taste from liked/rejected
-    films, and a platform preference line when filter_platforms is True.
+    films by name (e.g. "Se7en (1995)") rather than opaque numeric IDs.
+    Adds a platform preference line when filter_platforms is True.
 
     Args:
         request: RefineRequest including liked/rejected TMDB IDs and platform flag.
         ctx: Server-side user context loaded by _load_user_context().
+        liked_labels: Resolved "Title (Year)" strings for liked films.
+        rejected_labels: Resolved "Title (Year)" strings for rejected films.
 
     Returns:
         Full prompt string combining viewer profile and swipe feedback.
     """
     base = _build_user_prompt(request, ctx)
 
-    liked = ", ".join(str(i) for i in request.liked_tmdb_ids) or "none"
-    rejected = ", ".join(str(i) for i in request.rejected_tmdb_ids) or "none"
+    liked = ", ".join(liked_labels) or "none"
+    rejected = ", ".join(rejected_labels) or "none"
 
     swipe_lines = [
         "\nSWIPE FEEDBACK:",
@@ -315,6 +356,21 @@ def _build_refine_prompt(request: RefineRequest, ctx: _UserContext) -> str:
 
 
 # ── TMDB enrichment ──────────────────────────────────────────────────────────
+
+async def _resolve_id_to_label(tmdb_id: int) -> str:
+    """
+    Resolve a TMDB ID to a human-readable label for use in the refine prompt.
+
+    Returns "Title (Year)" so Mistral can understand liked/rejected films by
+    name rather than opaque numeric IDs. Falls back to the raw ID string if
+    the TMDB lookup fails.
+    """
+    try:
+        film = await get_film_details(tmdb_id)
+        return f"{film.title} ({film.year})"
+    except Exception:
+        return str(tmdb_id)
+
 
 async def _build_swipe_card(
     mistral_film: _MistralFilm,
@@ -400,10 +456,13 @@ async def refine(
     """
     Step 2 of the recommendation flow: refine using swipe signals.
 
-    Builds a Mistral prompt combining the original quiz answers with liked
-    and rejected film IDs from the swipe step. Requests 5 scored suggestions,
-    enriches each with TMDB metadata in parallel, sorts by match_score
-    descending, and returns the successfully resolved films.
+    Resolves liked/rejected TMDB IDs to readable titles, builds the refine prompt,
+    calls Mistral, enriches each section with TMDB metadata, then applies a
+    service-level safeguard: any film in suggestions that is also in the user's
+    watchlist is moved to from_watchlist to respect the schema invariant.
+
+    Raises:
+        ValueError: If Mistral returns no resolvable perfect_match film.
 
     Args:
         request: Quiz answers + swipe results + platform filter flag.
@@ -415,21 +474,75 @@ async def refine(
         match_score descending.
     """
     ctx = _load_user_context(user, db)
-    user_prompt = _build_refine_prompt(request, ctx)
 
-    raw_dict = await chat_mistral_json(
-        _REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.4
+    # Resolve liked/rejected IDs to titles in parallel before building the prompt
+    liked_labels, rejected_labels = await asyncio.gather(
+        asyncio.gather(*[_resolve_id_to_label(i) for i in request.liked_tmdb_ids]),
+        asyncio.gather(*[_resolve_id_to_label(i) for i in request.rejected_tmdb_ids]),
     )
+
+    user_prompt = _build_refine_prompt(request, ctx, list(liked_labels), list(rejected_labels))
+
+    raw_dict = await chat_mistral_json(_REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.3)
     raw = _MistralRefineResponse.model_validate(raw_dict)
 
     user_platform_names = {p.name for p in ctx.platforms}
-    tasks = [_build_swipe_card(f, user_platform_names) for f in raw.films]
-    results = await asyncio.gather(*tasks)
+    watchlist_ids = {e.tmdb_id for e in ctx.watchlist}
 
-    films = [
-        FilmRecommendation(**card.model_dump(), match_score=mistral_film.match_score)
-        for card, mistral_film in zip(results, raw.films)
-        if card is not None
-    ]
-    films.sort(key=lambda f: f.match_score, reverse=True)
-    return RecommendationResponse(films=films)
+    def to_rec(card: SwipeCard, score: int) -> FilmRecommendation:
+        return FilmRecommendation(**card.model_dump(), match_score=score)
+
+    # Enrich all sections in parallel
+    pm_card, suggestion_cards, watchlist_cards = await asyncio.gather(
+        _build_swipe_card(raw.perfect_match, user_platform_names),
+        asyncio.gather(*[_build_swipe_card(f, user_platform_names) for f in raw.new_suggestions]),
+        asyncio.gather(*[_build_swipe_card(f, user_platform_names) for f in raw.from_watchlist]),
+    )
+
+    suggestions: list[FilmRecommendation] = []
+    from_watchlist: list[FilmRecommendation] = []
+
+    # perfect_match — if it's actually a watchlist film, route it there
+    pm_film: FilmRecommendation | None = None
+    if pm_card is not None:
+        rec = to_rec(pm_card, raw.perfect_match.match_score)
+        if rec.tmdb_id in watchlist_ids:
+            from_watchlist.append(rec)
+        else:
+            pm_film = rec
+
+    # new_suggestions — same safeguard
+    for card, mistral_film in zip(suggestion_cards, raw.new_suggestions):
+        if card is None:
+            continue
+        rec = to_rec(card, mistral_film.match_score)
+        if rec.tmdb_id in watchlist_ids:
+            from_watchlist.append(rec)
+        else:
+            suggestions.append(rec)
+
+    # from_watchlist section — deduplicate against what was already routed there
+    seen_ids = {f.tmdb_id for f in from_watchlist}
+    for card, mistral_film in zip(watchlist_cards, raw.from_watchlist):
+        if card is None or card.tmdb_id in seen_ids:
+            continue
+        from_watchlist.append(to_rec(card, mistral_film.match_score))
+        seen_ids.add(card.tmdb_id)
+
+    # If perfect_match was moved to watchlist, promote the best suggestion
+    if pm_film is None:
+        suggestions.sort(key=lambda f: f.match_score, reverse=True)
+        if suggestions:
+            pm_film = suggestions.pop(0)
+
+    if pm_film is None:
+        raise ValueError("Refine produced no valid perfect_match after TMDB resolution.")
+
+    suggestions.sort(key=lambda f: f.match_score, reverse=True)
+    from_watchlist.sort(key=lambda f: f.match_score, reverse=True)
+
+    return RecommendationResponse(
+        perfect_match=pm_film,
+        suggestions=suggestions,
+        from_watchlist=from_watchlist[:2],
+    )

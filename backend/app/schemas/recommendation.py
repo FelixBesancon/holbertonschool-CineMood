@@ -164,8 +164,15 @@ class RecommendationResponse(BaseModel):
     Response body for POST /recommendations/refine.
 
     Attributes:
-        films (list[FilmRecommendation]): Ordered list of refined film
-            recommendations, sorted by match_score descending.
+        perfect_match: (FilmRecommendation): refined film
+            recommendation with the highest match_score.
             Typically 3 to 5 films.
+        suggestions (list[FilmRecommendation]): Ordered list of 2 to 4 refined
+            film recommendations, sorted by match_score descending.
+        from_watchlist (list[FilmRecommendation]): Ordered list of 0 to 4 refined
+            film recommendations, sorted by match_score descending.
+            
     """
-    films: list[FilmRecommendation]
+    perfect_match: FilmRecommendation
+    suggestions: list[FilmRecommendation]
+    from_watchlist: list[FilmRecommendation] = []
