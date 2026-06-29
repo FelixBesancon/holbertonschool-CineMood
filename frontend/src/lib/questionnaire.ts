@@ -1,9 +1,8 @@
 /**
- * mock-data.ts - Static fixture data for the recommendation questionnaire.
+ * questionnaire.ts - Mood questionnaire configuration.
  *
  * MOOD_QUESTIONS: the five questionnaire steps rendered by recommendation-page.tsx.
- * All other mock data (FILMS, RECOMMENDATIONS, PLATFORM_CHIP) has been removed
- * now that the recommendation flow is fully connected to the backend API.
+ * Each step defines its options, constraints (min/max), and auto-advance behaviour.
  */
 
 export interface MoodOption {

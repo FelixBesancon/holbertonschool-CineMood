@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { MOOD_QUESTIONS } from "@/lib/mock-data"
+import { MOOD_QUESTIONS } from "@/lib/questionnaire"
 import { discover } from "@/services/recommendations"
 import { LoadingScreen } from "@/components/loading-screen"
 

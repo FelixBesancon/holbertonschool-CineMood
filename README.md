@@ -203,7 +203,7 @@ holbertonschool-CineMood/
 │   │   ├── types/
 │   │   │   └── api.ts                   ← TypeScript interfaces (Film, SwipeCard, FilmRecommendation, …)
 │   │   └── lib/
-│   │       ├── mock-data.ts             ← MOOD_QUESTIONS (questionnaire config)
+│   │       ├── questionnaire.ts         ← MOOD_QUESTIONS (questionnaire steps config)
 │   │       ├── constants.ts             ← PRESTIGE_RECORD, PRESTIGE_TIERS, PRESTIGE_RANK
 │   │       └── utils.ts                 ← cn(), formatRuntime()
 │   ├── tsconfig.json
