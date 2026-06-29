@@ -79,6 +79,11 @@ if [ ! -f "backend/.env" ]; then
     SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
     sed -i "s/your_jwt_secret_key/$SECRET_KEY/" backend/.env
     echo "backend/.env created with a generated SECRET_KEY"
+    echo ""
+    echo "ACTION REQUIRED: open backend/.env and replace 'your_tmdb_jwt_access_token'"
+    echo "with your real TMDB Read Access Token (https://www.themoviedb.org/settings/api)."
+    echo "Film search and detail pages will not work without it."
+    echo ""
 else
     echo "backend/.env already exists - skipping"
 fi

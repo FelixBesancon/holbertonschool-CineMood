@@ -11,22 +11,22 @@ persistence is delegated to the viewing history repository.
 Functions:
     - get_all_tags: return all available tags
     - create_entry: log a new film in the user's viewing history
+    - update_entry: update tags/prestige/note on an existing entry
     - get_history: retrieve the full viewing history of a user
     - remove_entry: remove a film from the user's viewing history
 """
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.repositories import viewing_history_repository
+from app.repositories import viewing_history_repository, watchlist_repository
 from app.schemas.viewing_history import (
-    TagResponse, ViewingHistoryEntryCreate, ViewingHistoryEntryResponse
+    TagResponse, ViewingHistoryEntryCreate, ViewingHistoryEntryUpdate,
+    ViewingHistoryEntryResponse
 )
 from app.models.viewing_history_entry import ViewingHistoryEntry
 from app.models.user import User
 from app.external import tmdb_client
-
-# Reuse the same image base URL as film_service
-_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
+from app.services._tmdb_metadata import extract_metadata
 
 
 def get_all_tags(db: Session) -> list[TagResponse]:
@@ -71,23 +71,68 @@ async def create_entry(
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
         httpx.RequestError: If the TMDB request cannot be sent.
     """
-    film_data = await tmdb_client.get_movie_basic(payload.tmdb_id)
-    title = film_data.get("title")
-    poster_path = film_data.get("poster_path")
-    poster_url = _POSTER_BASE_URL + poster_path if poster_path else None
+    film_data = await tmdb_client.get_movie_details(payload.tmdb_id)
+    meta = extract_metadata(film_data)
 
     tags = viewing_history_repository.get_tags_by_ids(db, payload.tag_ids)
     entry = ViewingHistoryEntry(
         user_id=user.id,
         tmdb_id=payload.tmdb_id,
-        title=title,
-        poster_url=poster_url,
+        **meta,
         tags=tags,
         prestige_tier=payload.prestige_tier,
         personal_note=payload.personal_note
     )
     created = viewing_history_repository.create(db, entry)
+
+    # If the film was in the watchlist, remove it — it's now in history.
+    watchlist_entry = watchlist_repository.get_by_user_and_tmdb(db, user.id, payload.tmdb_id)
+    if watchlist_entry:
+        db.delete(watchlist_entry)
+        db.commit()
+
     return ViewingHistoryEntryResponse.model_validate(created)
+
+
+def update_entry(
+    db: Session, user: User, tmdb_id: int, payload: ViewingHistoryEntryUpdate
+) -> ViewingHistoryEntryResponse:
+    """
+    Update an existing viewing history entry (tags, prestige tier, note).
+
+    Replaces all provided fields. Passing null for prestige_tier or
+    personal_note clears those fields. tag_ids replaces the full list.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        user (User): The authenticated user.
+        tmdb_id (int): TMDB identifier of the film to update.
+        payload (ViewingHistoryEntryUpdate): Fields to update.
+
+    Returns:
+        ViewingHistoryEntryResponse: The updated entry.
+
+    Raises:
+        HTTPException 404: If the user has no history entry for this film.
+    """
+    entry = viewing_history_repository.get_by_user_and_tmdb(db, user.id, tmdb_id)
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No history entry found for this film."
+        )
+
+    if payload.tag_ids is not None:
+        entry.tags = viewing_history_repository.get_tags_by_ids(db, payload.tag_ids)
+
+    if "prestige_tier" in payload.model_fields_set:
+        entry.prestige_tier = payload.prestige_tier
+    if "personal_note" in payload.model_fields_set:
+        entry.personal_note = payload.personal_note
+
+    db.commit()
+    db.refresh(entry)
+    return ViewingHistoryEntryResponse.model_validate(entry)
 
 
 def get_history(

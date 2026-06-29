@@ -12,6 +12,8 @@ directly.
 Functions:
     - search_films: search the TMDB catalog and return a list of Films
     - get_film_details: fetch full metadata for a single film
+    - search_and_get_film: resolve a title + year to a full Film object
+      (used by the recommendation service to ground Mistral suggestions)
     - get_film_with_status: fetch full metadata and indicate if the film
       is already in the authenticated user's viewing history
 """
@@ -19,11 +21,11 @@ Functions:
 from sqlalchemy.orm import Session
 from app.schemas.film import Film, FilmWithStatus
 from app.external import tmdb_client
-from app.repositories import viewing_history_repository
+from app.repositories import viewing_history_repository, watchlist_repository
 from app.models.user import User
 
 # Base URL for TMDB poster images — w500 is a good balance for the frontend
-POSTER_PATH_BASE_URL = "https://image.tmdb.org/t/p/w500"
+_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 # Number of cast members included in film detail responses
 CAST_LIMIT = 5
@@ -40,7 +42,7 @@ def _build_poster_url(poster_path: str | None) -> str | None:
     """Return the full poster URL from a TMDB poster_path, or None."""
     if poster_path is None:
         return None
-    return POSTER_PATH_BASE_URL + poster_path
+    return _POSTER_BASE_URL + poster_path
 
 
 async def search_films(query: str) -> list[Film]:
@@ -135,6 +137,50 @@ async def get_film_details(tmdb_id: int) -> Film:
     )
 
 
+async def search_and_get_film(title: str, year: int) -> Film | None:
+    """
+    Resolve a film title and release year to a fully populated Film object.
+
+    Designed for the recommendation service to ground Mistral AI suggestions
+    in real TMDB data. LLMs reliably know film titles but frequently
+    hallucinate numeric database identifiers, so this function bridges the gap.
+
+    Search strategy:
+        1. Search TMDB by title.
+        2. Filter results to exclude adult content.
+        3. Among non-adult results, prefer those whose release year is within
+           ±1 of the expected year (accounts for international release gaps).
+        4. If no year match, fall back to all non-adult results.
+        5. Return full details for the most popular candidate.
+
+    Args:
+        title (str): Film title as provided by Mistral — usually the English
+            or most common international title.
+        year (int): Expected release year as provided by Mistral.
+
+    Returns:
+        Film: Fully populated Film object for the best match, or None if
+            no suitable result is found or the TMDB API returns an error.
+    """
+    results = await tmdb_client.search_movie(title)
+    if not results:
+        return None
+
+    non_adult = [r for r in results if not r.get("adult", False)]
+
+    year_matches = [
+        r for r in non_adult
+        if abs(int((r.get("release_date") or "0000")[:4] or 0) - year) <= 1
+    ]
+
+    candidates = year_matches if year_matches else non_adult
+    if not candidates:
+        return None
+
+    best = max(candidates, key=lambda r: r.get("popularity", 0))
+    return await get_film_details(best["id"])
+
+
 async def get_film_with_status(
     db: Session, user: User, tmdb_id: int
 ) -> FilmWithStatus:
@@ -153,7 +199,8 @@ async def get_film_with_status(
 
     Returns:
         FilmWithStatus: The fully populated Film object alongside
-            in_history (True if the user has logged this film).
+            in_history (True if the user has logged this film) and
+            in_watchlist (True if the user has saved this film to watch).
 
     Raises:
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
@@ -163,4 +210,7 @@ async def get_film_with_status(
     in_history = viewing_history_repository.get_by_user_and_tmdb(
         db, user.id, tmdb_id
     ) is not None
-    return FilmWithStatus(film=film, in_history=in_history)
+    in_watchlist = watchlist_repository.get_by_user_and_tmdb(
+        db, user.id, tmdb_id
+    ) is not None
+    return FilmWithStatus(film=film, in_history=in_history, in_watchlist=in_watchlist)

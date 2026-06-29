@@ -17,7 +17,7 @@ from app.database import Base
 from app.models.base_model import BaseModel
 from app.models.prestige_tier import PrestigeTier
 from app.models.tag import Tag
-from sqlalchemy import Table, Column, ForeignKey, Text, Enum
+from sqlalchemy import Table, Column, ForeignKey, Text, Enum, UniqueConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID
 
@@ -43,11 +43,14 @@ class ViewingHistoryEntry(BaseModel):
     Attributes:
         user_id (UUID): Foreign key to the user who logged this entry.
         tmdb_id (int): TMDB identifier of the film. Not a foreign key —
-            film metadata is fetched on demand from TMDB, never stored.
-        title (str, optional): Film title cached at log time to avoid
-            a TMDB call when displaying the history list.
-        poster_url (str, optional): Full poster URL cached at log time
-            for the same reason. None if TMDB had no poster.
+            film metadata is cached at log time from TMDB.
+        title (str, optional): Film title cached at log time.
+        poster_url (str, optional): Full poster URL cached at log time.
+        year (int, optional): Release year extracted from TMDB release_date.
+        director (str, optional): Director name(s), comma-joined if multiple.
+        synopsis (str, optional): Film overview from TMDB.
+        genres (list[str], optional): List of genre names from TMDB.
+        runtime (int, optional): Film duration in minutes from TMDB.
         tags (list[Tag]): Mood/quality labels chosen by the user.
             Loaded eagerly (lazy="joined") since tags are always needed
             when displaying a history entry.
@@ -58,6 +61,9 @@ class ViewingHistoryEntry(BaseModel):
     """
 
     __tablename__ = "viewing_history_entries"
+    __table_args__ = (
+        UniqueConstraint("user_id", "tmdb_id", name="uq_history_user_film"),
+    )
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id"),
@@ -70,6 +76,23 @@ class ViewingHistoryEntry(BaseModel):
         nullable=True
     )
     poster_url: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
+    year: Mapped[int | None] = mapped_column(
+        nullable=True
+    )
+    director: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
+    synopsis: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    genres: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True
+    )
+    runtime: Mapped[int | None] = mapped_column(
         nullable=True
     )
     tags: Mapped[list["Tag"]] = relationship(

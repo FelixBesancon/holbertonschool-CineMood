@@ -3,10 +3,11 @@
 > A personal film diary and AI-powered recommendation engine.<br>
 > Log what you watch, rate it your way, and get suggestions based on your mood and streaming platforms.
 
-![Status](https://img.shields.io/badge/status-in%20development-orange)
-![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
+![Status](https://img.shields.io/badge/status-MVP%20complete-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal?logo=fastapi)
 ![React](https://img.shields.io/badge/React-19+-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?logo=typescript)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?logo=postgresql)
 ![Holberton](https://img.shields.io/badge/Holberton-Bordeaux-red)
 
@@ -73,7 +74,7 @@ This project is the end-of-year portfolio project for the Bachelor CDA program a
 
 ### Film Logging
 
-🎞️ **The tool lets users add movies to personal “watched” or “to-watch” lists**
+🎞️ **The tool lets users add movies to personal "watched" or "to-watch" lists**
 - Search for any film by title (powered by the TMDB API)
 - Add it to your viewing history or watchlist
 - Log it with emotional and contextual tags instead of a simple star rating
@@ -92,16 +93,16 @@ This project is the end-of-year portfolio project for the Bachelor CDA program a
 | Would rewatch immediately | Says it all |
 | Instant classic | Timeless |
 
-Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
+Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Coal / Trash**
 
 ### Mood-Based Recommendation Engine
 
 🎭 **The tool provides personalized AI-powered recommendations through a comprehensive user experience**
-- Answer a short mood questionnaire
-- Swipe through film cards (right = interested, left = not interested)
-- Optionally add a custom prompt
-- Receive a curated list of personalised recommendations
-- Filtered by the streaming platforms you actually have
+- Answer a short mood questionnaire (audience, mood, desire, preferences, deal breakers, free-text note)
+- Swipe through 6 AI-selected film cards (right = interested, left = not for me)
+- Receive a curated shortlist: a perfect match, up to 5 suggestions, and picks from your watchlist
+- Filtered by the streaming platforms you actually subscribe to
+- Powered by Mistral AI (`mistral-medium-latest`) with TMDB enrichment
 
 ### Personal Dashboard
 📋 **The tool allows users to keep track of the movies they've watched and the emotional impact they had on them at the time of viewing**
@@ -115,13 +116,15 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Trash**
 
 | Layer | Technology | Role |
 |---|---|---|
-| Frontend | React 19 + Tailwind CSS | Component-based UI, responsive design |
-| Routing | React Router | Client-side navigation |
-| Backend | Python 3.11 + FastAPI | REST API, business logic, async support |
+| Frontend | React 19 + TypeScript + Tailwind CSS v4 | Component-based UI, type-safe, responsive design |
+| UI Components | shadcn/ui (New York style) | Accessible, composable component library |
+| Routing | React Router v7 | Client-side navigation |
+| Backend | Python 3.12 + FastAPI | REST API, business logic, async support |
 | Database | PostgreSQL 16 | Relational data persistence |
+| ORM | SQLAlchemy 2.0 + Alembic | Database models and migrations |
 | Authentication | JWT | Stateless user authentication |
 | Film data | TMDB API | Film metadata, posters, streaming availability |
-| AI recommendations | Mistral AI | Mood-based LLM recommendation engine |
+| AI recommendations | Mistral AI (`mistral-medium-latest`) | Two-step mood-based LLM recommendation engine |
 | Testing | pytest + pytest-cov | Unit and integration tests |
 | Version control | Git + GitHub | Source control and project history |
 
@@ -150,9 +153,11 @@ CinéMood uses PostgreSQL as its relational database. Film metadata is not store
 holbertonschool-CineMood/
 ├── README.md
 ├── docker-compose.yml
-├── clean.sh
-├── setup.sh
-├── start.sh
+├── setup.sh                    ← one-time environment setup
+├── start.sh                    ← start both servers
+├── clean.sh                    ← remove caches and build artifacts
+├── test.sh                     ← run backend test suite with coverage
+├── pyrightconfig.json          ← Pyright/Pylance config for backend venv
 ├── docs/
 │   ├── diagrams/
 │   │   ├── Architecture.md
@@ -163,34 +168,96 @@ holbertonschool-CineMood/
 │   ├── Stage 1 Report - Team Formation, Brainstorming and MVP.pdf
 │   ├── Stage 2 Report - Project Planning.pdf
 │   └── Stage 3 Report - Technical Documentation.pdf
-└── frontend/               ← Sprint 2
+├── frontend/
 │   ├── public/
-│   └── src/
-│       ├── components/
-│       │   ├── FilmCard/
-│       │   ├── TagSelector/
-│       │   ├── PlatformSelector/
-│       │   ├── SwipeDeck/
-│       │   └── NavBar/
-│       ├── pages/
-│       │   ├── AuthPage/
-│       │   ├── DashboardPage/
-│       │   ├── CatalogPage/
-│       │   ├── FilmDetailPage/
-│       │   ├── RecommendationPage/
-│       │   └── ProfilePage/
-│       └── services/
-│           └── api.js
+│   ├── src/
+│   │   ├── main.tsx                    ← app entry point
+│   │   ├── index.css                   ← global styles (Tailwind v4)
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── ui/                     ← shadcn/ui primitives
+│   │   │   ├── pages/                  ← one file per route
+│   │   │   │   ├── auth-page.tsx
+│   │   │   │   ├── dashboard-page.tsx
+│   │   │   │   ├── search-page.tsx
+│   │   │   │   ├── history-page.tsx
+│   │   │   │   ├── watchlist-page.tsx
+│   │   │   │   ├── film-detail-page.tsx
+│   │   │   │   ├── recommendation-page.tsx  ← mood questionnaire (step 1)
+│   │   │   │   ├── swipe-page.tsx           ← swipe deck (step 2)
+│   │   │   │   ├── results-page.tsx         ← recommendation results (step 3)
+│   │   │   │   └── profile-page.tsx
+│   │   │   ├── cinemood-app.tsx         ← root component + routing
+│   │   │   ├── app-layout.tsx           ← navbar + page shell
+│   │   │   ├── film-card.tsx            ← PosterFrame, FilmCard, TagChip
+│   │   │   ├── loading-screen.tsx       ← full-page loader shown during AI calls
+│   │   │   ├── log-film-dialog.tsx      ← tags + prestige + note modal
+│   │   │   ├── confirm-dialog.tsx
+│   │   │   └── logo.tsx
+│   │   ├── context/
+│   │   │   ├── AuthContext.tsx          ← JWT auth, session persistence
+│   │   │   └── LibraryContext.tsx       ← history, watchlist, mutations
+│   │   ├── services/
+│   │   │   ├── api.ts                   ← Axios instance + JWT interceptors
+│   │   │   └── recommendations.ts       ← discover() and refine() API calls
+│   │   ├── types/
+│   │   │   └── api.ts                   ← TypeScript interfaces (Film, SwipeCard, FilmRecommendation, …)
+│   │   └── lib/
+│   │       ├── questionnaire.ts         ← MOOD_QUESTIONS (questionnaire steps config)
+│   │       ├── constants.ts             ← PRESTIGE_RECORD, PRESTIGE_TIERS, PRESTIGE_RANK
+│   │       └── utils.ts                 ← cn(), formatRuntime()
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   └── package.json
 └── backend/
-    ├── alembic/
+    ├── alembic/                         ← database migrations
+    │   └── versions/
     ├── app/
-    │   ├── main.py
-    │   ├── database.py
+    │   ├── main.py                      ← FastAPI app + CORS + routers
+    │   ├── config.py                    ← settings (env vars)
+    │   ├── database.py                  ← SQLAlchemy engine + session
+    │   ├── dependencies.py              ← get_db, get_current_user
+    │   ├── external/
+    │   │   ├── tmdb_client.py           ← TMDB API facade
+    │   │   └── mistral_ai_client.py     ← Mistral AI facade (chat_mistral_json)
     │   ├── models/
-    │   ├── routes/
+    │   │   ├── user.py
+    │   │   ├── viewing_history_entry.py
+    │   │   ├── watchlist_entry.py
+    │   │   ├── tag.py
+    │   │   └── prestige_tier.py
+    │   ├── schemas/
+    │   │   ├── user.py
+    │   │   ├── film.py
+    │   │   ├── recommendation.py        ← DiscoverRequest/Response, RefineRequest, RecommendationResponse
+    │   │   ├── viewing_history.py
+    │   │   ├── watchlist.py
+    │   │   └── validate.py
+    │   ├── repositories/
+    │   │   ├── user_repository.py
+    │   │   ├── viewing_history_repository.py
+    │   │   └── watchlist_repository.py
     │   ├── services/
-    │   └── repositories/
+    │   │   ├── auth_service.py
+    │   │   ├── film_service.py
+    │   │   ├── recommendation_service.py ← two-step AI recommendation flow
+    │   │   ├── viewing_history_service.py
+    │   │   └── watchlist_service.py
+    │   └── routes/
+    │       ├── auth.py
+    │       ├── film.py
+    │       ├── recommendations.py        ← POST /recommendations/discover and /refine
+    │       ├── tag.py
+    │       ├── viewing_history.py
+    │       └── watchlist.py
+    ├── seeds/
+    │   └── seed_tag.py
     ├── tests/
+    │   ├── conftest.py
+    │   ├── test_auth.py
+    │   ├── test_films_and_history.py
+    │   ├── test_recommendations.py      ← auth + validation tests for recommendation routes
+    │   └── test_watchlist.py
     ├── requirements.txt
     └── .env.example
 ```
@@ -203,14 +270,14 @@ holbertonschool-CineMood/
 
 Before running the setup script, make sure the following tools are installed:
 
-- Python >= 3.11
+- Python >= 3.12
 - Node.js >= 18
 - Docker Engine with Docker Compose v2
-- A [TMDB API key](https://www.themoviedb.org/settings/api) *(required from Sprint 2)*
-- A [Mistral AI API key](https://console.mistral.ai/) *(required from Sprint 5)*
+- A [TMDB Read Access Token](https://www.themoviedb.org/settings/api) *(required for film search and detail)*
+- A [Mistral AI API key](https://console.mistral.ai/) *(required for the recommendation engine)*
 
 > The setup script checks that Python, Node.js, Docker, and Docker Compose are available.  
-> It also creates the virtual environment, installs project dependencies, creates local `.env` files, and starts the PostgreSQL container.
+> It also creates the virtual environment, installs project dependencies, creates local `.env` files, starts the PostgreSQL container, runs all Alembic migrations, and seeds the tag reference data.
 
 If Docker is not installed on Ubuntu, you can install it with:
 ```bash
@@ -237,17 +304,24 @@ cd holbertonschool-CineMood
 #### Run the setup script
 
 Run **`setup.sh`** to initialize the project in one command.<br>
-This script handles everything in one command, for Frontend and Backend initialization:
-- Checks Python 3.11+, Node.js 18+, Docker, and Docker Compose are available
-- Creates the Python virtual environment into backend directory
-- Installs all backend dependencies
-- Installs all frontend dependencies
-- Creates your `.env` files from `.env.example`
+This script handles everything for Frontend and Backend initialization:
+- Checks Python 3.12+, Node.js 18+, Docker, and Docker Compose are available
+- Creates the Python virtual environment in the backend directory
+- Installs all backend and frontend dependencies
+- Creates your `.env` files from `.env.example` with a generated `SECRET_KEY`
 - Starts the PostgreSQL container via Docker
+- Runs all Alembic database migrations
+- Seeds reference data (mood tags)
 
 ```bash
 ./setup.sh
 ```
+
+> ⚠️ **Important:** After running setup, open `backend/.env` and replace the placeholder values:
+> - `TMDB_READ_ACCESS_TOKEN` — from [themoviedb.org](https://www.themoviedb.org/settings/api)
+> - `MISTRAL_AI_API_KEY` — from [console.mistral.ai](https://console.mistral.ai/)
+>
+> Film search and the recommendation engine will not work without these keys.
 
 ### Each working session
 
@@ -261,8 +335,8 @@ source backend/venv/bin/activate
 ./start.sh
 ```
 
-The app will be available at `http://localhost:5173` *(frontend - Sprint 2)*
-The API will be available at `http://localhost:8000`
+The frontend will be available at `http://localhost:5173`  
+The API will be available at `http://localhost:8000`  
 The API documentation (Swagger UI) will be available at `http://localhost:8000/docs`
 
 ### Cleaning the project
@@ -275,8 +349,8 @@ From time to time, you can run the clean script to remove generated files and te
 This script removes common development artifacts such as:
 - Python cache files (`__pycache__`, `.pyc`, `.pyo`)
 - pytest cache and coverage reports
-- frontend build artifacts (`dist`, `dist-ssr`)
-- OS-generated files such as (`.DS_Store`, `Thumbs.db`)
+- frontend build and cache artifacts (`dist`, `dist-ssr`, `.vite`)
+- OS-generated files (`.DS_Store`, `Thumbs.db`)
 
 For a complete reset of the local development environment, use:
 ```bash
@@ -286,7 +360,7 @@ For a complete reset of the local development environment, use:
 **Caution: hard mode removes reinstallable local files**:
 - `backend/venv`
 - `frontend/node_modules`
-- backend and frontend `.env` files
+- backend and frontend `.env` / `.env.local` files
 
 > ⚠️ **Note:** Do not run `./clean.sh --hard` while the virtual environment is active.<br>
 Run `deactivate` first.
@@ -295,25 +369,29 @@ Run `deactivate` first.
 
 ## API Overview
 
-> Full API specification is available in the [Stage 3 Technical Documentation](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/develop/docs/Stage%203%20Report%20-%20Technical%20Documentation.pdf).
+> An interactive Swagger UI is available at `http://localhost:8000/docs` when the backend is running.
+
+### Implemented endpoints
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| POST | /auth/register | Create a new user account | ❌ |
-| POST | /auth/login | Log in and receive a JWT token | ❌ |
-| GET | /films/search | Search for a film by title | ✅ |
-| GET | /films/{tmdb_id} | Get film details and user status | ✅ |
-| POST | /films/log | Log a watched film with tags | ✅ |
-| DELETE | /films/log/{entry_id} | Remove a film from history | ✅ |
-| GET | /films/history | Retrieve the user's viewing history | ✅ |
-| POST | /films/watchlist | Add a film to the watchlist | ✅ |
-| DELETE | /films/watchlist/{tmdb_id} | Remove a film from the watchlist | ✅ |
-| GET | /films/watchlist | Retrieve the user's watchlist | ✅ |
-| GET | /users/me | Get current user profile | ✅ |
-| PATCH | /users/me | Update user profile | ✅ |
-| GET | /users/me/platforms | Get platform preferences | ✅ |
-| PUT | /users/me/platforms | Update platform preferences | ✅ |
-| POST | /recommendations/start | Get mood-based recommendations | ✅ |
+| POST | `/auth/register` | Create a new user account | ❌ |
+| POST | `/auth/login` | Log in and receive a JWT token | ❌ |
+| GET | `/tags` | List all available mood tags | ❌ |
+| GET | `/films/search` | Search for a film by title (TMDB) | ❌ |
+| GET | `/films/{tmdb_id}` | Get film details and user status | ✅ |
+| GET | `/users/me` | Get current user profile | ✅ |
+| PATCH | `/users/me` | Update user profile (age, platforms) | ✅ |
+| GET | `/history` | Retrieve the user's viewing history | ✅ |
+| POST | `/history` | Log a watched film with tags and prestige tier | ✅ |
+| PATCH | `/history/{tmdb_id}` | Update tags, prestige tier, or note on an existing entry | ✅ |
+| DELETE | `/history/{tmdb_id}` | Remove a film from history | ✅ |
+| GET | `/watchlist` | Retrieve the user's watchlist | ✅ |
+| POST | `/watchlist` | Add a film to the watchlist | ✅ |
+| DELETE | `/watchlist/{tmdb_id}` | Remove a film from the watchlist | ✅ |
+| POST | `/watchlist/{tmdb_id}/watched` | Mark a watchlist film as watched (atomic move to history) | ✅ |
+| POST | `/recommendations/discover` | Generate 6 swipe cards from quiz answers (Mistral + TMDB) | ✅ |
+| POST | `/recommendations/refine` | Produce final picks from quiz answers + swipe signals | ✅ |
 
 > ✅ Requires authentication — a valid JWT token must be included in the `Authorization: Bearer <token>` header.<br>
 > ❌ Public endpoint — no authentication required.
@@ -433,20 +511,37 @@ This automatically closes the issue and moves it to `Done` on the GitHub Project
 
 ## Testing
 
+The backend test suite uses **pytest** with coverage reporting. Use the provided script from the project root:
+
+```bash
+./test.sh
+```
+
+Or run manually from the `backend/` directory:
+
 ```bash
 cd backend
+source venv/bin/activate
 
-# Run all tests
-pytest
-
-# Run with coverage report
-pytest --cov=app --cov-report=html
+# Run all tests with coverage
+pytest tests/ -v --cov=app --cov-report=term-missing
 
 # Run a specific test file
 pytest tests/test_auth.py -v
 ```
 
+**Current test files:**
+
+| File | Coverage |
+|---|---|
+| `test_auth.py` | Registration, login, JWT validation edge cases |
+| `test_films_and_history.py` | Tags, film search, film detail, viewing history CRUD |
+| `test_watchlist.py` | Watchlist CRUD, mark-as-watched, platform caching |
+| `test_recommendations.py` | Auth enforcement and input validation for recommendation routes |
+
 Target: **minimum 50% coverage** on the backend codebase, focusing on the service layer and critical endpoints.
+
+> The recommendation happy path (real Mistral + TMDB calls) is covered by a manual integration script and is intentionally excluded from the automated suite to avoid network dependency and API costs in CI.
 
 ---
 
@@ -486,11 +581,10 @@ All project documentation is maintained as part of the Holberton portfolio proce
 ### MVP (current scope)
 - [x] Project planning and technical documentation
 - [x] User authentication (Sprint 1)
-- [ ] Film search and logging with tags (Sprint 2)
-- [ ] Watchlist and personal dashboard (Sprint 3)
-- [ ] Mood questionnaire and swipe interface (Sprint 4)
-- [ ] AI-powered recommendations via Mistral AI (Sprint 5)
-- [ ] Streaming availability display (Sprint 5)
+- [x] Film search and logging with tags (Sprint 2)
+- [x] Watchlist, mark-as-watched, and personal dashboard (Sprint 3)
+- [x] Frontend fully connected to backend API (Sprint 4)
+- [x] Mood questionnaire and AI-powered recommendations via Mistral AI (Sprint 5)
 
 ### Future versions
 - [ ] Guest mode - full navigation (search, recommendations) without an account, with a sign-up prompt at the end of the recommendation flow to save results

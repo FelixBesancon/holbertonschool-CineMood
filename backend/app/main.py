@@ -7,7 +7,9 @@ the root health check endpoint.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, film, tag
+from app.routes import (
+    auth, film, tag, platform, users, viewing_history, watchlist, library, recommendations
+    )
 
 # FastAPI application instance.
 # This object registers all routes and is served by uvicorn.
@@ -33,6 +35,12 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(film.router)
 app.include_router(tag.router)
+app.include_router(platform.router)
+app.include_router(users.router)
+app.include_router(viewing_history.router)
+app.include_router(watchlist.router)
+app.include_router(library.router)
+app.include_router(recommendations.router)
 
 
 @app.get("/")
