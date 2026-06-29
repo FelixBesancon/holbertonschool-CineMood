@@ -28,6 +28,8 @@ import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { MOOD_QUESTIONS } from "@/lib/mock-data"
+import { discover } from "@/services/recommendations"
+import { LoadingScreen } from "@/components/loading-screen"
 
 const CHIP_STEPS = MOOD_QUESTIONS.length
 
@@ -43,6 +45,7 @@ export function RecommendationPage() {
     () => MOOD_QUESTIONS.map(() => [])
   )
   const [specific, setSpecific] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   // unlocked[i] = true once the user has confirmed step i (manually or via auto-advance).
   // visibleCount is derived from this, NOT from isComplete, so optional steps
@@ -113,6 +116,8 @@ export function RecommendationPage() {
       return next
     })
   }
+
+  if (isLoading) return <LoadingScreen message="Searching for your films…" />
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-center px-4 py-8 sm:px-6">
@@ -266,10 +271,32 @@ export function RecommendationPage() {
                 <Button
                   size="lg"
                   className="gap-1.5 transition-all duration-200 hover:scale-105"
-                  onClick={() => navigate("/recommendation/swipe")}
+                  disabled={isLoading}
+                  onClick={async () => {
+                    setIsLoading(true)
+                    try {
+                      const quizAnswers = {
+                        audience: answers[0][0] ?? "",
+                        mood: answers[1],
+                        desire: answers[2][0] ?? "",
+                        preferences: answers[3],
+                        dealbreakers: answers[4],
+                        notes: specific,
+                      }
+                      const response = await discover({
+                        ...quizAnswers,
+                        filter_platforms: filterPlatforms,
+                      })
+                      navigate("/recommendation/swipe", {
+                        state: { quizAnswers, cards: response.cards, filterPlatforms },
+                      })
+                    } catch {
+                      setIsLoading(false)
+                    }
+                  }}
                 >
-                  Find my film
-                  <ArrowRight className="h-4 w-4" />
+                  {isLoading ? "Loading…" : "Find my film"}
+                  {!isLoading && <ArrowRight className="h-4 w-4" />}
                 </Button>
               </div>
             </div>

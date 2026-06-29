@@ -12,7 +12,7 @@ The response_format={"type": "json_object"} parameter guarantees a valid JSON
 response from the model without relying on prompt instructions to shape the
 output format.
 
-Model: mistral-small-latest
+Model: mistral-medium-latest
 Documentation: https://docs.mistral.ai/api/
 """
 
@@ -20,7 +20,7 @@ import json
 from mistralai import Mistral
 from app.config import settings
 
-MISTRAL_MODEL = "mistral-small-latest"
+MISTRAL_MODEL = "mistral-medium-latest"
 
 # Default temperature for recommendation requests: balanced between creativity
 # (varied suggestions) and determinism (reliable JSON structure).

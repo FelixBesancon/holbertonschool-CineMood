@@ -103,3 +103,50 @@ export interface FilmWithStatus {
   in_history: boolean
   in_watchlist: boolean
 }
+
+// --- Recommendation flow ---
+
+/** Quiz answers sent in both discover and refine requests. */
+export interface QuizAnswers {
+  audience: string
+  mood: string[]
+  desire: string
+  preferences: string[]
+  dealbreakers: string[]
+  notes: string
+}
+
+/** Body for POST /recommendations/discover */
+export interface DiscoverRequest extends QuizAnswers {
+  filter_platforms: boolean
+}
+
+/** Body for POST /recommendations/refine */
+export interface RefineRequest extends QuizAnswers {
+  filter_platforms: boolean
+  liked_tmdb_ids: number[]
+  rejected_tmdb_ids: number[]
+}
+
+/** A film card in the swipe deck (discover response). */
+export interface SwipeCard extends Film {
+  reason: string
+  available_on_my_platforms: boolean
+}
+
+/** A scored film in the final recommendation (refine response). */
+export interface FilmRecommendation extends SwipeCard {
+  match_score: number
+}
+
+/** Response from POST /recommendations/discover */
+export interface DiscoverResponse {
+  cards: SwipeCard[]
+}
+
+/** Response from POST /recommendations/refine */
+export interface RecommendationResponse {
+  perfect_match: FilmRecommendation
+  suggestions: FilmRecommendation[]
+  from_watchlist: FilmRecommendation[]
+}

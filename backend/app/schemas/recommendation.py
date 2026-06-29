@@ -164,14 +164,14 @@ class RecommendationResponse(BaseModel):
     Response body for POST /recommendations/refine.
 
     Attributes:
-        perfect_match: (FilmRecommendation): refined film
-            recommendation with the highest match_score.
-            Typically 3 to 5 films.
-        suggestions (list[FilmRecommendation]): Ordered list of 2 to 4 refined
-            film recommendations, sorted by match_score descending.
-        from_watchlist (list[FilmRecommendation]): Ordered list of 0 to 4 refined
-            film recommendations, sorted by match_score descending.
-            
+        perfect_match (FilmRecommendation): The highest-scoring film from
+            the merged pool (liked + new suggestions). Always present.
+        suggestions (list[FilmRecommendation]): Up to 4 remaining films from
+            the pool, sorted by match_score descending. Includes liked films
+            and Mistral's new suggestions interleaved by score.
+        from_watchlist (list[FilmRecommendation]): Up to 2 films from the
+            user's watchlist selected by Mistral as fitting tonight's mood.
+            Empty list when no watchlist film matches.
     """
     perfect_match: FilmRecommendation
     suggestions: list[FilmRecommendation]
