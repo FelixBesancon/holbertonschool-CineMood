@@ -127,7 +127,7 @@ function SwipeCard({
         <div>
           <h2 className="font-heading text-base font-bold leading-tight">{film.title}</h2>
           <p className="text-xs text-muted-foreground">
-            {film.year} · {film.director} · {formatRuntime(film.runtime)}
+            {film.year} · {film.director?.join(", ")} · {formatRuntime(film.runtime)}
           </p>
         </div>
         {film.synopsis && (

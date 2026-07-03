@@ -85,7 +85,7 @@ export function LogFilmDialog({
               <p className="text-xs font-medium uppercase tracking-wide text-primary">Log this film</p>
               <DialogTitle className="text-lg">{film.title}</DialogTitle>
               <p className="text-sm text-muted-foreground">
-                {film.year} · {film.director}
+                {film.year} · {film.director?.join(", ")}
               </p>
             </div>
           </div>

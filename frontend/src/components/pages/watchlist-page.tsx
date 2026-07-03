@@ -10,6 +10,7 @@
  * Data comes from LibraryContext (GET /watchlist).
  */
 import { useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import { Info, Bookmark, PenLine, Trash2 } from "lucide-react"
 import { cn, formatRuntime } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +26,7 @@ function entryAsFilm(entry: WatchlistEntry): Film {
     title: entry.title ?? "",
     poster_url: entry.poster_url,
     year: entry.year ?? null,
-    director: entry.director ?? null,
+    director: entry.director ? [entry.director] : null,
     synopsis: entry.synopsis ?? null,
     genres: entry.genres ?? null,
     runtime: entry.runtime ?? null,
@@ -111,9 +112,12 @@ export function WatchlistPage() {
               </div>
 
               <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col">
-                <span className="font-heading text-base font-bold leading-tight transition-colors group-hover:text-primary">
+                <Link
+                  to={`/films/${entry.tmdb_id}`}
+                  className="pointer-events-auto w-fit font-heading text-base font-bold leading-tight transition-colors hover:text-primary hover:underline"
+                >
                   {entry.title}
-                </span>
+                </Link>
 
                 {(entry.year || entry.director || entry.runtime) && (
                   <p className="text-xs text-muted-foreground">

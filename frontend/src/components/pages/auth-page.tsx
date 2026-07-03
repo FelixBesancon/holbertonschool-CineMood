@@ -9,7 +9,7 @@ import { useState, SyntheticEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock, User as UserIcon, ArrowRight, Calendar } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
-import { Logo } from "@/components/logo"
+import logoVertical from "@/assets/logos/logo-color-2.svg"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -95,7 +95,7 @@ export function AuthPage() {
       <div className="absolute inset-x-0 top-0 h-1/2 hero-gradient" aria-hidden />
       <div className="relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <Logo className="text-2xl" />
+          <img src={logoVertical} alt="CinéMood" className="h-36 w-auto" />
           <p className="max-w-xs text-pretty text-sm text-muted-foreground">
             Your personal film diary. Track what you watch, find what to watch next.
           </p>

@@ -7,10 +7,7 @@
   clip-rule="evenodd"
   viewBox="315 300 1900 1900"
   >
-  <clipPath id="circleClip">
-    <circle cx="1265" cy="1250" r="950"/>
-  </clipPath>
-  <g id="Favicon" clip-path="url(#circleClip)">
+  <g id="Logo-icon-white-red">
     <path
       fill="#cc270f"
       d="M.004102.00041822h2480.315724v2480.31624687H.004102z"

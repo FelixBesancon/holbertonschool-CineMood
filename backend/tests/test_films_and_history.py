@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import status
 
 from app.models.tag import Tag
+from app.models.platform import Platform
 from app.config import settings
 
 
@@ -58,7 +59,7 @@ MOCK_MOVIE_DETAILS = {
 }
 
 MOCK_WATCH_PROVIDERS = {
-    "flatrate": [{"provider_name": "Netflix", "logo_path": "/logo.jpg"}]
+    "flatrate": [{"provider_id": 8, "provider_name": "Netflix", "logo_path": "/logo.jpg"}]
 }
 
 
@@ -122,6 +123,16 @@ def seeded_tags(db_session):
     for tag in tags:
         db_session.refresh(tag)
     return tags
+
+
+@pytest.fixture()
+def seeded_platforms(db_session):
+    """Insert the Netflix platform (TMDB provider id 8) into the database."""
+    platform = Platform(id=8, name="Netflix", logo_path="/logo.jpg", is_free=False)
+    db_session.add(platform)
+    db_session.commit()
+    db_session.refresh(platform)
+    return [platform]
 
 
 @pytest.fixture()
@@ -259,17 +270,26 @@ class TestGetFilmDetail:
              patch("app.external.tmdb_client.get_watch_providers",
                    new=AsyncMock(return_value=MOCK_WATCH_PROVIDERS)):
             film = client.get(f"/films/{TMDB_ID}", headers=auth_headers).json()["film"]
-        assert film["director"] == "Christopher Nolan"
+        assert film["director"] == ["Christopher Nolan"]
         assert "Action" in film["genres"]
         assert film["runtime"] == 148
 
-    def test_maps_streaming_platforms(self, client, auth_headers):
+    def test_maps_streaming_platforms(self, client, auth_headers, seeded_platforms):
         with patch("app.external.tmdb_client.get_movie_details",
                    new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)), \
              patch("app.external.tmdb_client.get_watch_providers",
                    new=AsyncMock(return_value=MOCK_WATCH_PROVIDERS)):
             film = client.get(f"/films/{TMDB_ID}", headers=auth_headers).json()["film"]
-        assert "Netflix" in film["streaming_platforms"]
+        assert any(p["name"] == "Netflix" for p in film["streaming_platforms"])
+
+    def test_omits_streaming_platforms_not_in_our_table(self, client, auth_headers):
+        """Providers TMDB reports that aren't in our own `platforms` table are dropped."""
+        with patch("app.external.tmdb_client.get_movie_details",
+                   new=AsyncMock(return_value=MOCK_MOVIE_DETAILS)), \
+             patch("app.external.tmdb_client.get_watch_providers",
+                   new=AsyncMock(return_value=MOCK_WATCH_PROVIDERS)):
+            film = client.get(f"/films/{TMDB_ID}", headers=auth_headers).json()["film"]
+        assert not film["streaming_platforms"]
 
     def test_tmdb_404_returns_404(self, client, auth_headers):
         with patch("app.external.tmdb_client.get_movie_details",
