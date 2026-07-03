@@ -23,6 +23,7 @@ from app.schemas.film import Film, FilmWithStatus
 from app.external import tmdb_client
 from app.repositories import viewing_history_repository, watchlist_repository
 from app.models.user import User
+from app.models.platform import Platform
 
 # Base URL for TMDB poster images — w500 is a good balance for the frontend
 _POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
@@ -79,7 +80,7 @@ async def search_films(query: str) -> list[Film]:
     ]
 
 
-async def get_film_details(tmdb_id: int) -> Film:
+async def get_film_details(tmdb_id: int, db: Session) -> Film:
     """
     Fetch full metadata for a single film from TMDB.
 
@@ -87,13 +88,18 @@ async def get_film_details(tmdb_id: int) -> Film:
     combined response to a fully populated Film object.
 
     Mapping decisions:
-        - Director: first crew member with job == "Director".
+        - Director: every crew member with job == "Director" (a film can
+          have several), in TMDB crew order.
         - Cast: top CAST_LIMIT billed actors (ordered by TMDB billing).
-        - Streaming platforms: flatrate (subscription) providers only.
-          Rent and buy options are excluded for the MVP.
+        - Streaming platforms: flatrate (subscription) providers only,
+          restricted to the platforms seeded in our own `platforms` table
+          (matched by TMDB provider ID). Rent and buy options are excluded
+          for the MVP, as are providers we don't track.
 
     Args:
         tmdb_id (int): TMDB unique identifier of the movie.
+        db (Session): SQLAlchemy database session, used to filter
+            streaming platforms against the `platforms` table.
 
     Returns:
         Film: A fully populated Film object.
@@ -109,19 +115,20 @@ async def get_film_details(tmdb_id: int) -> Film:
 
     credits = details.get("credits", {})
 
-    director = next(
-        (member["name"] for member in credits.get("crew", [])
-        if member.get("job") == "Director"),
-        None
-    )
+    seen_directors = set()
+    director = [
+        member["name"] for member in credits.get("crew", [])
+        if member.get("job") == "Director"
+        and not (member["name"] in seen_directors or seen_directors.add(member["name"]))
+    ]
 
     cast = [member["name"] for member in credits.get("cast", [])[:CAST_LIMIT]]
 
-    seen = set()
-    streaming_platforms = [
-        p["provider_name"] for p in providers.get("flatrate", [])
-        if not (p["provider_name"] in seen or seen.add(p["provider_name"]))
-    ]
+    provider_ids = {p["provider_id"] for p in providers.get("flatrate", [])}
+    streaming_platforms = (
+        db.query(Platform).filter(Platform.id.in_(provider_ids)).all()
+        if provider_ids else []
+    )
 
     return Film(
         tmdb_id=details["id"],
@@ -130,14 +137,14 @@ async def get_film_details(tmdb_id: int) -> Film:
         genres=[g["name"] for g in details.get("genres", [])] or None,
         poster_url=_build_poster_url(details.get("poster_path")),
         synopsis=details.get("overview") or None,
-        director=director,
+        director=director or None,
         cast=cast or None,
         runtime=details.get("runtime") or None,
         streaming_platforms=streaming_platforms or None,
     )
 
 
-async def search_and_get_film(title: str, year: int) -> Film | None:
+async def search_and_get_film(title: str, year: int, db: Session) -> Film | None:
     """
     Resolve a film title and release year to a fully populated Film object.
 
@@ -157,6 +164,8 @@ async def search_and_get_film(title: str, year: int) -> Film | None:
         title (str): Film title as provided by Mistral — usually the English
             or most common international title.
         year (int): Expected release year as provided by Mistral.
+        db (Session): SQLAlchemy database session, forwarded to
+            get_film_details() to filter streaming platforms.
 
     Returns:
         Film: Fully populated Film object for the best match, or None if
@@ -178,7 +187,7 @@ async def search_and_get_film(title: str, year: int) -> Film | None:
         return None
 
     best = max(candidates, key=lambda r: r.get("popularity", 0))
-    return await get_film_details(best["id"])
+    return await get_film_details(best["id"], db)
 
 
 async def get_film_with_status(
@@ -206,7 +215,7 @@ async def get_film_with_status(
         httpx.HTTPStatusError: If TMDB returns a non-2xx response.
         httpx.RequestError: If the request cannot be sent.
     """
-    film = await get_film_details(tmdb_id)
+    film = await get_film_details(tmdb_id, db)
     in_history = viewing_history_repository.get_by_user_and_tmdb(
         db, user.id, tmdb_id
     ) is not None

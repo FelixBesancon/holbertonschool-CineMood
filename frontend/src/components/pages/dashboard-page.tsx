@@ -133,7 +133,7 @@ export function DashboardPage() {
           title: logTarget.title ?? "",
           poster_url: logTarget.poster_url,
           year: logTarget.year,
-          director: logTarget.director,
+          director: logTarget.director ? [logTarget.director] : null,
           synopsis: logTarget.synopsis,
           genres: logTarget.genres,
           cast: null,

@@ -2,10 +2,15 @@
  * FilmDetailPage - Full film detail view, reachable from any card or search result.
  *
  * Hero section: blurred backdrop, poster, meta (year/director/runtime), genres,
- * synopsis, and context-sensitive action buttons that adapt to the film's status:
+ * synopsis, casting, and context-sensitive action buttons that adapt to the
+ * film's status:
  *   - "none"      → Add to watchlist | Log this film
  *   - "watchlist" → Remove from watchlist | Log this film
  *   - "watched"   → Remove from history  | Edit the log
+ *
+ * Streaming platforms section: only platforms present in our own /platforms
+ * catalogue are shown (others TMDB reports are omitted); platforms the user
+ * has selected on their profile are highlighted.
  *
  * Diary entry section (shown only when status === "watched"):
  * displays the stored prestige tier, mood tags, and personal note with an Edit button.
@@ -24,8 +29,9 @@ import { TagChip } from "@/components/film-card"
 import { LogFilmDialog } from "@/components/log-film-dialog"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLibrary } from "@/context/LibraryContext"
+import { useAuth } from "@/context/AuthContext"
 import { PRESTIGE_RECORD } from "@/lib/constants"
-import { formatRuntime } from "@/lib/utils"
+import { cn, formatRuntime } from "@/lib/utils"
 import type { FilmWithStatus } from "@/types/api"
 import api from "@/services/api"
 
@@ -33,6 +39,7 @@ export function FilmDetailPage() {
   const { id } = useParams()
   const tmdb_id = id ? parseInt(id) : null
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [filmData, setFilmData] = useState<FilmWithStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const {
@@ -107,7 +114,7 @@ export function FilmDetailPage() {
             <div className="flex flex-1 flex-col">
               <h1 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{filmData.film.title}</h1>
               <p className="mt-1 text-muted-foreground">
-                {filmData.film.year} · Directed by {filmData.film.director} · {formatRuntime(filmData.film.runtime)}
+                {filmData.film.year} · Directed by {filmData.film.director?.join(", ")} · {formatRuntime(filmData.film.runtime)}
               </p>
 
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -119,6 +126,12 @@ export function FilmDetailPage() {
               </div>
 
               <p className="mt-4 max-w-2xl text-pretty leading-relaxed text-foreground/80">{filmData.film.synopsis}</p>
+
+              {filmData.film.cast && filmData.film.cast.length > 0 && (
+                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Casting:</span> {filmData.film.cast.join(", ")}
+                </p>
+              )}
 
               <div className="mt-6 flex flex-wrap gap-3">
                 {status === "none" && (
@@ -186,6 +199,38 @@ export function FilmDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* Streaming platforms — only those in our own catalogue, matches with the user's own platforms highlighted */}
+      {filmData.film.streaming_platforms && filmData.film.streaming_platforms.length > 0 && (
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+          <h2 className="mb-3 font-heading text-lg font-bold">Available on</h2>
+          <div className="flex flex-wrap gap-3">
+            {filmData.film.streaming_platforms.map((platform) => {
+              const owned = user?.platforms.some((p) => p.id === platform.id)
+              return (
+                <div
+                  key={platform.id}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border px-3 py-2",
+                    owned ? "border-primary bg-accent" : "border-border"
+                  )}
+                >
+                  <img
+                    src={platform.logo_url}
+                    alt=""
+                    className="h-8 w-8 rounded-md object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                    }}
+                  />
+                  <span className="text-sm font-medium">{platform.name}</span>
+                  {owned && <Check className="h-4 w-4 text-primary" />}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* History */}
       {entry && (

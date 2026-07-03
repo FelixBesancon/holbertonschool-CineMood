@@ -14,6 +14,7 @@ Schemas defined here:
       authenticated user has already logged this film
 """
 from pydantic import BaseModel
+from app.schemas.platform import PlatformResponse
 
 
 class Film(BaseModel):
@@ -38,14 +39,17 @@ class Film(BaseModel):
         poster_url (str, optional): Full URL of the movie poster image,
             constructed from TMDB's poster_path.
         synopsis (str, optional): Movie overview / plot summary.
-        director (str, optional): Name of the director, extracted
-            from TMDB's credits crew list.
+        director (list[str], optional): Names of every director, extracted
+            from TMDB's credits crew list (a film can have several).
         cast (list[str], optional): List of actor names, extracted
             from TMDB's credits cast list.
         runtime (int, optional): Movie duration in minutes.
-        streaming_platforms (list[str], optional): Names of streaming
-            services where the movie is available (e.g. ["Netflix"]).
-            Sourced from TMDB's watch/providers endpoint.
+        streaming_platforms (list[PlatformResponse], optional): Streaming
+            services where the movie is available, restricted to the
+            platforms known in CinéMood's own `platforms` table (sourced
+            from TMDB's watch/providers endpoint, cross-referenced by
+            provider ID). Platforms TMDB reports but that aren't in our
+            table are silently omitted.
     """
     tmdb_id: int
     title: str
@@ -53,10 +57,10 @@ class Film(BaseModel):
     poster_url: str | None = None
     synopsis: str | None = None
     genres: list[str] | None = None
-    director: str | None = None
+    director: list[str] | None = None
     cast: list[str] | None = None
     runtime: int | None = None
-    streaming_platforms: list[str] | None = None
+    streaming_platforms: list[PlatformResponse] | None = None
 
 
 class FilmWithStatus(BaseModel):

@@ -178,6 +178,18 @@ Rules:
 - Never suggest a film listed in the viewer's viewing history
 - If the viewer provided a SPECIFIC REQUEST (notes field), at least 3 of the 7
   must directly address it.
+- If the viewer's SPECIFIC REQUEST mentions a director, actor, or franchise, VERIFY the film's association with them before suggesting it. If uncertain, EXCLUDE the film.
+- For director/actor requests: prioritize films where the person is the PRIMARY director/lead actor (not a minor role).
+- Never invent a film to match a director/actor request. If no real film fits, suggest a similar film and explain the limitation.
+
+
+EXAMPLES OF GOOD RESPONSES:
+- Request: "Films by Christopher Nolan"
+  → Suggest "Inception (2010)", "The Dark Knight (2008)" (Nolan as director)
+  → EXCLUDE "Memento (2000)" if the user already saw it (check VIEWING HISTORY)
+- Request: "Films with Leonardo DiCaprio"
+  → Suggest "The Revenant (2015)" (DiCaprio as lead actor)
+  → EXCLUDE "Don't Look Up (2021)" if it's in VIEWING HISTORY
 """.strip()
 
 _REFINE_SYSTEM_PROMPT = """
@@ -226,9 +238,24 @@ Fields:
 - match_score: integer 0–100
 
 Rules:
-- Only real theatrical films — no TV series, TV movies, short films, or adult content
+- Only suggest real theatrical films you are confident exist
+- No TV series, TV movies, short films, or adult/pornographic content
+- The reason must describe the actual film identified by title and year
 - Never suggest any film from LIKED FILMS, REJECTED FILMS, VIEWING HISTORY, or WATCHLIST
   in new_suggestions (watchlist films belong in from_watchlist only)
+- If the viewer provided a SPECIFIC REQUEST (notes field), at least 3 of the 7
+  must directly address it.
+- If the viewer's SPECIFIC REQUEST mentions a director, actor, or franchise, VERIFY the film's association with them before suggesting it. If uncertain, EXCLUDE the film.
+- For director/actor requests: prioritize films where the person is the PRIMARY director/lead actor (not a minor role).
+- Never invent a film to match a director/actor request. If no real film fits, suggest a similar film and explain the limitation.
+
+EXAMPLES OF GOOD RESPONSES:
+- Request: "Films by Christopher Nolan"
+  → Suggest "Inception (2010)", "The Dark Knight (2008)" (Nolan as director)
+  → EXCLUDE "Memento (2000)" if the user already saw it (check VIEWING HISTORY)
+- Request: "Films with Leonardo DiCaprio"
+  → Suggest "The Revenant (2015)" (DiCaprio as lead actor)
+  → EXCLUDE "Don't Look Up (2021)" if it's in VIEWING HISTORY
 """.strip()
 
 
@@ -365,7 +392,7 @@ def _build_refine_prompt(
 
 # ── TMDB enrichment ──────────────────────────────────────────────────────────
 
-async def _resolve_id_to_label(tmdb_id: int) -> str:
+async def _resolve_id_to_label(tmdb_id: int, db: Session) -> str:
     """
     Resolve a TMDB ID to a human-readable label for use in the refine prompt.
 
@@ -374,7 +401,7 @@ async def _resolve_id_to_label(tmdb_id: int) -> str:
     the TMDB lookup fails.
     """
     try:
-        film = await get_film_details(tmdb_id)
+        film = await get_film_details(tmdb_id, db)
         return f"{film.title} ({film.year})"
     except Exception:
         return str(tmdb_id)
@@ -382,7 +409,8 @@ async def _resolve_id_to_label(tmdb_id: int) -> str:
 
 async def _build_swipe_card(
     mistral_film: _MistralFilm,
-    user_platform_names: set[str],
+    user_platform_ids: set[int],
+    db: Session,
 ) -> SwipeCard | None:
     """
     Enrich one Mistral film suggestion into a SwipeCard.
@@ -393,20 +421,22 @@ async def _build_swipe_card(
 
     Args:
         mistral_film: A single film suggestion from Mistral's JSON response.
-        user_platform_names: Set of platform names configured by the user,
+        user_platform_ids: IDs of the platforms configured by the user,
             used to compute available_on_my_platforms.
+        db: Active SQLAlchemy session, forwarded to TMDB enrichment to
+            filter streaming platforms.
 
     Returns:
         SwipeCard if resolution and enrichment succeed, None otherwise.
         None is returned silently - callers filter it out of the results list.
     """
     try:
-        film = await search_and_get_film(mistral_film.title, mistral_film.year)
+        film = await search_and_get_film(mistral_film.title, mistral_film.year, db)
         if film is None:
             return None
         available = bool(
             film.streaming_platforms
-            and set(film.streaming_platforms) & user_platform_names
+            and {p.id for p in film.streaming_platforms} & user_platform_ids
         )
         return SwipeCard(
             **film.model_dump(),
@@ -448,8 +478,8 @@ async def discover(
     )
     raw = _MistralDiscoverResponse.model_validate(raw_dict)
 
-    user_platform_names = {p.name for p in ctx.platforms}
-    tasks = [_build_swipe_card(f, user_platform_names) for f in raw.films]
+    user_platform_ids = {p.id for p in ctx.platforms}
+    tasks = [_build_swipe_card(f, user_platform_ids, db) for f in raw.films]
     results = await asyncio.gather(*tasks)
 
     cards = [c for c in results if c is not None][:6]
@@ -494,27 +524,27 @@ async def refine(
 
     # Resolve liked/rejected IDs to "Title (Year)" labels in parallel
     liked_tuple, rejected_tuple = await asyncio.gather(
-        asyncio.gather(*[_resolve_id_to_label(i) for i in request.liked_tmdb_ids]),
-        asyncio.gather(*[_resolve_id_to_label(i) for i in request.rejected_tmdb_ids]),
+        asyncio.gather(*[_resolve_id_to_label(i, db) for i in request.liked_tmdb_ids]),
+        asyncio.gather(*[_resolve_id_to_label(i, db) for i in request.rejected_tmdb_ids]),
     )
     liked_labels = list(liked_tuple)
     rejected_labels = list(rejected_tuple)
 
     # Single Mistral call: 4 new suggestions + watchlist picks
     user_prompt = _build_refine_prompt(request, ctx, liked_labels, rejected_labels)
-    raw_dict = await chat_mistral_json(_REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.7)
+    raw_dict = await chat_mistral_json(_REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.5)
     raw = _MistralRefineResponse.model_validate(raw_dict)
 
-    user_platform_names = {p.name for p in ctx.platforms}
+    user_platform_ids = {p.id for p in ctx.platforms}
     rejected_ids = set(request.rejected_tmdb_ids)
     watchlist_ids = {e.tmdb_id for e in ctx.watchlist}
 
     # Fetch liked films + enrich Mistral suggestions — all in parallel
     liked_details, new_cards, wl_cards = await asyncio.gather(
-        asyncio.gather(*[get_film_details(tid) for tid in request.liked_tmdb_ids],
+        asyncio.gather(*[get_film_details(tid, db) for tid in request.liked_tmdb_ids],
                        return_exceptions=True),
-        asyncio.gather(*[_build_swipe_card(f, user_platform_names) for f in raw.new_suggestions]),
-        asyncio.gather(*[_build_swipe_card(f, user_platform_names) for f in raw.from_watchlist]),
+        asyncio.gather(*[_build_swipe_card(f, user_platform_ids, db) for f in raw.new_suggestions]),
+        asyncio.gather(*[_build_swipe_card(f, user_platform_ids, db) for f in raw.from_watchlist]),
     )
 
     pool: list[FilmRecommendation] = []
@@ -532,7 +562,7 @@ async def refine(
         eval_ = raw.liked_films[idx]
         available = bool(
             film.streaming_platforms
-            and set(film.streaming_platforms) & user_platform_names
+            and {p.id for p in film.streaming_platforms} & user_platform_ids
         )
         card = SwipeCard(
             **film.model_dump(),

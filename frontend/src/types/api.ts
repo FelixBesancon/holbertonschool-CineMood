@@ -92,10 +92,11 @@ export interface Film {
   poster_url: string | null
   synopsis: string | null
   genres: string[] | null
-  director: string | null
+  director: string[] | null
   cast: string[] | null
   runtime: number | null
-  streaming_platforms: string[] | null
+  /** Restricted to the platforms known in our own /platforms catalogue. */
+  streaming_platforms: Platform[] | null
 }
 
 export interface FilmWithStatus {
