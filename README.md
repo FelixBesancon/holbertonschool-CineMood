@@ -81,17 +81,15 @@ This project is the end-of-year portfolio project for the Bachelor CDA program a
 
 ### Original Rating System
 
-🏷️ **The tool lets users rate films with tags that actually mean something**:
+🏷️ **The tool lets users rate films with tags that actually mean something** - 50 mood tags seeded in `backend/seeds/seed_tag.py`, each with a short, opinionated description. A few examples:
 | Tag | Meaning |
 |---|---|
-| Great with a group | Best experienced with others |
-| Perfect background watch | Can scroll while it's on |
-| Emotional wreck | Unexpectedly moving |
-| Guilty pleasure | Bad but you loved it |
-| Mind blowing | Changed how you think |
-| Needs full attention | Do not disturb |
-| Would rewatch immediately | Says it all |
-| Instant classic | Timeless |
+| Hidden Gem | Better than expected and deserves more attention |
+| Emotional Damage | You're fine. Totally fine. Definitely not crying |
+| Perfect Cast | Everyone feels exactly right in their role |
+| Slow Burn | Takes its time, but the payoff is worth it |
+| So Stupid It's Good | Dumb in exactly the right way |
+| Instant Classic | Feels like it will still matter years from now |
 
 Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Coal / Trash**
 
@@ -109,6 +107,7 @@ Optionally assign a prestige tier: **Platinum / Gold / Silver / Bronze / Coal / 
 - View your full watching history
 - Browse your watchlist
 - See your tags and tiers at a glance
+- Configure the streaming platforms you subscribe to from your profile (16 platforms seeded from TMDB, see `backend/seeds/seed_platform.py`) - film detail pages show casting and highlight the platforms a film is available on that you actually have
 
 ---
 
@@ -174,6 +173,7 @@ holbertonschool-CineMood/
 │   │   ├── main.tsx                    ← app entry point
 │   │   ├── index.css                   ← global styles (Tailwind v4)
 │   │   ├── assets/
+│   │   │   └── logos/                  ← logo/favicon SVG variants
 │   │   ├── components/
 │   │   │   ├── ui/                     ← shadcn/ui primitives
 │   │   │   ├── pages/                  ← one file per route
@@ -225,10 +225,12 @@ holbertonschool-CineMood/
     │   │   ├── viewing_history_entry.py
     │   │   ├── watchlist_entry.py
     │   │   ├── tag.py
+    │   │   ├── platform.py              ← streaming platform reference data
     │   │   └── prestige_tier.py
     │   ├── schemas/
     │   │   ├── user.py
     │   │   ├── film.py
+    │   │   ├── platform.py
     │   │   ├── recommendation.py        ← DiscoverRequest/Response, RefineRequest, RecommendationResponse
     │   │   ├── viewing_history.py
     │   │   ├── watchlist.py
@@ -239,19 +241,26 @@ holbertonschool-CineMood/
     │   │   └── watchlist_repository.py
     │   ├── services/
     │   │   ├── auth_service.py
+    │   │   ├── user_service.py
     │   │   ├── film_service.py
+    │   │   ├── _tmdb_metadata.py        ← shared TMDB→entry metadata mapping (history/watchlist caching)
+    │   │   ├── library_service.py       ← cross-domain refresh of cached TMDB metadata
     │   │   ├── recommendation_service.py ← two-step AI recommendation flow
     │   │   ├── viewing_history_service.py
     │   │   └── watchlist_service.py
     │   └── routes/
     │       ├── auth.py
     │       ├── film.py
+    │       ├── platform.py              ← GET /platforms
+    │       ├── library.py               ← POST /library/refresh
     │       ├── recommendations.py        ← POST /recommendations/discover and /refine
     │       ├── tag.py
+    │       ├── users.py
     │       ├── viewing_history.py
     │       └── watchlist.py
     ├── seeds/
-    │   └── seed_tag.py
+    │   ├── seed_tag.py
+    │   └── seed_platform.py
     ├── tests/
     │   ├── conftest.py
     │   ├── test_auth.py
@@ -379,9 +388,12 @@ Run `deactivate` first.
 | POST | `/auth/login` | Log in and receive a JWT token | ❌ |
 | GET | `/tags` | List all available mood tags | ❌ |
 | GET | `/films/search` | Search for a film by title (TMDB) | ❌ |
-| GET | `/films/{tmdb_id}` | Get film details and user status | ✅ |
+| GET | `/films/{tmdb_id}` | Get film details (incl. cast and streaming platforms) and user status | ✅ |
+| GET | `/platforms` | List all available streaming platforms | ❌ |
 | GET | `/users/me` | Get current user profile | ✅ |
-| PATCH | `/users/me` | Update user profile (age, platforms) | ✅ |
+| PATCH | `/users/me` | Update user profile (first/last name, age) | ✅ |
+| GET | `/users/me/platforms` | Get the current user's selected streaming platforms | ✅ |
+| PUT | `/users/me/platforms` | Replace the current user's selected streaming platforms | ✅ |
 | GET | `/history` | Retrieve the user's viewing history | ✅ |
 | POST | `/history` | Log a watched film with tags and prestige tier | ✅ |
 | PATCH | `/history/{tmdb_id}` | Update tags, prestige tier, or note on an existing entry | ✅ |
@@ -390,6 +402,7 @@ Run `deactivate` first.
 | POST | `/watchlist` | Add a film to the watchlist | ✅ |
 | DELETE | `/watchlist/{tmdb_id}` | Remove a film from the watchlist | ✅ |
 | POST | `/watchlist/{tmdb_id}/watched` | Mark a watchlist film as watched (atomic move to history) | ✅ |
+| POST | `/library/refresh` | Re-sync cached TMDB metadata for all of the user's history and watchlist entries | ✅ |
 | POST | `/recommendations/discover` | Generate 6 swipe cards from quiz answers (Mistral + TMDB) | ✅ |
 | POST | `/recommendations/refine` | Produce final picks from quiz answers + swipe signals | ✅ |
 
@@ -583,8 +596,9 @@ All project documentation is maintained as part of the Holberton portfolio proce
 - [x] User authentication (Sprint 1)
 - [x] Film search and logging with tags (Sprint 2)
 - [x] Watchlist, mark-as-watched, and personal dashboard (Sprint 3)
-- [x] Frontend fully connected to backend API (Sprint 4)
+- [x] Streaming platform selection and frontend fully connected to backend API (Sprint 4)
 - [x] Mood questionnaire and AI-powered recommendations via Mistral AI (Sprint 5)
+- [x] Film detail casting/streaming-platform enrichment and a full responsive design pass (mobile navigation, questionnaire, swipe deck)
 
 ### Future versions
 - [ ] Guest mode - full navigation (search, recommendations) without an account, with a sign-up prompt at the end of the recommendation flow to save results

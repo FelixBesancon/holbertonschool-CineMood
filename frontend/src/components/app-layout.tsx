@@ -3,18 +3,20 @@
  *
  * Renders:
  *   - NavBar: sticky top bar with logo, navigation links (hidden on mobile,
- *     replaced by a horizontal scroll bar below the header), and a
+ *     replaced by a fixed-column icon grid below the header), and a
  *     user account dropdown (Profile + Logout).
  *   - <main>: page content with a fade-in animation keyed on the pathname
  *     so each navigation triggers the animation.
  *
- * NAV_LINKS drives both the desktop nav and the mobile scroll bar.
+ * NAV_LINKS drives both the desktop nav and the mobile icon grid — the grid's
+ * column count is derived from NAV_LINKS.length, so adding/removing a link
+ * doesn't require touching the layout separately.
  * Active state is set via startsWith() so sub-routes (e.g. /recommendation/swipe)
  * keep the parent link highlighted.
  */
 import type { ReactNode } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { ChevronDown, LogOut, User as UserIcon } from "lucide-react"
+import { ChevronDown, LogOut, User as UserIcon, Home, Search, History, Bookmark, Wand2 } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -31,11 +33,11 @@ import {
 import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/search", label: "Search" },
-  { to: "/history", label: "My History" },
-  { to: "/watchlist", label: "My Watchlist" },
-  { to: "/recommendation", label: "Recommendation" },
+  { to: "/dashboard", label: "Home", icon: Home },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/history", label: "History", icon: History },
+  { to: "/watchlist", label: "Watchlist", icon: Bookmark },
+  { to: "/recommendation", label: "For You", icon: Wand2 },
 ]
 
 function NavBar() {
@@ -116,17 +118,21 @@ function NavBar() {
         </div>
       </div>
 
-      {/* Mobile nav */}
-      <nav className="flex items-center gap-1 overflow-x-auto border-t border-border px-4 py-2 md:hidden no-scrollbar">
+      {/* Mobile nav — fixed column grid so every link fits on screen, no horizontal scroll */}
+      <nav
+        className="grid gap-0.5 border-t border-border px-1 py-1.5 md:hidden"
+        style={{ gridTemplateColumns: `repeat(${NAV_LINKS.length}, minmax(0, 1fr))` }}
+      >
         {NAV_LINKS.map((link) => (
           <Link
             key={link.to}
             to={link.to}
             className={cn(
-              "shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200",
+              "flex cursor-pointer flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-center text-[10px] font-medium leading-tight transition-all duration-200",
               isActive(link.to) ? "bg-accent text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
+            <link.icon className="h-4 w-4" />
             {link.label}
           </Link>
         ))}

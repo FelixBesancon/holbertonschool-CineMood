@@ -91,11 +91,11 @@ export function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-6 sm:py-10">
       <div className="absolute inset-x-0 top-0 h-1/2 hero-gradient" aria-hidden />
       <div className="relative w-full max-w-md">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <img src={logoVertical} alt="CinéMood" className="h-36 w-auto" />
+        <div className="mb-4 flex flex-col items-center gap-3 text-center sm:mb-8">
+          <img src={logoVertical} alt="CinéMood" className="h-20 w-auto sm:h-36" />
           <p className="max-w-xs text-pretty text-sm text-muted-foreground">
             Your personal film diary. Track what you watch, find what to watch next.
           </p>
