@@ -45,30 +45,30 @@ export function DashboardPage() {
             Ready for tonight&apos;s film? Pick up where you left off or let us find the perfect match for your mood.
           </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4">
             <Link to="/search" className="group">
-              <div className="flex h-full min-h-[7rem] items-center gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent text-primary transition-transform duration-200 group-hover:scale-110">
-                  <Search className="h-7 w-7" />
+              <div className="flex h-full min-h-[5rem] items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg sm:min-h-[7rem] sm:gap-4 sm:p-6">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary transition-transform duration-200 group-hover:scale-110 sm:h-14 sm:w-14">
+                  <Search className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-heading text-lg font-bold">Browse Films</h2>
-                  <p className="text-sm text-muted-foreground">Search for a film and log what you watch.</p>
+                  <h2 className="font-heading text-base font-bold sm:text-lg">Browse Films</h2>
+                  <p className="text-xs text-muted-foreground sm:text-sm">Search for a film and log what you watch.</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 sm:h-5 sm:w-5" />
               </div>
             </Link>
 
             <Link to="/recommendation" className="group">
-              <div className="cta-gradient flex h-full min-h-[7rem] items-center gap-4 rounded-2xl border border-transparent p-6 text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/15 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
-                  <Wand2 className="h-7 w-7" />
+              <div className="cta-gradient flex h-full min-h-[5rem] items-center gap-3 rounded-2xl border border-transparent p-4 text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg sm:min-h-[7rem] sm:gap-4 sm:p-6">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6 sm:h-14 sm:w-14">
+                  <Wand2 className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="font-heading text-lg font-bold">What to Watch Tonight?</h2>
-                  <p className="text-sm text-primary-foreground/85">Answer 3 quick questions for a tailored pick.</p>
+                  <h2 className="font-heading text-base font-bold sm:text-lg">What to Watch Tonight?</h2>
+                  <p className="text-xs text-primary-foreground/85 sm:text-sm">Take a quick mood quiz and get a pick made for you.</p>
                 </div>
-                <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1 sm:h-5 sm:w-5" />
               </div>
             </Link>
           </div>
@@ -115,10 +115,11 @@ export function DashboardPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-1.5 w-full gap-1"
+                    className="mt-1.5 w-full gap-1 px-1.5 text-xs sm:px-3 sm:text-sm"
                     onClick={() => setLogTarget(entry)}
                   >
-                    Mark as watched
+                    <span className="sm:hidden">Watched</span>
+                    <span className="hidden sm:inline">Mark as watched</span>
                   </Button>
               }
             />

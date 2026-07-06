@@ -104,79 +104,110 @@ export function HistoryPage() {
             <div
               key={entry.tmdb_id}
               className={cn(
-                "group relative flex gap-4 overflow-hidden rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
+                "group relative flex flex-col gap-3 overflow-hidden rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
                 entry.prestige_tier ? (TIER_STYLE[entry.prestige_tier] ?? "border-border") : "border-border",
                 isPlatinum && "animate-platinum-glow platinum-shine",
               )}
             >
               <button
                 type="button"
-                aria-label={`Edit log for ${entry.title ?? "this film"}`}
+                tabIndex={-1}
+                aria-hidden="true"
                 onClick={() => navigate(`/films/${entry.tmdb_id}`)}
                 className="absolute inset-0 z-0 cursor-pointer"
               />
 
-              <div className="pointer-events-none relative z-10 block w-20 shrink-0 sm:w-24">
-                <PosterFrame film={entry} className="ring-1 ring-border" />
-              </div>
-
-              <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-heading text-base font-bold leading-tight group-hover:text-primary">
-                      {entry.title}
-                    </span>
-                    {(entry.year || entry.director || entry.runtime) && (
-                      <p className="text-xs text-muted-foreground">
-                        {[entry.year, entry.director, formatRuntime(entry.runtime)].filter(Boolean).join(" · ")}
-                      </p>
-                    )}
-                  </div>
-                  {tier && (
-                    <Badge
-                      variant="secondary"
-                      className={cn("shrink-0 gap-1", isPlatinum && "bg-amber-100 text-amber-800")}
-                    >
-                      <span aria-hidden>{tier.emoji}</span>
-                      {tier.label}
-                    </Badge>
-                  )}
+              <div className="flex gap-4">
+                <div className="pointer-events-none relative z-10 block w-20 shrink-0 sm:w-24">
+                  <PosterFrame film={entry} className="ring-1 ring-border" />
                 </div>
 
-                {entry.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {entry.tags.map((tag) => (
-                      <TagChip key={tag.id} label={tag.name} />
-                    ))}
+                <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                    <div>
+                      <span className="font-heading text-base font-bold leading-tight group-hover:text-primary">
+                        {entry.title}
+                      </span>
+                      {(entry.year || entry.director || entry.runtime) && (
+                        <p className="text-xs text-muted-foreground">
+                          {[entry.year, entry.director, formatRuntime(entry.runtime)].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                    {tier && (
+                      <Badge
+                        variant="secondary"
+                        className={cn("w-fit shrink-0 gap-1", isPlatinum && "bg-amber-100 text-amber-800")}
+                      >
+                        <span aria-hidden>{tier.emoji}</span>
+                        {tier.label}
+                      </Badge>
+                    )}
                   </div>
-                )}
 
-                {entry.personal_note && (
-                  <p className="mt-2 text-pretty text-sm italic text-muted-foreground">
-                    &ldquo;{entry.personal_note}&rdquo;
+                  {/* Desktop only - tags/note/date stay inline in the content column, as before */}
+                  {(entry.tags.length > 0 || entry.personal_note) && (
+                    <div className="mt-2 hidden flex-col gap-2 sm:flex">
+                      {entry.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {entry.tags.map((tag) => (
+                            <TagChip key={tag.id} label={tag.name} />
+                          ))}
+                        </div>
+                      )}
+                      {entry.personal_note && (
+                        <p className="text-pretty text-sm italic text-muted-foreground">
+                          &ldquo;{entry.personal_note}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <p className="mt-2 hidden text-xs text-muted-foreground sm:block">
+                    Watched {formatDate(entry.created_at)}
                   </p>
-                )}
+                </div>
 
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Watched {formatDate(entry.created_at)}
-                </p>
+                <div className="relative z-10 flex shrink-0 flex-col items-center gap-1 self-start">
+                  <button
+                    type="button"
+                    aria-label={`Edit log for ${entry.title ?? "this film"}`}
+                    onClick={() => navigate(`/films/${entry.tmdb_id}`)}
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-primary"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${entry.title ?? "this film"} from history`}
+                    onClick={() => setRemoveTarget(entry)}
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
-              <button
-                type="button"
-                aria-label={`Remove ${entry.title ?? "this film"} from history`}
-                onClick={() => setRemoveTarget(entry)}
-                className="relative z-10 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-muted-foreground transition-colors duration-200 hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              {/* Mobile only - tags/note/date span the full card width below */}
+              {(entry.tags.length > 0 || entry.personal_note) && (
+                <div className="pointer-events-none relative z-10 flex flex-col gap-2 sm:hidden">
+                  {entry.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {entry.tags.map((tag) => (
+                        <TagChip key={tag.id} label={tag.name} />
+                      ))}
+                    </div>
+                  )}
+                  {entry.personal_note && (
+                    <p className="text-pretty text-sm italic text-muted-foreground">
+                      &ldquo;{entry.personal_note}&rdquo;
+                    </p>
+                  )}
+                </div>
+              )}
 
-              <div className="pointer-events-none absolute bottom-3 right-3 z-10">
-                <span className="flex translate-y-1 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-0 shadow-md transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-                  <Pencil className="h-3.5 w-3.5" />
-                  Click to edit your log
-                </span>
-              </div>
+              <p className="pointer-events-none relative z-10 text-xs text-muted-foreground sm:hidden">
+                Watched {formatDate(entry.created_at)}
+              </p>
             </div>
           )
         })}

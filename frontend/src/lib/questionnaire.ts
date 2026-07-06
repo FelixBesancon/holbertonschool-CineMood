@@ -87,7 +87,7 @@ export const MOOD_QUESTIONS: MoodQuestion[] = [
       { emoji: "🔥", label: "Recent films preferred", hint: "Fresh releases and modern favorites.", exclusiveWith: "Older films welcome" },
       { emoji: "🏆", label: "Highly rated only", hint: "Well-reviewed by critics or audiences.", exclusiveWith: "Open to cheesy movies" },
       { emoji: "🗑️", label: "Open to cheesy movies", hint: "Not everything needs to be a masterpiece.", exclusiveWith: "Highly rated only" },
-      { emoji: "🌍", label: "International films welcome", hint: "Bring on the world cinema." },
+      { emoji: "🌍", label: "World cinema welcome", hint: "Bring on the world cinema." },
       { emoji: "🕜", label: "Under 90 minutes", hint: "Short and sweet.", exclusiveWith: "Under 2 hours" },
       { emoji: "🕑", label: "Under 2 hours", hint: "No epic commitments tonight.", exclusiveWith: "Under 90 minutes" },
     ],

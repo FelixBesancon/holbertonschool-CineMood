@@ -202,19 +202,19 @@ export function SwipePage() {
   const next = cards[index + 1]
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-sm flex-col items-center px-4 py-5">
-      <div className="mb-3 w-full text-center">
+    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-sm flex-col items-center px-4 py-3 sm:py-5">
+      <div className="mb-2 w-full text-center sm:mb-3">
         <h1 className="font-heading text-lg font-bold sm:text-xl">Refine the recommendation tool with swipes</h1>
-        <p className="mx-auto mt-1 max-w-xs text-pretty text-sm text-muted-foreground">
+        <p className="mx-auto mt-1 hidden max-w-xs text-pretty text-sm text-muted-foreground sm:block">
           Optional — react to a few films to sharpen your picks, or skip straight to your recommendations.
         </p>
-        <span className="mt-3 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground">
+        <span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground sm:mt-3">
           {index + 1} / {cards.length} films
         </span>
       </div>
 
       {/* card stack */}
-      <div className="relative aspect-[3/4.2] max-h-[68vh] w-full">
+      <div className="relative aspect-[3/4.2] max-h-[48dvh] w-full sm:max-h-[64dvh]">
         {/* swipe direction arrows — only on first card */}
         {index === 0 && (
           <>
@@ -249,26 +249,26 @@ export function SwipePage() {
       </div>
 
       {/* action buttons */}
-      <div className="mt-5 flex items-center gap-10">
-        <div className="flex flex-col items-center gap-1.5">
+      <div className="mt-3 flex items-center gap-8 sm:mt-5 sm:gap-10">
+        <div className="flex flex-col items-center gap-1">
           <Button
             size="icon-lg"
-            className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="h-12 w-12 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:h-14 sm:w-14"
             aria-label="Not interested"
             onClick={() => decide("left")}
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
           <span className="text-xs font-medium text-muted-foreground">Not for me</span>
         </div>
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-1">
           <Button
             size="icon-lg"
-            className="h-14 w-14 rounded-full bg-emerald-500 text-white hover:bg-emerald-600"
+            className="h-12 w-12 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 sm:h-14 sm:w-14"
             aria-label="Interested"
             onClick={() => decide("right")}
           >
-            <Check className="h-6 w-6" />
+            <Check className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
           <span className="text-xs font-medium text-muted-foreground">Why not</span>
         </div>
@@ -276,7 +276,8 @@ export function SwipePage() {
 
       <Button
         variant="ghost"
-        className="mt-6 gap-1.5 text-muted-foreground hover:text-foreground"
+        size="sm"
+        className="mt-2 gap-1.5 text-muted-foreground hover:text-foreground sm:mt-6"
         onClick={() => sendRefine(likedIds, rejectedIds)}
       >
         <SkipForward className="h-4 w-4" />
