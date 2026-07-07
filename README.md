@@ -579,7 +579,7 @@ All project documentation is maintained as part of the Holberton portfolio proce
 #### [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
   > High-level overview and detailed component architecture showing how the frontend, backend, database, and external services interact. Includes design patterns (Repository, Facade, REST).
 <details>
-  <summary>Overview: High-Level Architecture Overview</summary>
+  <summary>Overview: High-Level Architecture</summary>
 
   ```mermaid
   architecture-beta
@@ -611,6 +611,87 @@ All project documentation is maintained as part of the Holberton portfolio proce
   | FastAPI REST API | PostgreSQL | SQL queries for all persistent data (users, films, watchlist, tags) |
   | FastAPI REST API | TMDB API | Fetches film metadata (title, poster, synopsis, cast) and streaming availability |
   | FastAPI REST API | Mistral AI | Sends mood and viewing history as a prompt, receives film recommendations in JSON |
+</details>
+<details>
+  <summary>Overview: High-Level Architecture Overview</summary>
+
+  ```mermaid
+  flowchart TD
+      User(["User\n(Browser)"])
+  
+      subgraph Frontend["Frontend: React + Tailwind CSS"]
+          React["React Components"]
+          Router["React Router"]
+      end
+  
+      Calls(["REST calls"])
+  
+      subgraph Backend["Backend: Python + FastAPI"]
+          subgraph Routes["API Routes"]
+              AuthR["/auth/*"]
+              FilmR["/films/*"]
+              UserR["/users/*"]
+              RecoR["/recommendations/*"]
+          end
+          subgraph Services["Services"]
+              AuthS["Auth Service (JWT)"]
+              FilmS["Film Service"]
+              UserS["User Service"]
+              RecoF["Recommendation Facade"]
+          end
+          subgraph Repos["Repositories"]
+              UserRepo["User\nRepository"]
+              ViewingHistoryRepo["Viewing history\nRepository"]
+              WatchlistRepo["Watchlist\nRepository"]
+          end
+      end
+  
+      subgraph Database["Database"]
+          DB[("PostgreSQL")]
+      end
+  
+      subgraph External["External Services"]
+          TMDB["TMDB API"]
+          Mistral["Mistral AI"]
+      end
+  
+      User -->|"Uses app"| Frontend
+      React --> Router
+      Router --- Calls
+      Calls -->|"HTTP/HTTPS – JSON"| AuthR & FilmR & UserR & RecoR
+  
+      AuthR --> AuthS
+      FilmR --> FilmS
+      UserR --> UserS
+      RecoR --> RecoF
+  
+      AuthS & UserS --> UserRepo
+      FilmS --> ViewingHistoryRepo & WatchlistRepo
+      FilmS -->|"Film metadata"| TMDB
+      RecoF -->|"Streaming availability"| TMDB
+      RecoF -->|"Mood-based prompt"| Mistral
+  
+      UserRepo & ViewingHistoryRepo & WatchlistRepo -->|"SQL queries"| DB
+  
+      TMDB ~~~ Mistral
+  ```
+  
+  | From | To | Description |
+  |---|---|---|
+  | User | React Components | The user interacts with the app through the browser |
+  | React Components | React Router | Navigation between pages is handled client-side without full page reloads |
+  | React Router | API Routes | All backend communication goes through HTTP/HTTPS calls with JSON payloads |
+  | /auth/* | Auth Service | Handles registration, login, and JWT token generation and validation |
+  | /films/* | Film Service | Handles film search, logging, tagging, and watchlist management |
+  | /users/* | User Service | Handles user profile and streaming platform preferences |
+  | /recommendations/* | Recommendation Facade | Orchestrates the full recommendation flow (mood + swipe + LLM) |
+  | Auth Service | User Repository | Reads and writes user authentication data |
+  | Film Service | Viewing History Repository | Reads and writes film logging and tag data |
+  | Film Service | Watchlist Repository | Reads and writes watchlist entries |
+  | Film Service | TMDB API | Fetches film metadata (poster, synopsis, cast, genres, runtime) and streaming availability |
+  | Recommendation Facade | TMDB API | Fetches streaming availability for recommended films |
+  | Recommendation Facade | Mistral AI | Sends a structured prompt with mood and viewing history, receives film suggestions in JSON |
+  | All Repositories | PostgreSQL | All persistent data is stored and retrieved via SQL queries |
 </details>
 
 #### [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
@@ -813,11 +894,756 @@ All project documentation is maintained as part of the Holberton portfolio proce
 
 #### [Sequence Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/SequenceDiagrams.md)
   > Step-by-step interaction flows for the 5 key use cases: user registration, user login, film search, film logging, and the full mood-based recommendation experience.
+<details>
+  <summary>Overview: User Registration</summary>
+
+  **Actors:**
+  
+  - `User` - user interacting through the React frontend
+  - `Backend` - the `/auth/register` route of the `FastAPI`
+  - `Business Logic` - the  User Service of the `FastAPI`
+  - `Database` - the PostgreSQL database
+  
+  **Key steps:**
+  
+  1. The user submits the registration form via the frontend
+  2. The frontend sends a POST request to /auth/register
+  3. The backend routes the request to the User Service
+  4. The User Service validates the input data (name, email, password format)
+  5. The User Service hashes the password using bcrypt
+  6. The User Service inserts the new user record into the database
+  7. If the email already exists, a 409 Conflict is returned
+  8. If the insert fails, a 500 Internal Server Error is returned
+  9. If successful, a JWT token is generated and returned with a 201 Created response
+  10. The frontend redirects the authenticated user to the dashboard
+  
+  ```mermaid
+  sequenceDiagram
+      actor User as User (Frontend)
+      participant Back as Backend<br>(FastAPI<br>/auth/register)
+      participant BL as Business Logic<br>(User Service)
+      participant DB as PostgreSQL<br>Database
+  
+      User->>Back: Register account
+      Note over User,Back: Fills in registration form<br>first name, last name,<br>email, password
+  
+      Back->>BL: Validate and process registration
+      Note over Back,BL: POST /auth/register<br>{first_name, last_name,<br>email, password}
+  
+      BL->>BL: Validate user data
+      Note over BL: validate_name()<br>validate_email()<br>validate_password()
+  
+      alt Invalid input data
+          BL-->>Back: Reject registration
+          Note over BL,Back: 400 Bad Request<br>Validation error details
+  
+          Back-->>User: Display error message
+          Note over Back,User: Invalid name, email,<br>or password format
+  
+      else Valid input data
+          BL->>BL: Hash password
+          Note over BL: bcrypt hash<br>Password is never stored<br>in plain text
+  
+          BL->>DB: Create user
+          Note over BL,DB: INSERT INTO users<br>(first_name, last_name,<br>email, hashed_password, ...)
+          DB->>DB: Execute INSERT
+  
+          alt Email already exists
+              DB-->>BL: Reject insert
+              Note over DB,BL: Unique constraint violation<br>on users.email
+  
+              BL-->>Back: Email conflict
+              Note over BL,Back: 409 Conflict<br>"email already in use"
+  
+              Back-->>User: Display error message
+              Note over Back,User: Account cannot be created<br>with this email address
+  
+          else Insert fails
+              DB-->>BL: Database error
+              Note over DB,BL: Unexpected database<br>or server error
+  
+              BL-->>Back: Server error
+              Note over BL,Back: 500 Internal Server Error
+  
+              Back-->>User: Display generic error
+              Note over Back,User: Registration failed<br>Please try again later
+  
+          else Insert successful
+              DB-->>BL: User created
+              Note over DB,BL: New user record<br>returned from database
+  
+              BL->>BL: Generate JWT
+              Note over BL: Create access token<br>linked to user_id
+  
+              BL-->>Back: Return success response
+              Note over BL,Back: 201 Created<br>{jwt_token, user_id}
+  
+              Back-->>User: Redirect to dashboard
+              Note over Back,User: User is authenticated<br>and redirected
+          end
+      end
+  ```
+</details>
+<details>
+  <summary>Overview: User Login</summary>
+
+  **Actors:**
+  
+  - `User` - user interacting through the React frontend
+  - `Backend` - the `/auth/login` route of the `FastAPI`
+  - `Business Logic` - the User Service of the `FastAPI`
+  - `Database` - the PostgreSQL database
+  
+  **Key steps:**
+  
+  1. The user submits their email and password via the frontend
+  2. The frontend sends a POST request to /auth/login
+  3. The backend routes the request to the User Service
+  4. The User Service queries the database for the user by email
+  5. If the user is not found, a 401 Unauthorized is returned
+  6. The User Service verifies the password against the stored bcrypt hash
+  7. If the password is incorrect, a 401 Unauthorized is returned
+  8. If valid, a JWT token is generated and returned with a 200 OK response
+  9. The frontend stores the token and redirects to the dashboard
+  
+  ```mermaid
+  sequenceDiagram
+      actor User as User (Frontend)
+      participant Back as Backend<br>(FastAPI<br>/auth/login)
+      participant BL as Business Logic<br>(User Service)
+      participant DB as PostgreSQL<br>Database
+  
+      User->>Back: Log in
+      Note over User,Back: Submits login form<br>email, password
+  
+      Back->>BL: Route login request
+      Note over Back,BL: POST /auth/login<br>{email, password}
+  
+      BL->>DB: Fetch user by email
+      Note over BL,DB: SELECT * FROM users<br>WHERE email = ?
+  
+      DB->>DB: Execute SELECT
+  
+      alt User not found
+          DB-->>BL: Empty result
+          Note over DB,BL: No user matching<br>this email address
+          BL-->>Back: User not found
+          Note over BL,Back: 401 Unauthorized<br>"invalid credentials"
+          Back-->>User: Display error message
+          Note over Back,User: Intentionally vague to prevent<br>email enumeration attacks
+      else User found
+          DB-->>BL: User record
+          Note over DB,BL: Returns user including<br>hashed_password
+  
+          BL->>BL: Verify password
+          Note over BL: verify_password()<br>Compare input with<br>bcrypt hash
+  
+          alt Password incorrect
+              BL-->>Back: Invalid password
+              Note over BL,Back: 401 Unauthorized<br>"invalid credentials"
+              Back-->>User: Display error message
+              Note over Back,User: Same message as user not found<br>to prevent enumeration
+          else Password correct
+              BL->>BL: Generate JWT
+              Note over BL: Create access token<br>linked to user_id
+              BL-->>Back: Return success response
+              Note over BL,Back: 200 OK<br>{jwt_token, user_id}
+              Back-->>User: Return success
+              Note over Back,User: User is authenticated<br>and redirected to dashboard
+          end
+      end
+  ```
+</details>
+<details>
+  <summary>Overview: Searching for a Movie</summary>
+
+  **Actors:**
+  
+  - `User` - user interacting through the React frontend
+  - `Backend` - the `/films/search` route of the `FastAPI`
+  - `Business Logic` - the Film Service of the `FastAPI`
+  - `API` - the TMDB API
+  
+  **Key steps:**
+  
+  0. The user navigates through the app to the movie search page
+  1. The user types a movie title in the search bar and confirms
+  2. The frontend sends a GET request to `/films/search?query=...`
+  3. The backend routes the request to the Film Service
+  4. The Film Service calls the TMDB search endpoint
+  5. TMDB returns a list of matching films (multilingual search by default)
+  6. The backend returns the results to the frontend
+  7. The user selects a film from the results
+  
+  ```mermaid
+  sequenceDiagram
+      actor User as User (Frontend)
+      participant Back as Backend<br>(FastAPI<br>/films/search)
+      participant BL as Business Logic<br>(Film Service)
+      participant API as TMDB API
+  
+      User->>Back: Search for a movie
+      Note over User,Back: Submits search query<br>movie title
+  
+      Back->>BL: Route search request
+      Note over Back,BL: GET /films/search<br>?query=title
+  
+      BL->>API: Search movie catalog
+      Note over BL,API: GET /search/movie<br>?query=title
+  
+      alt TMDB unavailable
+          API-->>BL: Error or timeout
+          Note over API,BL: External service<br>unreachable
+          BL-->>Back: Service error
+          Note over BL,Back: 503 Service Unavailable
+          Back-->>User: Display error message
+          Note over Back,User: Movie search is temporarily<br>unavailable
+      else No results found
+          API-->>BL: Empty results list
+          Note over API,BL: No movie matches<br>the search query
+          BL-->>Back: Empty response
+          Note over BL,Back: 200 OK<br>{results: []}
+          Back-->>User: Display no results message
+          Note over Back,User: No movie found<br>for this search
+      else Results found
+          API-->>BL: List of matching movies
+          Note over API,BL: tmdb_id, title, year,<br>poster_url for each result
+          BL-->>Back: Return search results
+          Note over BL,Back: 200 OK<br>{results: [{tmdb_id, title,<br>year, poster_url}]}
+          Back-->>User: Display search results
+          Note over Back,User: User sees matching<br>movie cards
+      end
+  ```
+</details>
+<details>
+  <summary>Overview: Log a Film</summary>
+
+  **Actors:**
+  
+  - `User` - user interacting through the React frontend
+  - `Backend` - the `/films/*` routes of the `FastAPI`
+  - `Business Logic - Film Service` - the Film Service of the `FastAPI`
+  - `Business Logic - User Service` - the User Service of the `FastAPI`
+  - `API` - the TMDB API
+  - `Database` - the PostgreSQL database
+  
+  **Key steps:**
+  
+  0. The user navigates through the app to a film's details page (from search results)
+  1. The backend fetches full film details from TMDB
+  2. The backend checks if the film is already in the user's viewing history or watchlist
+  3. The frontend displays the film details and adapts the action buttons accordingly
+  4. The user clicks "Log this film" and selects tags
+  5. The backend creates a viewing history entry and links the selected tags
+  6. A `201 Created` response confirms the film has been logged
+  
+  ```mermaid
+  sequenceDiagram
+      actor User as User (Frontend)
+      participant Back as Backend<br>(FastAPI /films)
+      participant BLF as Business Logic<br>(Film Service)
+      participant BLU as Business Logic<br>(User Service)
+      participant API as TMDB API
+      participant DB as PostgreSQL<br>Database
+  
+      User->>Back: Open film details page
+      Note over User,Back: Navigates from search results<br>GET /films/{tmdb_id}
+  
+      Back->>BLF: Fetch film details
+      Note over Back,BLF: tmdb_id from URL
+  
+      BLF->>API: Get full film data
+      Note over BLF,API: GET /movie/{tmdb_id}<br>?append_to_response=credits
+  
+      API-->>BLF: Film details
+      Note over API,BLF: title, synopsis, cast,<br>genres, runtime, poster
+  
+      BLF->>BLU: Check film status for user
+      Note over BLF,BLU: Is this film already in<br>viewing history or watchlist?
+  
+      BLU->>DB: Query user film status
+      Note over BLU,DB: SELECT FROM viewing_history_entries<br>AND watchlist_entries<br>WHERE user_id = ? AND tmdb_id = ?
+  
+      DB-->>BLU: Film status
+      Note over DB,BLU: {in_viewing_history: bool,<br>in_watchlist: bool}
+  
+      BLU-->>BLF: Return status
+      BLF-->>Back: Film details + status
+      Back-->>User: Display film page
+      Note over Back,User: Film details displayed
+      Note over DB,User: Buttons adapt to film status:<br>"Log this film" or "Remove from history"<br>"Add to watchlist" or "Remove from watchlist"
+  
+      alt User clicks "Log this film"
+          User->>Back: Log film with tags
+          Note over User,Back: POST /films/log<br>{tmdb_id, tag_ids[]}
+  
+          Back->>BLF: Create viewing history entry
+          BLF->>DB: Insert entry
+          Note over BLF,DB: INSERT INTO viewing_history_entries<br>(user_id, tmdb_id, ...)
+  
+          DB->>DB: Execute INSERT
+  
+          alt Insert fails
+              DB-->>BLF: Database error
+              BLF-->>Back: Server error
+              Note over BLF,Back: 500 Internal Server Error
+              Back-->>User: Display error message
+  
+          else Insert successful
+              DB-->>BLF: Entry created
+              BLF->>DB: Link selected tags
+              Note over BLF,DB: INSERT INTO viewing_history_tags<br>(entry_id, tag_id) for each tag
+              DB-->>BLF: Tags linked
+              BLF-->>Back: Success
+              Note over BLF,Back: 201 Created<br>{entry_id}
+              Back-->>User: Confirm film logged
+              Note over Back,User: Film added to viewing history<br>Button switches to "Remove from history"
+          end
+  
+      else User clicks "Remove from history"
+          User->>Back: Remove film from history
+          Note over User,Back: DELETE /films/log/{entry_id}
+  
+          Back->>BLF: Delete viewing history entry
+          BLF->>DB: Delete entry
+          Note over BLF,DB: DELETE FROM viewing_history_entries<br>WHERE id = entry_id<br>CASCADE removes linked tags
+  
+          DB-->>BLF: Entry deleted
+          BLF-->>Back: Success
+          Note over BLF,Back: 200 OK
+          Back-->>User: Display confirmation removal message
+          Note over Back,User: Film removed from history<br>Button switches back to "Log this film"
+      end
+  ```
+</details>
+<details>
+  <summary>Overview: Film Recommendation</summary>
+
+  **Actors:**
+  
+  - `User` - user interacting through the React frontend
+  - `Backend` - the `/recommendation/*` routes of the `FastAPI`
+  - `Business Logic - Recommendation Facade` - the Recommendation Facade of the `FastAPI`
+  - `Business Logic - User Service` - the User Service of the `FastAPI`
+  - `API` - the TMDB API
+  - `LLM` - the Mistral AI API
+  - `Database` - the PostgreSQL database
+  
+  **Key steps:**
+  
+  0. The user navigates from the home screen to the Recommendation experience
+  1. The user starts the recommendation experience
+  2. The user completes a mood questionnaire (handled entirely on the frontend)
+  3. The user swipes through film cards (right = interested, left = not interested)
+  4. The user optionally adds a free-text prompt before final submission
+  5. The backend retrieves the user's viewing history and platform preferences
+  6. The backend sends a structured prompt to the LLM
+  7. The LLM returns film suggestions
+  8. The backend enriches the suggestions with TMDB data and streaming availability
+  9. The frontend displays the final recommendation list
+  
+  ```mermaid
+  sequenceDiagram
+      actor User as User (Frontend)
+      participant Back as Backend<br>(FastAPI<br>/recommendations)
+      participant BLR as Business Logic<br>(Recommendation Facade)
+      participant BLU as Business Logic<br>(User Service)
+      participant DB as PostgreSQL<br>Database
+      participant LLM as Mistral AI
+      participant API as TMDB API
+  
+      User->>Back: Start recommendation experience
+  
+      Note over User: Mood questionnaire<br>(handled on frontend)
+      Note over User: Film card swiping session<br>(swipe data held in memory)
+      Note over User: Optional free-text prompt<br>("I want something like...")
+  
+      User->>Back: Submit recommendation request
+      Note over User,Back: POST /recommendations/start<br>{mood, swipe_results[], optional_prompt}
+  
+      Back->>BLR: Process recommendation request
+      BLR->>BLU: Fetch user context
+      BLU->>DB: Get viewing history + platform preferences
+      Note over BLU,DB: SELECT viewing_history + user_platforms<br>WHERE user_id = ?
+      DB-->>BLU: User data
+      BLU-->>BLR: Viewing history + platforms
+  
+      BLR->>BLR: Build structured prompt
+      Note over BLR: Combines mood, swipe results,<br>optional prompt, history,<br>and platform preferences
+  
+      BLR->>LLM: Send prompt
+      Note over BLR,LLM: POST to Mistral API<br>Structured JSON output requested
+  
+      alt LLM unavailable
+          LLM-->>BLR: Error or timeout
+          BLR-->>Back: Service error
+          Note over BLR,Back: 503 Service Unavailable
+          Back-->>User: Display error message
+          Note over Back,User: Recommendation service<br>temporarily unavailable
+      else LLM responds
+          LLM-->>BLR: Film suggestions
+          Note over LLM,BLR: [{tmdb_id, title, reason}]
+  
+          BLR->>API: Fetch film details + streaming availability
+          Note over BLR,API: GET /movie/{tmdb_id}<br>GET /movie/{tmdb_id}/watch/providers<br>for each suggested film
+  
+          API-->>BLR: Enriched film data
+          BLR->>BLR: Filter by user platform preferences
+          BLR-->>Back: Final recommendations
+          Note over BLR,Back: 200 OK<br>[{film, platform, reason}]
+  
+          Back-->>User: Display recommendation list
+          Note over Back,User: Curated film suggestions<br>with streaming availability
+  
+          opt User adds film to watchlist
+              User->>Back: Add to watchlist
+              Note over User,Back: POST /films/watchlist<br>{tmdb_id}
+              Back->>DB: INSERT INTO watchlist_entries
+              DB-->>Back: 201 Created
+              Back-->>User: Confirm film added
+          end
+      end
+  ```
+</details>
 
 > **All of the preceding diagrams were created before development began, so they no longer reflect the current state of the project; however, they are being retained to preserve documentation of the project's evolution.**
 
 #### [Revised Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/RevisedDiagrams.md)
   > Includes architecture, class, and database diagrams that are up to date with the project at the time of deployment
+<details>
+  <summary>Overview: Revised High-Level Architecture Diagram</summary>
+
+  ```mermaid
+  architecture-beta
+      group frontend(cloud)[Frontend React Tailwind]
+          service react(server)[React Components] in frontend
+          service router(server)[React Router] in frontend
+  
+      group backend(cloud)[Backend FastAPI]
+          service api(server)[FastAPI REST API] in backend
+  
+      group database(cloud)[Database]
+          service db(database)[PostgreSQL] in database
+  
+      group external(cloud)[External Services]
+          service tmdb(internet)[TMDB API] in external
+          service mistral(internet)[Mistral AI] in external
+  
+      react:R --> L:router
+      router:R --> L:api
+      api{group}:B --> T:db{group}
+      api{group}:R --> L:tmdb
+      api:R --> L:mistral
+  ```
+  
+  | From | To | Description |
+  |---|---|---|
+  | React Components | React Router | User actions trigger client-side navigation |
+  | React Router | FastAPI REST API | HTTP/HTTPS requests with JSON payloads |
+  | FastAPI REST API | PostgreSQL | SQL queries for all persistent data (users, watchlist, history, tags, platforms) |
+  | FastAPI REST API | TMDB API | Fetches film metadata (title, poster, synopsis, cast, streaming availability) and resolves AI suggestions |
+  | FastAPI REST API | Mistral AI | Sends mood context and viewing history as a structured prompt, receives film recommendations in JSON |
+</details>
+<details>
+  <summary>Overview: Revised Detailed Component Architecture</summary>
+
+  ```mermaid
+  flowchart TD
+      User(["User\n(Browser)"])
+  
+      subgraph Frontend["Frontend: React + Tailwind CSS"]
+          React["React Components"]
+          Router["React Router"]
+      end
+  
+      Calls(["REST calls"])
+  
+      subgraph Backend["Backend: Python + FastAPI"]
+          subgraph Routes["API Routes"]
+              AuthR["/auth/*"]
+              FilmR["/films/*"]
+              UserR["/users/*"]
+              RecoR["/recommendations/*"]
+          end
+          subgraph Services["Services"]
+              AuthS["Auth Service (JWT)"]
+              FilmS["Film Service"]
+              UserS["User Service"]
+              RecoF["Recommendation Facade"]
+          end
+          subgraph Repos["Repositories"]
+              UserRepo["User\nRepository"]
+              ViewingHistoryRepo["Viewing History\nRepository"]
+              WatchlistRepo["Watchlist\nRepository"]
+          end
+      end
+  
+      subgraph Database["Database"]
+          DB[("PostgreSQL")]
+      end
+  
+      subgraph External["External Services"]
+          TMDB["TMDB API"]
+          Mistral["Mistral AI"]
+      end
+  
+      User -->|"Uses app"| Frontend
+      React --> Router
+      Router --- Calls
+      Calls -->|"HTTP/HTTPS – JSON"| AuthR & FilmR & UserR & RecoR
+  
+      AuthR --> AuthS
+      FilmR --> FilmS
+      UserR --> UserS
+      RecoR --> RecoF
+  
+      AuthS & UserS --> UserRepo
+      FilmS --> ViewingHistoryRepo & WatchlistRepo
+      FilmS -->|"Film metadata + streaming availability"| TMDB
+      RecoF -->|"Streaming availability"| TMDB
+      RecoF -->|"Mood-based structured prompt"| Mistral
+  
+      UserRepo & ViewingHistoryRepo & WatchlistRepo -->|"SQL queries"| DB
+  
+      TMDB ~~~ Mistral
+  ```
+  
+  | From | To | Description |
+  |---|---|---|
+  | User | React Components | The user interacts with the app through the browser |
+  | React Components | React Router | Navigation between pages is handled client-side without full page reloads |
+  | React Router | API Routes | All backend communication goes through HTTP/HTTPS calls with JSON payloads |
+  | /auth/* | Auth Service | Handles registration, login, and JWT token generation and validation |
+  | /films/* | Film Service | Handles film search, logging, tagging, and watchlist management |
+  | /users/* | User Service | Handles user profile and streaming platform preferences |
+  | /recommendations/* | Recommendation Facade | Orchestrates the full recommendation flow (mood questionnaire + swipe deck + LLM) |
+  | Auth Service | User Repository | Reads and writes user authentication data |
+  | Film Service | Viewing History Repository | Reads and writes film logging, tag, and prestige tier data |
+  | Film Service | Watchlist Repository | Reads and writes watchlist entries |
+  | Film Service | TMDB API | Fetches and caches film metadata (poster, synopsis, director, genres, runtime) and streaming availability at save time |
+  | Recommendation Facade | TMDB API | Resolves Mistral title+year suggestions to real TMDB IDs; fetches streaming availability for recommended films |
+  | Recommendation Facade | Mistral AI | Sends a structured prompt with mood, age, viewing history, and watchlist context; receives film suggestions and match scores in JSON |
+  | All Repositories | PostgreSQL | All persistent data is stored and retrieved via SQL queries |
+</details>
+<details>
+  <summary>Overview: Revised Class Diagram</summary>
+
+  ```mermaid
+  classDiagram
+  direction LR
+  
+  class BaseModel {
+      <<abstract>>
+      #id: UUID4
+      #created_at: datetime
+      #updated_at: datetime
+  }
+  
+  class User {
+      <<entity>>
+      -first_name: str
+      -last_name: str
+      +username: str
+      -email: str
+      -hashed_password: str
+      -is_admin: bool = False
+      +age: int | None
+      +platforms: list[Platform]
+      +verify_password(plain_password str) bool
+  }
+  
+  class WatchlistEntry {
+      <<entity>>
+      -user_id: UUID
+      +tmdb_id: int
+      +title: str | None
+      +poster_url: str | None
+      +year: int | None
+      +director: str | None
+      +synopsis: str | None
+      +genres: list[str] | None
+      +runtime: int | None
+  }
+  
+  class Film {
+      <<DTO>>
+      +tmdb_id: int
+      +title: str
+      +year: int
+      +genres: list[str]
+      +poster_url: str
+      +synopsis: str
+      +director: str
+      +cast: list[str]
+      +runtime: int
+      +streaming_platforms: list[str]
+  }
+  
+  class ViewingHistoryEntry {
+      <<entity>>
+      -user_id: UUID
+      +tmdb_id: int
+      +title: str | None
+      +poster_url: str | None
+      +year: int | None
+      +director: str | None
+      +synopsis: str | None
+      +genres: list[str] | None
+      +runtime: int | None
+      +tags: list[Tag]
+      +prestige_tier: PrestigeTier | None
+      +personal_note: str | None
+  }
+  
+  class Tag {
+      <<entity>>
+      +id: int
+      +name: str
+      +description: str
+  }
+  
+  class Platform {
+      <<entity>>
+      +id: int
+      +name: str
+      +logo_path: str
+      +is_free: bool
+      +logo_url: str
+  }
+  
+  class PrestigeTier {
+      <<enumeration>>
+      PLATINUM
+      GOLD
+      SILVER
+      BRONZE
+      COAL
+      TRASH
+  }
+  
+  BaseModel          <|-- User                : extends
+  User "1" --> "0..*" WatchlistEntry       : owns
+  
+  BaseModel          <|-- ViewingHistoryEntry : extends
+  User "1" --> "0..*" ViewingHistoryEntry  : owns
+  ViewingHistoryEntry --> PrestigeTier          : uses
+  ViewingHistoryEntry ..> Film                  : enriched via TMDB
+  
+  BaseModel          <|-- WatchlistEntry      : extends
+  WatchlistEntry      ..> Film                  : enriched via TMDB
+  User "0..*" <--> "0..*" Platform         : subscribes to
+  
+  ViewingHistoryEntry "0..*" <--> "0..*" Tag   : labeled with
+  ```
+  
+  | Relationship | Type | Description |
+  |---|---|---|
+  | BaseModel → User / WatchlistEntry / ViewingHistoryEntry | Inheritance | Shared attributes (`id`, `created_at`, `updated_at`) |
+  | User → WatchlistEntry | One-to-many | A user owns zero or more watchlist entries |
+  | User → ViewingHistoryEntry | One-to-many | A user owns zero or more viewing history entries |
+  | User ↔ Platform | Many-to-many | A user subscribes to multiple platforms; managed via `user_platforms` join table |
+  | ViewingHistoryEntry ↔ Tag | Many-to-many | An entry can have multiple tags; managed via `viewing_history_tags` join table |
+  | ViewingHistoryEntry → PrestigeTier | Association | Each entry optionally holds one value from the PrestigeTier enumeration |
+  | WatchlistEntry → Film | Dependency (DTO) | Core metadata cached at save time; full Film DTO fetched from TMDB on demand for enriched display |
+  | ViewingHistoryEntry → Film | Dependency (DTO) | Same caching strategy as WatchlistEntry |
+</details>
+<details>
+  <summary>Overview: Revised Entity Relationship Diagram</summary>
+
+  ```mermaid
+  erDiagram
+      users {
+          uuid        id               PK
+          varchar     first_name
+          varchar     last_name
+          varchar     username
+          varchar     email            UK
+          varchar     hashed_password
+          boolean     is_admin
+          integer     age              "nullable"
+          timestamptz created_at
+          timestamptz updated_at
+      }
+  
+      watchlist_entries {
+          uuid        id               PK
+          uuid        user_id          FK
+          integer     tmdb_id
+          varchar     title            "nullable - cached from TMDB"
+          varchar     poster_url       "nullable - cached from TMDB"
+          integer     year             "nullable - cached from TMDB"
+          varchar     director         "nullable - cached from TMDB"
+          text        synopsis         "nullable - cached from TMDB"
+          json        genres           "nullable - cached from TMDB"
+          integer     runtime          "nullable - cached from TMDB"
+          timestamptz created_at
+          timestamptz updated_at
+      }
+  
+      viewing_history_entries {
+          uuid          id               PK
+          uuid          user_id          FK
+          integer       tmdb_id
+          varchar       title            "nullable - cached from TMDB"
+          varchar       poster_url       "nullable - cached from TMDB"
+          integer       year             "nullable - cached from TMDB"
+          varchar       director         "nullable - cached from TMDB"
+          text          synopsis         "nullable - cached from TMDB"
+          json          genres           "nullable - cached from TMDB"
+          integer       runtime          "nullable - cached from TMDB"
+          prestige_tier prestige_tier    "nullable"
+          text          personal_note    "nullable"
+          timestamptz   created_at
+          timestamptz   updated_at
+      }
+  
+      tags {
+          integer id          PK
+          varchar name        UK
+          varchar description
+      }
+  
+      platforms {
+          integer id        PK "TMDB watch-provider ID"
+          varchar name      UK
+          varchar logo_path
+          boolean is_free
+      }
+  
+      viewing_history_tags {
+          uuid    viewing_history_entry_id FK
+          integer tag_id                  FK
+      }
+  
+      user_platforms {
+          uuid    user_id     FK
+          integer platform_id FK
+      }
+  
+      users                   ||--o{ watchlist_entries       : owns
+      users                   ||--o{ viewing_history_entries : owns
+  
+      viewing_history_entries ||--o{ viewing_history_tags    : has
+      tags                    ||--o{ viewing_history_tags    : labels
+  
+      users                   ||--o{ user_platforms          : subscribes
+      platforms               ||--o{ user_platforms          : selected_by
+  ```
+  
+  | Term | Meaning |
+  |---|---|
+  | `PK` | **Primary Key** - unique identifier of a table row |
+  | `FK` | **Foreign Key** - column referencing the primary key of another table |
+  | `UK` | **Unique Key** - ensures that a value cannot appear twice in the same column |
+  | `uuid` | **Universally Unique Identifier** - used for user-owned entities to avoid predictable IDs |
+  | `integer` | **Whole number** - used for reference tables such as tags and platforms |
+  | `varchar` | **Variable-length text field** - short strings with a defined maximum length |
+  | `text` | **Longer text field** - used when content length may vary significantly |
+  | `boolean` | **True/false value** |
+  | `json` | **JSON column** - stores a list of values (e.g. genres) as a structured JSON array |
+  | `timestamptz` | **PostgreSQL timestamp with time zone** - ensures dates are stored consistently across time zones |
+  | `prestige_tier` | **PostgreSQL enum** - limits the rating column to the six allowed PrestigeTier values |
+</details>
 
 ### UI Prototype
 
