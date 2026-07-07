@@ -576,46 +576,252 @@ All project documentation is maintained as part of the Holberton portfolio proce
 
 ### Technical Diagrams
 
-- [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
+#### [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
   > High-level overview and detailed component architecture showing how the frontend, backend, database, and external services interact. Includes design patterns (Repository, Facade, REST).
+<details>
+  <summary>Overview: High-Level Architecture Overview</summary>
 
-**Overview**
-```mermaid
-architecture-beta
-    group frontend(cloud)[Frontend React Tailwind]
-        service react(server)[React Components] in frontend
-        service router(server)[React Router] in frontend
+  ```mermaid
+  architecture-beta
+      group frontend(cloud)[Frontend React Tailwind]
+          service react(server)[React Components] in frontend
+          service router(server)[React Router] in frontend
+  
+      group backend(cloud)[Backend FastAPI]
+          service api(server)[FastAPI REST API] in backend
+  
+      group database(cloud)[Database]
+          service db(database)[PostgreSQL] in database
+  
+      group external(cloud)[External Services]
+          service tmdb(internet)[TMDB API] in external
+          service mistral(internet)[Mistral AI] in external
+  
+      react:R --> L:router
+      router:R --> L:api
+      api{group}:B --> T:db{group}
+      api{group}:R --> L:tmdb
+      api:R --> L:mistral
+  ```
 
-    group backend(cloud)[Backend FastAPI]
-        service api(server)[FastAPI REST API] in backend
+  | From | To | Description |
+  |---|---|---|
+  | React Components | React Router | User actions trigger client-side navigation |
+  | React Router | FastAPI REST API | HTTP/HTTPS requests with JSON payloads |
+  | FastAPI REST API | PostgreSQL | SQL queries for all persistent data (users, films, watchlist, tags) |
+  | FastAPI REST API | TMDB API | Fetches film metadata (title, poster, synopsis, cast) and streaming availability |
+  | FastAPI REST API | Mistral AI | Sends mood and viewing history as a prompt, receives film recommendations in JSON |
+</details>
 
-    group database(cloud)[Database]
-        service db(database)[PostgreSQL] in database
-
-    group external(cloud)[External Services]
-        service tmdb(internet)[TMDB API] in external
-        service mistral(internet)[Mistral AI] in external
-
-    react:R --> L:router
-    router:R --> L:api
-    api{group}:B --> T:db{group}
-    api{group}:R --> L:tmdb
-    api:R --> L:mistral
-```
-
-- [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
+#### [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
   > Backend business logic layer: all persistent entities (User, WatchlistEntry, ViewingHistoryEntry), the Film DTO, Tag, Platform, and PrestigeTier enumeration with attributes, methods, and UML relationships.
-- [Entity Relationship Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ERDiagram.md)
+<details>
+  <summary>Overview: Class Diagram</summary>
+
+  ```mermaid
+  classDiagram
+  direction LR
+  
+  class BaseModel {
+      <<abstract>>
+      #id: UUID4
+      #created_at: datetime
+      #updated_at: datetime
+  }
+  
+  class User {
+      <<entity>>
+      -first_name: str
+      -last_name: str
+      +username: str
+      -email: str
+      -hashed_password: str
+      -is_admin: bool = False
+      +age: int
+      +verify_password()
+      +get_watchlist()
+      +get_viewing_history()
+      +get_platforms()
+  }
+  
+  class WatchlistEntry {
+      <<entity>>
+      -user_id: UUID
+      +tmdb_id: int
+      +add()
+      +remove()
+      +mark_as_watched()
+      +get_film_details() Film
+  }
+  
+  class Film {
+      <<DTO>>
+      +tmdb_id: int
+      +title: str
+      +year: int
+      +genres: list
+      +poster_url: str
+      +synopsis: str
+      +director: str
+      +cast: list
+      +runtime: int
+      +streaming_platforms: list
+  }
+  
+  class ViewingHistoryEntry {
+      <<entity>>
+      -user_id: UUID
+      +tmdb_id: int
+      +tags: list
+      +prestige_tier: PrestigeTier
+      +personal_note: str
+      +add_tag()
+      +remove_tag()
+      +update_prestige_tier()
+      +get_film_details() Film
+  }
+  
+  class Tag {
+      <<entity>>
+      +id: int
+      +name: str
+      +description: str
+  }
+  
+  class Platform {
+      <<entity>>
+      +id: int
+      +name: str
+      +logo_url: str
+  }
+  
+  class PrestigeTier {
+      <<enumeration>>
+      PLATINUM
+      GOLD
+      SILVER
+      BRONZE
+      TRASH
+  }
+  
+  BaseModel <|-- User : extends
+  User "1" --> "0..*" WatchlistEntry : owns
+  
+  BaseModel <|-- ViewingHistoryEntry : extends
+  User "1" --> "0..*" ViewingHistoryEntry : owns
+  ViewingHistoryEntry --> PrestigeTier : uses
+  ViewingHistoryEntry ..> Film : fetches via TMDB
+  
+  BaseModel <|-- WatchlistEntry : extends
+  WatchlistEntry ..> Film : fetches via TMDB
+  WatchlistEntry ..> ViewingHistoryEntry : mark_as_watched
+  
+  User "0..*" <--> "0..*" Platform : subscribes to
+  ViewingHistoryEntry "0..*" <--> "0..*" Tag : labeled with
+  ```
+  
+  | Relationship | Type | Description |
+  |---|---|---|
+  | BaseModel → User / WatchlistEntry / ViewingHistoryEntry | Inheritance | Shared attributes (`id`, `created_at`, `updated_at`) and CRUD methods (`save`, `delete`) |
+  | User → WatchlistEntry | One-to-many | A user owns zero or more watchlist entries |
+  | User → ViewingHistoryEntry | One-to-many | A user owns zero or more viewing history entries |
+  | User ↔ Platform | Many-to-many | A user subscribes to multiple platforms; each platform can have many users. Managed via `user_platforms` join table. |
+  | ViewingHistoryEntry ↔ Tag | Many-to-many | An entry can have multiple tags; each tag can be used across many entries. Managed via `viewing_history_tags` join table. |
+  | ViewingHistoryEntry → PrestigeTier | Association | Each entry optionally uses one value from the PrestigeTier enumeration |
+  | WatchlistEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand - not a database relationship |
+  | ViewingHistoryEntry → Film | Dependency (DTO) | Fetches film data from TMDB on demand - not a database relationship |
+  | WatchlistEntry → ViewingHistoryEntry | Dependency | `mark_as_watched()` creates a ViewingHistoryEntry and deletes the WatchlistEntry |
+</details>
+
+#### [Entity Relationship Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ERDiagram.md)
   > PostgreSQL database schema with all tables, columns, primary/foreign keys, and relationship summary. Includes design notes on UUID vs integer IDs and the absence of a local films table.
-- [Sequence Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/SequenceDiagrams.md)
+<details>
+  <summary>Overview: High-Level Architecture Overview</summary>
+
+  ```mermaid
+  erDiagram
+      users {
+          uuid id PK
+          varchar first_name
+          varchar last_name
+          varchar username
+          varchar email UK
+          varchar hashed_password
+          boolean is_admin
+          integer age
+          timestamptz created_at
+          timestamptz updated_at
+      }
+  
+      watchlist_entries {
+          uuid id PK
+          uuid user_id FK
+          integer tmdb_id
+          timestamptz created_at
+          timestamptz updated_at
+      }
+  
+      viewing_history_entries {
+          uuid        id               PK
+          uuid        user_id          FK
+          integer     tmdb_id
+          prestige_tier prestige_tier     "nullable"
+          text        personal_note    "nullable"
+          timestamptz created_at
+          timestamptz updated_at
+      }
+  
+      tags {
+          integer id PK
+          varchar name UK
+          text description
+      }
+  
+      platforms {
+          integer id PK
+          varchar name UK
+          text logo_url
+      }
+  
+      viewing_history_tags {
+          uuid viewing_history_entry_id FK
+          integer tag_id FK
+      }
+  
+      user_platforms {
+          uuid user_id FK
+          integer platform_id FK
+      }
+  
+      users ||--o{ watchlist_entries : owns
+      users ||--o{ viewing_history_entries : owns
+  
+      viewing_history_entries ||--o{ viewing_history_tags : has
+      tags ||--o{ viewing_history_tags : labels
+  
+      users ||--o{ user_platforms : subscribes
+      platforms ||--o{ user_platforms : selected_by
+  ```
+
+  | Relationship | Entity A | Entity B | Type | Join table |
+  |---|---|---|---|---|
+  | A user owns watchlist entries | `users` | `watchlist_entries` | One-to-many | - |
+  | A user owns viewing history entries | `users` | `viewing_history_entries` | One-to-many | - |
+  | A user subscribes to platforms | `users` | `platforms` | Many-to-many | `user_platforms` |
+  | A viewing history entry is labeled with tags | `viewing_history_entries` | `tags` | Many-to-many | `viewing_history_tags` |
+</details>
+
+#### [Sequence Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/SequenceDiagrams.md)
   > Step-by-step interaction flows for the 5 key use cases: user registration, user login, film search, film logging, and the full mood-based recommendation experience.
+
 > **All of the preceding diagrams were created before development began, so they no longer reflect the current state of the project; however, they are being retained to preserve documentation of the project's evolution.**
-- [Revised Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/RevisedDiagrams.md)
+
+#### [Revised Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/RevisedDiagrams.md)
   > Includes architecture, class, and database diagrams that are up to date with the project at the time of deployment
 
 ### UI Prototype
 
-- [Figma Interactive Prototype](https://www.figma.com/make/0wZvyA1aYW8MHzXm31lNvD/CinéMood-UI-Prototype?fullscreen=1)
+#### [Figma Interactive Prototype](https://www.figma.com/make/0wZvyA1aYW8MHzXm31lNvD/CinéMood-UI-Prototype?fullscreen=1)
   > Navigable mockup covering all main screens: dashboard, authentication, film catalog, mood questionnaire, swipe interface, recommendation results, and user profile.
 
 ---
