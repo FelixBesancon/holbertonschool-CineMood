@@ -140,7 +140,9 @@ External services (TMDB and Mistral AI) are called exclusively by the backend �
 
 ## Database
 
-CinéMood uses PostgreSQL as its relational database. Film metadata is not stored locally — only the `tmdb_id` is persisted, and full film details are fetched from TMDB on demand.
+CinéMood uses PostgreSQL as its relational database. A core subset of film metadata (title, poster, year, director, synopsis, genres, runtime) 
+is cached locally at save time in watchlist and history entries. Full film details (cast, live streaming availability) 
+are fetched from TMDB on demand.
 
 → [View Entity Relationship Diagram](docs/diagrams/ERDiagram.md)
 
@@ -163,6 +165,7 @@ holbertonschool-CineMood/
 │   │   ├── ClassDiagram.md
 │   │   ├── ERDiagram.md
 │   │   └── SequenceDiagrams.md
+│   │   └── RevisedDiagrams.md
 │   ├── images/
 │   ├── Stage 1 Report - Team Formation, Brainstorming and MVP.pdf
 │   ├── Stage 2 Report - Project Planning.pdf
@@ -575,12 +578,40 @@ All project documentation is maintained as part of the Holberton portfolio proce
 
 - [Architecture Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/Architecture.md)
   > High-level overview and detailed component architecture showing how the frontend, backend, database, and external services interact. Includes design patterns (Repository, Facade, REST).
+
+**Overview**
+```mermaid
+architecture-beta
+    group frontend(cloud)[Frontend React Tailwind]
+        service react(server)[React Components] in frontend
+        service router(server)[React Router] in frontend
+
+    group backend(cloud)[Backend FastAPI]
+        service api(server)[FastAPI REST API] in backend
+
+    group database(cloud)[Database]
+        service db(database)[PostgreSQL] in database
+
+    group external(cloud)[External Services]
+        service tmdb(internet)[TMDB API] in external
+        service mistral(internet)[Mistral AI] in external
+
+    react:R --> L:router
+    router:R --> L:api
+    api{group}:B --> T:db{group}
+    api{group}:R --> L:tmdb
+    api:R --> L:mistral
+```
+
 - [Class Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ClassDiagram.md)
   > Backend business logic layer: all persistent entities (User, WatchlistEntry, ViewingHistoryEntry), the Film DTO, Tag, Platform, and PrestigeTier enumeration with attributes, methods, and UML relationships.
 - [Entity Relationship Diagram](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/ERDiagram.md)
   > PostgreSQL database schema with all tables, columns, primary/foreign keys, and relationship summary. Includes design notes on UUID vs integer IDs and the absence of a local films table.
 - [Sequence Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/SequenceDiagrams.md)
   > Step-by-step interaction flows for the 5 key use cases: user registration, user login, film search, film logging, and the full mood-based recommendation experience.
+> **All of the preceding diagrams were created before development began, so they no longer reflect the current state of the project; however, they are being retained to preserve documentation of the project's evolution.**
+- [Revised Diagrams](https://github.com/FelixBesancon/holbertonschool-CineMood/blob/main/docs/diagrams/RevisedDiagrams.md)
+  > Includes architecture, class, and database diagrams that are up to date with the project at the time of deployment
 
 ### UI Prototype
 
