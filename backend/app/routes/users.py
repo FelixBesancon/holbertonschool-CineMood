@@ -30,7 +30,8 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
     Return the authenticated user's full profile.
 
     The current user is loaded by the get_current_user dependency, including
-    their selected platforms (eager-loaded via the User.platforms relationship).
+    their selected platforms (eager-loaded via the
+    User.platforms relationship).
     No extra database query is performed in this handler.
 
     Returns:
@@ -40,7 +41,11 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
     return user_service.get_profile(current_user)
 
 
-@router.patch("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
+@router.patch(
+        "/me",
+        response_model=UserResponse,
+        status_code=status.HTTP_200_OK
+        )
 def update_user_profile(
     payload: UserUpdate,
     current_user: User = Depends(get_current_user),
@@ -105,4 +110,8 @@ def update_user_platforms(
     Returns:
         list[PlatformResponse]: The user's new platform list after update.
     """
-    return user_service.update_user_platforms(db, current_user, payload.platform_ids)
+    return user_service.update_user_platforms(
+        db,
+        current_user,
+        payload.platform_ids
+        )

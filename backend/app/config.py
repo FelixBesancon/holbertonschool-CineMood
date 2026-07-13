@@ -2,7 +2,8 @@
 Application configuration.
 
 Centralises all environment variables using Pydantic Settings.
-All settings are loaded once at startup and accessible via the settings instance.
+All settings are loaded once at startup and accessible
+via the settings instance.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

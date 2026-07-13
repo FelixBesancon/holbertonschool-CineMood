@@ -9,7 +9,8 @@ any route that declares it as a parameter will automatically
 require a valid Bearer token in the Authorization header.
 
 Dependencies defined here:
-    - get_current_user: decode a JWT and return the authenticated user
+    - get_current_user: decode a JWT and return
+    the authenticated user
 """
 
 from fastapi import Depends, HTTPException, status
@@ -55,7 +56,11 @@ def get_current_user(
     """
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[_ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[_ALGORITHM]
+            )
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise jwt.InvalidTokenError

@@ -86,7 +86,9 @@ async def create_entry(
     created = viewing_history_repository.create(db, entry)
 
     # If the film was in the watchlist, remove it — it's now in history.
-    watchlist_entry = watchlist_repository.get_by_user_and_tmdb(db, user.id, payload.tmdb_id)
+    watchlist_entry = watchlist_repository.get_by_user_and_tmdb(
+        db, user.id, payload.tmdb_id
+    )
     if watchlist_entry:
         db.delete(watchlist_entry)
         db.commit()
@@ -115,7 +117,9 @@ def update_entry(
     Raises:
         HTTPException 404: If the user has no history entry for this film.
     """
-    entry = viewing_history_repository.get_by_user_and_tmdb(db, user.id, tmdb_id)
+    entry = viewing_history_repository.get_by_user_and_tmdb(
+        db, user.id, tmdb_id
+    )
     if not entry:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -123,7 +127,9 @@ def update_entry(
         )
 
     if payload.tag_ids is not None:
-        entry.tags = viewing_history_repository.get_tags_by_ids(db, payload.tag_ids)
+        entry.tags = viewing_history_repository.get_tags_by_ids(
+            db, payload.tag_ids
+        )
 
     if "prestige_tier" in payload.model_fields_set:
         entry.prestige_tier = payload.prestige_tier
@@ -150,7 +156,10 @@ def get_history(
             belonging to the user. Returns an empty list if none exist.
     """
     entries = viewing_history_repository.get_by_user(db, user.id)
-    return [ViewingHistoryEntryResponse.model_validate(entry) for entry in entries]
+    return [
+        ViewingHistoryEntryResponse.model_validate(entry)
+        for entry in entries
+    ]
 
 
 def remove_entry(

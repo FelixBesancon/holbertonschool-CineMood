@@ -4,12 +4,12 @@ Library Routes
 Cross-domain endpoints that operate on both watchlist and viewing history.
 
 Routes:
-    - POST /library/refresh: re-sync all cached TMDB metadata for the current user
+    - POST /library/refresh: re-sync all cached TMDB metadata
+        for the current user
 """
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-import httpx
 
 from app.database import get_db
 from app.dependencies import get_current_user

@@ -20,7 +20,11 @@ from app.services import user_service
 router = APIRouter(prefix="/platforms", tags=["platforms"])
 
 
-@router.get("", response_model=list[PlatformResponse], status_code=status.HTTP_200_OK)
+@router.get(
+        "",
+        response_model=list[PlatformResponse],
+        status_code=status.HTTP_200_OK
+        )
 def get_platforms(db: Session = Depends(get_db)):
     """
     Return all available streaming platforms.

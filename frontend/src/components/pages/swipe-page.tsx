@@ -86,7 +86,7 @@ function SwipeCard({
       )}
     >
       {/* poster — object-contain shows the full image, padding keeps it off the edges */}
-      <div className="relative h-[58%] shrink-0 overflow-hidden bg-muted/40">
+      <div className="relative select-none h-[58%] shrink-0 overflow-hidden bg-muted/40">
         <img
           src={film.poster_url || "/placeholder.svg"}
           alt={`${film.title} poster`}
@@ -99,7 +99,7 @@ function SwipeCard({
           "absolute inset-0 flex items-center justify-center transition-opacity",
           tint === "right" ? "bg-emerald-500/35 opacity-100" : "opacity-0",
         )}>
-          <div className="rounded-full bg-emerald-500 px-5 py-3 text-base font-bold text-white shadow-lg">
+          <div className="rounded-full bg-emerald-500 select-none px-5 py-3 text-base font-bold text-white shadow-lg">
             Why not 👍
           </div>
         </div>
@@ -107,14 +107,14 @@ function SwipeCard({
           "absolute inset-0 flex items-center justify-center transition-opacity",
           tint === "left" ? "bg-destructive/35 opacity-100" : "opacity-0",
         )}>
-          <div className="rounded-full bg-destructive px-5 py-3 text-base font-bold text-destructive-foreground shadow-lg">
+          <div className="rounded-full bg-destructive select-none px-5 py-3 text-base font-bold text-white shadow-lg">
             Not for me 👎
           </div>
         </div>
 
         {showHint && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-center justify-center px-3 text-white">
-            <span className="flex animate-pulse items-center gap-1.5 rounded-full bg-foreground/65 px-3.5 py-1.5 text-center text-xs font-medium backdrop-blur-sm">
+            <span className="flex animate-pulse select-none items-center gap-1.5 rounded-full bg-foreground/65 px-3.5 py-1.5 text-center text-xs font-medium backdrop-blur-sm">
               <Hand className="h-3.5 w-3.5 shrink-0" />
               Swipe left if you&apos;re not interested, right if you&apos;d give it a chance
             </span>
@@ -123,7 +123,7 @@ function SwipeCard({
       </div>
 
       {/* details: title → synopsis → reason → genres */}
-      <div className="flex flex-1 flex-col gap-1.5 p-3.5">
+      <div className="flex flex-1 select-none flex-col gap-1.5 p-3.5">
         <div>
           <h2 className="font-heading text-base font-bold leading-tight">{film.title}</h2>
           <p className="text-xs text-muted-foreground">
@@ -206,7 +206,7 @@ export function SwipePage() {
       <div className="mb-2 w-full text-center sm:mb-3">
         <h1 className="font-heading text-lg font-bold sm:text-xl">Refine the recommendation tool with swipes</h1>
         <p className="mx-auto mt-1 hidden max-w-xs text-pretty text-sm text-muted-foreground sm:block">
-          Optional — react to a few films to sharpen your picks, or skip straight to your recommendations.
+          Optional - react to a few films to sharpen your picks, or skip straight to your recommendations.
         </p>
         <span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium text-muted-foreground sm:mt-3">
           {index + 1} / {cards.length} films
@@ -253,7 +253,7 @@ export function SwipePage() {
         <div className="flex flex-col items-center gap-1">
           <Button
             size="icon-lg"
-            className="h-12 w-12 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:h-14 sm:w-14"
+            className="h-12 w-12 rounded-full bg-destructive text-white hover:bg-destructive/90 sm:h-14 sm:w-14"
             aria-label="Not interested"
             onClick={() => decide("left")}
           >

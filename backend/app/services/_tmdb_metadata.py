@@ -1,8 +1,9 @@
 """
-Shared helper for extracting cacheable metadata from a TMDB movie detail response.
+Shared helper for extracting cacheable metadata from a TMDB movie
+detail response.
 
-Used by watchlist_service, viewing_history_service, and library_service so the
-extraction logic lives in exactly one place.
+Used by watchlist_service, viewing_history_service, and library_service
+so the extraction logic lives in exactly one place.
 """
 
 _POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
@@ -25,7 +26,8 @@ def extract_metadata(film_data: dict) -> dict:
         film_data (dict): Raw TMDB movie detail response (with credits).
 
     Returns:
-        dict: Keys: title, poster_url, year, director, synopsis, genres, runtime.
+        dict: Keys: title, poster_url, year, director, synopsis, genres,
+            runtime.
     """
     poster_path = film_data.get("poster_path")
     poster_url = _POSTER_BASE_URL + poster_path if poster_path else None
@@ -40,7 +42,11 @@ def extract_metadata(film_data: dict) -> dict:
     synopsis = film_data.get("overview") or None
     genres = [g["name"] for g in film_data.get("genres", [])] or None
     runtime_raw = film_data.get("runtime")
-    runtime = runtime_raw if isinstance(runtime_raw, int) and runtime_raw > 0 else None
+    runtime = (
+        runtime_raw
+        if isinstance(runtime_raw, int) and runtime_raw > 0
+        else None
+    )
 
     return {
         "title": film_data.get("title"),

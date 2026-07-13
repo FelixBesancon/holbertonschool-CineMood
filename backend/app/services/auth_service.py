@@ -27,7 +27,8 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 
-# SECRET_KEY is validated at startup by pydantic_settings — guaranteed non-empty
+# SECRET_KEY is validated at startup by pydantic_settings — guaranteed
+# non-empty
 SECRET_KEY: str = settings.SECRET_KEY
 
 # Signing algorithm used for all JWT tokens issued by this service
@@ -83,7 +84,8 @@ def register_user(db: Session, payload: UserCreate) -> AuthResponse:
 
     created_user = user_repository.create(db, new_user)
 
-    # Auto-assign all free platforms so the user immediately gets useful defaults
+    # Auto-assign all free platforms so the user immediately gets useful
+    # defaults
     created_user.platforms = user_repository.get_free_platforms(db)
     db.commit()
     db.refresh(created_user)
@@ -93,7 +95,8 @@ def register_user(db: Session, payload: UserCreate) -> AuthResponse:
         token=jwt.encode(
             {
                 "sub": str(created_user.id),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=TOKEN_EXPIRY_HOURS)
+                "exp": datetime.now(tz=timezone.utc)
+                + timedelta(hours=TOKEN_EXPIRY_HOURS)
             },
             SECRET_KEY,
             ALGORITHM
@@ -144,7 +147,8 @@ def login_user(db: Session, payload: UserLogin) -> AuthResponse:
         token=jwt.encode(
             {
                 "sub": str(existing_user.id),
-                "exp": datetime.now(tz=timezone.utc) + timedelta(hours=TOKEN_EXPIRY_HOURS)
+                "exp": datetime.now(tz=timezone.utc)
+                + timedelta(hours=TOKEN_EXPIRY_HOURS)
             },
             SECRET_KEY,
             ALGORITHM

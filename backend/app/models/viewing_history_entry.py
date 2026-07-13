@@ -17,7 +17,10 @@ from app.database import Base
 from app.models.base_model import BaseModel
 from app.models.prestige_tier import PrestigeTier
 from app.models.tag import Tag
-from sqlalchemy import Table, Column, ForeignKey, Text, Enum, UniqueConstraint, JSON
+from sqlalchemy import (
+    Table, Column, ForeignKey, Text,
+    Enum, UniqueConstraint, JSON
+    )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID
 
@@ -26,7 +29,11 @@ from uuid import UUID
 viewing_history_tags = Table(
     "viewing_history_tags",
     Base.metadata,
-    Column("viewing_history_entry_id", ForeignKey("viewing_history_entries.id"), primary_key=True),
+    Column(
+        "viewing_history_entry_id",
+        ForeignKey("viewing_history_entries.id"),
+        primary_key=True
+        ),
     Column("tag_id", ForeignKey("tags.id"), primary_key=True)
 )
 
@@ -101,8 +108,8 @@ class ViewingHistoryEntry(BaseModel):
         lazy="joined"
     )
     prestige_tier: Mapped[PrestigeTier | None] = mapped_column(
-        # values_callable tells SQLAlchemy to store the VALUE string ("Platinum")
-        # instead of the Python member name ("PLATINUM"). This must match the
+        # values_callable tells SQLAlchemy to store the VALUE string ("Gold")
+        # instead of the Python member name ("GOLD"). This must match the
         # PostgreSQL enum type created by the migration, which uses the values.
         Enum(PrestigeTier, values_callable=lambda e: [x.value for x in e]),
         nullable=True

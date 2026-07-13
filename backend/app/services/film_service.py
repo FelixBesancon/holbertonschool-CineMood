@@ -33,7 +33,8 @@ CAST_LIMIT = 5
 
 
 def _extract_year(release_date: str | None) -> int | None:
-    """Extract the 4-digit year from a TMDB release_date string (YYYY-MM-DD)."""
+    """Extract the 4-digit year from a TMDB release_date string
+    (YYYY-MM-DD)."""
     if not release_date:
         return None
     return int(release_date[:4])
@@ -119,7 +120,10 @@ async def get_film_details(tmdb_id: int, db: Session) -> Film:
     director = [
         member["name"] for member in credits.get("crew", [])
         if member.get("job") == "Director"
-        and not (member["name"] in seen_directors or seen_directors.add(member["name"]))
+        and not (
+            member["name"] in seen_directors
+            or seen_directors.add(member["name"])
+        )
     ]
 
     cast = [member["name"] for member in credits.get("cast", [])[:CAST_LIMIT]]
@@ -144,7 +148,9 @@ async def get_film_details(tmdb_id: int, db: Session) -> Film:
     )
 
 
-async def search_and_get_film(title: str, year: int, db: Session) -> Film | None:
+async def search_and_get_film(
+    title: str, year: int, db: Session
+) -> Film | None:
     """
     Resolve a film title and release year to a fully populated Film object.
 
@@ -222,4 +228,6 @@ async def get_film_with_status(
     in_watchlist = watchlist_repository.get_by_user_and_tmdb(
         db, user.id, tmdb_id
     ) is not None
-    return FilmWithStatus(film=film, in_history=in_history, in_watchlist=in_watchlist)
+    return FilmWithStatus(
+        film=film, in_history=in_history, in_watchlist=in_watchlist
+    )

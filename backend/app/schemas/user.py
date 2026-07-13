@@ -12,7 +12,8 @@ Schemas defined here:
     - UserUpdate:   validates incoming profile update data (PATCH /users/me)
     - UserResponse: shapes the user data returned in API responses; embeds
                     PlatformResponse (imported from schemas.platform)
-    - AuthResponse: wraps UserResponse with a JWT token on registration and login
+    - AuthResponse: wraps UserResponse with a JWT token on registration
+                    and login
     - UserLogin:    validates incoming login data (POST /auth/login)
 """
 
@@ -200,44 +201,6 @@ class UserCreate(BaseModel):
     email: ValidEmail
     password: ValidPassword
     age: ValidAge = None
-
-
-class PlatformResponse(BaseModel):
-    """
-    Schema for a streaming platform entry returned by GET /platforms.
-
-    Serialized from the Platform ORM model. The ``logo_url`` field maps
-    the model's ``logo_path`` column (TMDB relative path) to a more
-    descriptive name for API consumers. The full CDN URL is built by
-    prepending ``https://image.tmdb.org/t/p/original`` to ``logo_url``.
-
-    Attributes:
-        id (int): TMDB watch-provider ID (e.g. 8 for Netflix).
-        name (str): Human-readable platform name.
-        logo_url (str): Relative path to the platform logo on the TMDB CDN.
-        is_free (bool): True if the platform requires no paid subscription.
-    """
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    logo_url: str
-    is_free: bool
-
-
-class PlatformListUpdate(BaseModel):
-    """
-    Payload for PUT /users/me/platforms.
-
-    Replaces the user's entire platform list with the provided IDs.
-    Sending an empty list clears all platforms. Unknown IDs are silently
-    ignored at the service level (only valid seeded IDs are linked).
-
-    Attributes:
-        platform_ids (list[int]): TMDB watch-provider IDs of the platforms
-            to associate with the user. Defaults to an empty list.
-    """
-    platform_ids: list[int] = []
 
 
 class UserResponse(BaseModel):

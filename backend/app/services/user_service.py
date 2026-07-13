@@ -1,9 +1,11 @@
 """
 User Service
 
-This module provides business-logic functions for user and platform operations.
-It acts as the intermediary between the route handlers and the repository layer,
-converting raw ORM objects into validated Pydantic response schemas.
+This module provides business-logic functions for user and platform
+operations.
+It acts as the intermediary between the route handlers and the
+repository layer, converting raw ORM objects into validated Pydantic
+response schemas.
 
 All functions receive a SQLAlchemy Session injected by FastAPI's get_db()
 dependency (where needed) and delegate database access to user_repository.

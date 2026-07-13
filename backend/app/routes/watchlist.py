@@ -7,10 +7,14 @@ response forwarding. All business logic is delegated to
 watchlist_service.
 
 Routes:
-    - GET    /watchlist:                    retrieve the current user's watchlist
-    - POST   /watchlist:                    add a film to the current user's watchlist
-    - DELETE /watchlist/{tmdb_id}:          remove a film from the current user's watchlist
-    - POST   /watchlist/{tmdb_id}/watched:  move a film from watchlist to viewing history
+    - GET    /watchlist:                    retrieve the current
+                                            user's watchlist
+    - POST   /watchlist:                    add a film to the current
+                                            user's watchlist
+    - DELETE /watchlist/{tmdb_id}:          remove a film from the current
+                                            user's watchlist
+    - POST   /watchlist/{tmdb_id}/watched:  move a film from watchlist to
+                                            viewing history
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -51,7 +55,11 @@ def get_watchlist(
     return watchlist_service.get_watchlist(db, current_user)
 
 
-@router.post("", response_model=WatchlistEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+        "",
+        response_model=WatchlistEntryResponse,
+        status_code=status.HTTP_201_CREATED
+        )
 async def add_film(
     payload: WatchlistEntryCreate,
     current_user: User = Depends(get_current_user),
@@ -78,7 +86,11 @@ async def add_film(
         HTTPException 503: If TMDB is unreachable.
     """
     try:
-        return await watchlist_service.create_entry(db, current_user, payload)
+        return await watchlist_service.create_entry(
+            db,
+            current_user,
+            payload
+            )
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -124,7 +136,11 @@ def remove_film(
     return {"detail": "Film removed from watchlist."}
 
 
-@router.post("/{tmdb_id}/watched", response_model=ViewingHistoryEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+        "/{tmdb_id}/watched",
+        response_model=ViewingHistoryEntryResponse,
+        status_code=status.HTTP_201_CREATED
+        )
 async def mark_as_watched(
     tmdb_id: int,
     payload: ViewingHistoryEntryCreate,
@@ -132,7 +148,8 @@ async def mark_as_watched(
     db: Session = Depends(get_db)
 ):
     """
-    Move a film from the authenticated user's watchlist to their viewing history.
+    Move a film from the authenticated user's watchlist
+    to their viewing history.
 
     The tmdb_id in the URL takes precedence over any tmdb_id in the body.
     The body carries the optional viewing history fields (prestige_tier,
@@ -156,7 +173,11 @@ async def mark_as_watched(
     """
     payload.tmdb_id = tmdb_id
     try:
-        return await watchlist_service.mark_as_watched(db, current_user, payload)
+        return await watchlist_service.mark_as_watched(
+            db,
+            current_user,
+            payload
+            )
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

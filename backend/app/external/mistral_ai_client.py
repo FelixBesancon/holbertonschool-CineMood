@@ -34,7 +34,7 @@ _client = Mistral(api_key=settings.MISTRAL_AI_API_KEY, timeout_ms=30_000)
 async def chat_mistral_json(
     system_prompt: str, user_prompt: str,
     temperature: float = DEFAULT_TEMPERATURE,
-    ) -> dict:
+) -> dict:
     """
     Send a chat request to Mistral AI and return the response as a parsed dict.
 
@@ -60,7 +60,8 @@ async def chat_mistral_json(
         MistralAPIException: If the Mistral API returns a non-2xx status.
         json.JSONDecodeError: If the response content cannot be parsed as JSON.
             Should not occur with json_object format, but guarded for safety.
-        IndexError: If the API returns an empty choices list (unexpected state).
+        IndexError: If the API returns an empty choices list
+            (unexpected state).
     """
     response = await _client.chat.complete_async(
         model=MISTRAL_MODEL,

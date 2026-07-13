@@ -19,7 +19,11 @@ from app.services import viewing_history_service
 router = APIRouter(prefix="/tags", tags=["tags"])
 
 
-@router.get("", response_model=list[TagResponse], status_code=status.HTTP_200_OK)
+@router.get(
+        "",
+        response_model=list[TagResponse],
+        status_code=status.HTTP_200_OK
+        )
 def get_tags(db: Session = Depends(get_db)):
     """
     Return all available mood/quality tags.

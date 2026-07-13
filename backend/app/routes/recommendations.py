@@ -5,7 +5,7 @@ Implements the two-step film recommendation flow:
 
 Routes:
     - POST /recommendations/discover: generate 6 swipe cards from quiz answers
-    - POST /recommendations/refine:   produce final picks from quiz + swipe signals
+    - POST /recommendations/refine:   produce final picks from quiz + swipes
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -14,7 +14,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
-from app.schemas.recommendation import DiscoverRequest, DiscoverResponse, RefineRequest, RecommendationResponse
+from app.schemas.recommendation import (
+    DiscoverRequest, DiscoverResponse,
+    RefineRequest, RecommendationResponse
+    )
 from app.services import recommendation_service
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
@@ -65,15 +68,18 @@ async def refine(
 
     Scores liked films via Mistral, suggests 3 new films, picks 0-2 from the
     watchlist, enriches all via TMDB, and assembles the final recommendation
-    response: a perfect_match, up to 4 suggestions, and up to 2 watchlist picks.
+    response: a perfect_match, up to 4 suggestions,
+    and up to 2 watchlist picks.
 
     Args:
-        request: Quiz answers, platform filter flag, liked and rejected TMDB IDs.
+        request: Quiz answers, platform filter flag,
+                 liked and rejected TMDB IDs.
         current_user: Authenticated user injected by JWT dependency.
         db: SQLAlchemy session injected by get_db.
 
     Returns:
-        RecommendationResponse with perfect_match, suggestions, from_watchlist.
+        RecommendationResponse with perfect_match,
+        suggestions, from_watchlist.
 
     Raises:
         HTTPException 500: If Mistral or TMDB returns an unrecoverable error.

@@ -18,7 +18,8 @@ Implements the two-step film recommendation flow:
   Step 2 - refine()
     One Mistral call (medium model, temp 0.7) handles two tasks:
       - TASK 1: score each liked film (list of ints, same order as input)
-      - TASK 2: suggest exactly 4 new films (notes field takes highest priority)
+      - TASK 2: suggest exactly 4 new films (notes field takes highest
+        priority)
       - TASK 3: pick 0-2 films from the user's watchlist
     Liked films are fetched directly from TMDB by the service and inserted into
     the result pool with their Mistral-assigned scores. Rejected films are
@@ -30,8 +31,10 @@ Internal helpers (prefixed _) are pure functions where possible:
   _load_user_context   - DB I/O only, returns a _UserContext bundle
   _build_user_prompt   - pure string builder from quiz + user context
   _build_refine_prompt - extends _build_user_prompt with swipe signals
-  _resolve_id_to_label - async: tmdb_id → "Title (Year)" string for the refine prompt
-  _build_swipe_card    - async: search_and_get_film → SwipeCard (None on failure)
+  _resolve_id_to_label - async: tmdb_id → "Title (Year)" string for the
+      refine prompt
+  _build_swipe_card    - async: search_and_get_film → SwipeCard (None
+      on failure)
 """
 
 import asyncio
@@ -76,13 +79,15 @@ class _MistralDiscoverResponse(BaseModel):
 
 
 class _MistralLikedEval(BaseModel):
-    """Score + reason for a single liked film, evaluated in TASK 1 of the refine prompt."""
+    """Score + reason for a single liked film, evaluated in TASK 1 of
+    the refine prompt."""
     reason: str
     match_score: int
 
 
 class _MistralRefineResponse(BaseModel):
-    """Wrapper for Mistral's refine response: liked evals + new suggestions + watchlist picks."""
+    """Wrapper for Mistral's refine response: liked evals + new
+    suggestions + watchlist picks."""
     liked_films: list[_MistralLikedEval] = []
     new_suggestions: list[_MistralRefineFilm]
     from_watchlist: list[_MistralRefineFilm] = []
@@ -100,8 +105,10 @@ class _UserContext:
 
     Attributes:
         age: User's age, or None if not provided.
-        platforms: User's configured streaming platforms (Platform ORM objects).
-        viewing_history: All films the user has logged (ViewingHistoryEntry list).
+        platforms: User's configured streaming platforms (Platform ORM
+            objects).
+        viewing_history: All films the user has logged
+            (ViewingHistoryEntry list).
             Used to tell Mistral which films to exclude from suggestions.
         watchlist: Films the user wants to watch (WatchlistEntry list).
             Used to hint at the user's taste profile.
@@ -117,32 +124,69 @@ class _UserContext:
 # into the Mistral prompt. Keeps prompt-building logic out of the data layer.
 
 _AUDIENCE_HINTS = {
-    "Just me": "watching alone - no consensus needed, can go niche or demanding.",
-    "On a date": "on a romantic date - prefer feel-good, fun or mildly thrilling films. Avoid anything too heavy, controversial, or disturbing.",
-    "As a couple": "watching as a couple - they likely have similar tastes, so variety is welcome.",
-    "With friends": "with a group of friends - fun, interesting but easy to follow, ideally a conversation-starter.",
-    "With a group": "with a large group - mainstream appeal, nothing too niche or divisive.",
-    "With family": "with family - broadly enjoyable and appropriate for all ages.",
+    "Just me": (
+        "watching alone - no consensus needed, can go niche or "
+        "demanding."
+    ),
+    "On a date": (
+        "on a romantic date - prefer feel-good, fun or mildly "
+        "thrilling films. Avoid anything too heavy, controversial, "
+        "or disturbing."
+    ),
+    "As a couple": (
+        "watching as a couple - they likely have similar tastes, "
+        "so variety is welcome."
+    ),
+    "With friends": (
+        "with a group of friends - fun, interesting but easy to "
+        "follow, ideally a conversation-starter."
+    ),
+    "With a group": (
+        "with a large group - mainstream appeal, nothing too niche "
+        "or divisive."
+    ),
+    "With family": (
+        "with family - broadly enjoyable and appropriate for all "
+        "ages."
+    ),
 }
 
 _MOOD_HINTS = {
     "Comfort me": "something warm, cozy and reassuring",
     "Make me laugh": "something fun, light-hearted and entertaining",
     "Make me feel something": "something emotional, moving and memorable",
-    "Keep me on edge": "something suspenseful, with mystery or thriller elements",
+    "Keep me on edge": (
+        "something suspenseful, with mystery or thriller elements"
+    ),
     "Blow my mind": "something epic, spectacular and unforgettable",
     "Terrifies me": "something genuinely scary with real horror",
     "Make me think": "something clever, thought-provoking and layered",
     "Surprise me": "something unexpected, original and unusual",
-    "I'm open to anything": "any genre - prioritize quality and fit with other criteria",
+    "I'm open to anything": (
+        "any genre - prioritize quality and fit with other criteria"
+    ),
 }
 
 _DESIRE_HINTS = {
-    "Something easy": "fun, accessible, lighthearted - easily followed even if the viewer is distracted.",
-    "Something immersive": "gripping and captivating - a film you can lose yourself in.",
-    "Something challenging": "complex and layered - rewarding for discerning viewers or critics.",
-    "Something familiar": "close to the user's existing taste - similar to their history, mainstream, widely seen.",
-    "Something out of my comfort zone": "outside the user's usual tastes - unusual, original, little-known.",
+    "Something easy": (
+        "fun, accessible, lighthearted - easily followed even if "
+        "the viewer is distracted."
+    ),
+    "Something immersive": (
+        "gripping and captivating - a film you can lose yourself in."
+    ),
+    "Something challenging": (
+        "complex and layered - rewarding for discerning viewers or "
+        "critics."
+    ),
+    "Something familiar": (
+        "close to the user's existing taste - similar to their "
+        "history, mainstream, widely seen."
+    ),
+    "Something out of my comfort zone": (
+        "outside the user's usual tastes - unusual, original, "
+        "little-known."
+    ),
 }
 
 
@@ -150,7 +194,8 @@ _DESIRE_HINTS = {
 
 _DISCOVER_SYSTEM_PROMPT = """
 You are a film recommendation expert.
-Your task is to suggest exactly 7 diverse theatrical films matching the viewer profile provided.
+Your task is to suggest exactly 7 diverse theatrical films matching
+the viewer profile provided.
 Vary genres, eras, and styles across picks.
 
 Respond ONLY with this JSON - no text before or after:
@@ -159,17 +204,18 @@ Respond ONLY with this JSON - no text before or after:
     {
       "title": "Se7en",
       "year": 1995,
-      "reason": "Because you wanted a Fincher-style thriller that unsettles and challenges..."
+      "reason": "Because you wanted a Fincher-style thriller..."
     }
   ]
 }
 
 Fields:
-- title: exact film title as it appears internationally (use the original or most common English title)
+- title: exact film title as it appears internationally (use the
+  original or most common English title)
 - year: integer, theatrical release year
-- reason: 1-2 sentences addressed directly to the viewer ("you") explaining why
-  THIS specific film matches their answers - do not write generic descriptions,
-  use proper and polite language
+- reason: 1-2 sentences addressed directly to the viewer ("you")
+  explaining why THIS specific film matches their answers - do not
+  write generic descriptions, use proper and polite language
 
 Rules:
 - Only suggest real theatrical films you are confident exist
@@ -178,9 +224,13 @@ Rules:
 - Never suggest a film listed in the viewer's viewing history
 - If the viewer provided a SPECIFIC REQUEST (notes field), at least 3 of the 7
   must directly address it.
-- If the viewer's SPECIFIC REQUEST mentions a director, actor, or franchise, VERIFY the film's association with them before suggesting it. If uncertain, EXCLUDE the film.
-- For director/actor requests: prioritize films where the person is the PRIMARY director/lead actor (not a minor role).
-- Never invent a film to match a director/actor request. If no real film fits, suggest a similar film and explain the limitation.
+- If the viewer's SPECIFIC REQUEST mentions a director, actor, or
+  franchise, VERIFY the film's association with them before
+  suggesting it. If uncertain, EXCLUDE the film.
+- For director/actor requests: prioritize films where the person is
+  the PRIMARY director/lead actor (not a minor role).
+- Never invent a film to match a director/actor request. If no real
+  film fits, suggest a similar film and explain the limitation.
 
 
 EXAMPLES OF GOOD RESPONSES:
@@ -197,24 +247,31 @@ You are a film recommendation expert.
 Complete three tasks using the viewer profile provided:
 
 TASK 1 — EVALUATE THE LIKED FILMS
-For each film in LIKED FILMS (in the same order), write a reason (2-3 sentences
-addressed to the viewer) explaining why this film is a strong match for tonight,
-and assign a match_score (0–100) based on how well it fits the viewer profile.
+For each film in LIKED FILMS (in the same order), write a reason (2-3
+sentences addressed to the viewer) explaining why this film is a
+strong match for tonight, and assign a match_score (0–100) based on
+how well it fits the viewer profile.
 Return one object per film, in the same order as the LIKED FILMS list.
 If LIKED FILMS is empty, return an empty array.
 
 TASK 2 — 4 NEW FILM SUGGESTIONS
 Suggest EXACTLY 4 new theatrical films that match the viewer profile.
-These films must NOT appear in LIKED FILMS, REJECTED FILMS, VIEWING HISTORY, or WATCHLIST.
-Use LIKED FILMS as a positive taste signal — identify common style, tone, era, themes.
-Use REJECTED FILMS as a negative taste signal — avoid similar style, tone, genre.
-If the viewer provided a SPECIFIC REQUEST (notes field), it takes highest priority
-over all other criteria — at least 1 of the 3 films must directly address it.
+These films must NOT appear in LIKED FILMS, REJECTED FILMS, VIEWING
+HISTORY, or WATCHLIST.
+Use LIKED FILMS as a positive taste signal — identify common style,
+tone, era, themes.
+Use REJECTED FILMS as a negative taste signal — avoid similar style,
+tone, genre.
+If the viewer provided a SPECIFIC REQUEST (notes field), it takes
+highest priority over all other criteria — at least 1 of the 3 films
+must directly address it.
 Vary genres, eras, and styles across the 3 picks.
 
 TASK 3 — WATCHLIST PICKS
-From the viewer's WATCHLIST, select 0 to 2 films that genuinely fit tonight's mood.
-If none fit, or if there is no watchlist, return an empty list — never force a match.
+From the viewer's WATCHLIST, select 0 to 2 films that genuinely fit
+tonight's mood.
+If none fit, or if there is no watchlist, return an empty list —
+never force a match.
 
 Respond ONLY with this JSON — no text before or after:
 {
@@ -223,15 +280,16 @@ Respond ONLY with this JSON — no text before or after:
     {"reason": "...", "match_score": 88}
   ],
   "new_suggestions": [
-    {"title": "...", "year": 1999, "reason": "2-3 sentences to the viewer", "match_score": 92}
+    {"title": "...", "year": 1999, "reason": "...", "match_score": 92}
   ],
   "from_watchlist": [
-    {"title": "...", "year": 2005, "reason": "Why this watchlist film fits tonight", "match_score": 78}
+    {"title": "...", "year": 2005, "reason": "...", "match_score": 78}
   ]
 }
 
 Fields:
-- liked_films: array of objects (one per LIKED FILM, same order): reason + match_score
+- liked_films: array of objects (one per LIKED FILM, same order):
+  reason + match_score
 - title: exact film title as it appears internationally
 - year: integer, theatrical release year
 - reason: 2-3 sentences addressed to the viewer explaining the match
@@ -241,13 +299,18 @@ Rules:
 - Only suggest real theatrical films you are confident exist
 - No TV series, TV movies, short films, or adult/pornographic content
 - The reason must describe the actual film identified by title and year
-- Never suggest any film from LIKED FILMS, REJECTED FILMS, VIEWING HISTORY, or WATCHLIST
-  in new_suggestions (watchlist films belong in from_watchlist only)
+- Never suggest any film from LIKED FILMS, REJECTED FILMS, VIEWING
+  HISTORY, or WATCHLIST in new_suggestions (watchlist films belong in
+  from_watchlist only)
 - If the viewer provided a SPECIFIC REQUEST (notes field), at least 3 of the 7
   must directly address it.
-- If the viewer's SPECIFIC REQUEST mentions a director, actor, or franchise, VERIFY the film's association with them before suggesting it. If uncertain, EXCLUDE the film.
-- For director/actor requests: prioritize films where the person is the PRIMARY director/lead actor (not a minor role).
-- Never invent a film to match a director/actor request. If no real film fits, suggest a similar film and explain the limitation.
+- If the viewer's SPECIFIC REQUEST mentions a director, actor, or
+  franchise, VERIFY the film's association with them before
+  suggesting it. If uncertain, EXCLUDE the film.
+- For director/actor requests: prioritize films where the person is
+  the PRIMARY director/lead actor (not a minor role).
+- Never invent a film to match a director/actor request. If no real
+  film fits, suggest a similar film and explain the limitation.
 
 EXAMPLES OF GOOD RESPONSES:
 - Request: "Films by Christopher Nolan"
@@ -305,7 +368,10 @@ def _build_user_prompt(request: DiscoverRequest, ctx: _UserContext) -> str:
     if len(mood_hints) == 1:
         mood_line = f"The viewer wants {mood_hints[0]}."
     else:
-        mood_line = f"The viewer wants {mood_hints[0]}, and also {mood_hints[1]}."
+        mood_line = (
+            f"The viewer wants {mood_hints[0]}, "
+            f"and also {mood_hints[1]}."
+        )
 
     desire_hint = _DESIRE_HINTS.get(request.desire, request.desire)
 
@@ -324,23 +390,34 @@ def _build_user_prompt(request: DiscoverRequest, ctx: _UserContext) -> str:
         lines.append(f"- Deal breakers: {', '.join(request.dealbreakers)}")
 
     if request.notes:
-        lines.append("- SPECIFIC REQUEST (notes field) - highest priority, overrides all other criteria:")
+        lines.append(
+            "- SPECIFIC REQUEST (notes field) - highest priority, "
+            "overrides all other criteria:"
+        )
         lines.append(f"  {request.notes}")
-        lines.append("  (Disregard only if the request is clearly irrelevant to film recommendations.)")
+        lines.append(
+            "  (Disregard only if the request is clearly irrelevant "
+            "to film recommendations.)"
+        )
 
     if ctx.viewing_history:
         history_str = ", ".join(
             f"{e.title or 'Unknown'} ({e.tmdb_id})"
             for e in ctx.viewing_history
         )
-        lines.append(f"\nVIEWING HISTORY (never suggest these):\n{history_str}")
+        lines.append(
+            f"\nVIEWING HISTORY (never suggest these):\n{history_str}"
+        )
 
     if ctx.watchlist:
         watchlist_str = ", ".join(
             f"{e.title or 'Unknown'} ({e.tmdb_id})"
             for e in ctx.watchlist
         )
-        lines.append(f"\nWATCHLIST (user wants to see these - similar style welcome):\n{watchlist_str}")
+        lines.append(
+            "\nWATCHLIST (user wants to see these - similar style "
+            f"welcome):\n{watchlist_str}"
+        )
 
     return "\n".join(lines)
 
@@ -360,7 +437,8 @@ def _build_refine_prompt(
     also filters them mechanically as a second safety net.
 
     Args:
-        request: RefineRequest including liked/rejected TMDB IDs and platform flag.
+        request: RefineRequest including liked/rejected TMDB IDs and
+            platform flag.
         ctx: Server-side user context loaded by _load_user_context().
         liked_labels: Resolved "Title (Year)" strings for liked films.
         rejected_labels: Resolved "Title (Year)" strings for rejected films.
@@ -373,7 +451,8 @@ def _build_refine_prompt(
 
     if liked_labels:
         lines += [
-            f"\nLIKED FILMS ({len(liked_labels)} films — evaluate each in liked_films, same order):",
+            f"\nLIKED FILMS ({len(liked_labels)} films — evaluate each "
+            "in liked_films, same order):",
             ", ".join(liked_labels),
         ]
 
@@ -431,7 +510,9 @@ async def _build_swipe_card(
         None is returned silently - callers filter it out of the results list.
     """
     try:
-        film = await search_and_get_film(mistral_film.title, mistral_film.year, db)
+        film = await search_and_get_film(
+            mistral_film.title, mistral_film.year, db
+        )
         if film is None:
             return None
         available = bool(
@@ -495,13 +576,16 @@ async def refine(
     Step 2 of the recommendation flow: refine using swipe signals.
 
     Architecture:
-      1. Resolve liked/rejected TMDB IDs to "Title (Year)" labels in parallel.
-      2. Single Mistral call (3 tasks): score liked films + suggest 4 new films
-         + pick 0-2 from watchlist.
-      3. Fetch liked film details from TMDB in parallel with Mistral enrichment.
-      4. Service assembly: rejected films filtered mechanically, all results
-         merged into one pool, sorted by match_score descending, then split into
-         perfect_match (top 1) / suggestions (next up to 5) / from_watchlist (up to 2).
+      1. Resolve liked/rejected TMDB IDs to "Title (Year)" labels in
+         parallel.
+      2. Single Mistral call (3 tasks): score liked films + suggest
+         4 new films + pick 0-2 from watchlist.
+      3. Fetch liked film details from TMDB in parallel with Mistral
+         enrichment.
+      4. Service assembly: rejected films filtered mechanically, all
+         results merged into one pool, sorted by match_score
+         descending, then split into perfect_match (top 1) /
+         suggestions (next up to 5) / from_watchlist (up to 2).
 
     Liked films use the match_score assigned by Mistral in TASK 1 — no
     arbitrary fixed value. If Mistral returns fewer scores than expected
@@ -524,15 +608,26 @@ async def refine(
 
     # Resolve liked/rejected IDs to "Title (Year)" labels in parallel
     liked_tuple, rejected_tuple = await asyncio.gather(
-        asyncio.gather(*[_resolve_id_to_label(i, db) for i in request.liked_tmdb_ids]),
-        asyncio.gather(*[_resolve_id_to_label(i, db) for i in request.rejected_tmdb_ids]),
+        asyncio.gather(
+            *[_resolve_id_to_label(i, db) for i in request.liked_tmdb_ids]
+        ),
+        asyncio.gather(
+            *[
+                _resolve_id_to_label(i, db)
+                for i in request.rejected_tmdb_ids
+            ]
+        ),
     )
     liked_labels = list(liked_tuple)
     rejected_labels = list(rejected_tuple)
 
     # Single Mistral call: 4 new suggestions + watchlist picks
-    user_prompt = _build_refine_prompt(request, ctx, liked_labels, rejected_labels)
-    raw_dict = await chat_mistral_json(_REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.5)
+    user_prompt = _build_refine_prompt(
+        request, ctx, liked_labels, rejected_labels
+    )
+    raw_dict = await chat_mistral_json(
+        _REFINE_SYSTEM_PROMPT, user_prompt, temperature=0.5
+    )
     raw = _MistralRefineResponse.model_validate(raw_dict)
 
     user_platform_ids = {p.id for p in ctx.platforms}
@@ -541,17 +636,30 @@ async def refine(
 
     # Fetch liked films + enrich Mistral suggestions — all in parallel
     liked_details, new_cards, wl_cards = await asyncio.gather(
-        asyncio.gather(*[get_film_details(tid, db) for tid in request.liked_tmdb_ids],
-                       return_exceptions=True),
-        asyncio.gather(*[_build_swipe_card(f, user_platform_ids, db) for f in raw.new_suggestions]),
-        asyncio.gather(*[_build_swipe_card(f, user_platform_ids, db) for f in raw.from_watchlist]),
+        asyncio.gather(
+            *[get_film_details(tid, db) for tid in request.liked_tmdb_ids],
+            return_exceptions=True,
+        ),
+        asyncio.gather(
+            *[
+                _build_swipe_card(f, user_platform_ids, db)
+                for f in raw.new_suggestions
+            ]
+        ),
+        asyncio.gather(
+            *[
+                _build_swipe_card(f, user_platform_ids, db)
+                for f in raw.from_watchlist
+            ]
+        ),
     )
 
     pool: list[FilmRecommendation] = []
     from_watchlist: list[FilmRecommendation] = []
     seen_ids: set[int] = set()
 
-    # Include liked films directly — reason + score from Mistral (skip if eval missing)
+    # Include liked films directly — reason + score from Mistral
+    # (skip if eval missing)
     for idx, film in enumerate(liked_details):
         if isinstance(film, Exception) or film is None:
             continue
@@ -569,7 +677,9 @@ async def refine(
             reason=eval_.reason,
             available_on_my_platforms=available,
         )
-        rec = FilmRecommendation(**card.model_dump(), match_score=eval_.match_score)
+        rec = FilmRecommendation(
+            **card.model_dump(), match_score=eval_.match_score
+        )
         if film.tmdb_id in watchlist_ids:
             from_watchlist.append(rec)
         else:
@@ -578,9 +688,15 @@ async def refine(
 
     # Add Mistral new suggestions — filter rejected mechanically
     for card, mf in zip(new_cards, raw.new_suggestions):
-        if card is None or card.tmdb_id in rejected_ids or card.tmdb_id in seen_ids:
+        if (
+            card is None
+            or card.tmdb_id in rejected_ids
+            or card.tmdb_id in seen_ids
+        ):
             continue
-        rec = FilmRecommendation(**card.model_dump(), match_score=mf.match_score)
+        rec = FilmRecommendation(
+            **card.model_dump(), match_score=mf.match_score
+        )
         if card.tmdb_id in watchlist_ids:
             from_watchlist.append(rec)
         else:
@@ -589,13 +705,23 @@ async def refine(
 
     # Add Mistral watchlist picks — filter rejected mechanically
     for card, mf in zip(wl_cards, raw.from_watchlist):
-        if card is None or card.tmdb_id in rejected_ids or card.tmdb_id in seen_ids:
+        if (
+            card is None
+            or card.tmdb_id in rejected_ids
+            or card.tmdb_id in seen_ids
+        ):
             continue
-        from_watchlist.append(FilmRecommendation(**card.model_dump(), match_score=mf.match_score))
+        from_watchlist.append(
+            FilmRecommendation(
+                **card.model_dump(), match_score=mf.match_score
+            )
+        )
         seen_ids.add(card.tmdb_id)
 
     if not pool:
-        raise ValueError("Refine produced no valid films after TMDB resolution.")
+        raise ValueError(
+            "Refine produced no valid films after TMDB resolution."
+        )
 
     pool.sort(key=lambda f: f.match_score, reverse=True)
     from_watchlist.sort(key=lambda f: f.match_score, reverse=True)

@@ -13,7 +13,7 @@ Functions:
     - get_free_platforms:    return platforms that require no paid subscription
     - get_platforms_by_ids:  return Platform rows for a given list of IDs
     - get_by_email:          retrieve a user by email address
-    - get_by_id:             retrieve a user by UUID (used by the auth dependency)
+    - get_by_id:             retrieve a user by UUID (used by auth dependency)
     - create:                persist a new user and return the created instance
 """
 
@@ -57,11 +57,16 @@ def get_free_platforms(db: Session) -> list[Platform]:
         list[Platform]: Platform instances where is_free=True, ordered by name.
     """
     return db.execute(
-        select(Platform).where(Platform.is_free == True).order_by(Platform.name)
+        select(Platform)
+        .where(Platform.is_free is True)
+        .order_by(Platform.name)
     ).scalars().all()
 
 
-def get_platforms_by_ids(db: Session, platform_ids: list[int]) -> list[Platform]:
+def get_platforms_by_ids(
+        db: Session,
+        platform_ids: list[int]
+        ) -> list[Platform]:
     """
     Return Platform rows whose IDs are in the provided list.
 
@@ -127,8 +132,9 @@ def get_by_id(db: Session, user_id: str) -> User | None:
         uid = UUID(user_id)
     except (ValueError, AttributeError):
         return None
-    # .unique() is required because lazy="joined" on User.platforms produces
-    # multiple rows per user (one per platform) in the result set.
+    # .unique() is required because lazy="joined"
+    # on User.platforms produces multiple rows per user
+    # (one per platform) in the result set.
     return db.execute(
         select(User)
         .where(User.id == uid)

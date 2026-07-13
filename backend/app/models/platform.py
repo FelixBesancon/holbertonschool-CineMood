@@ -41,7 +41,11 @@ class Platform(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     logo_path: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_free: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_free: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+        )
 
     @property
     def logo_url(self) -> str:

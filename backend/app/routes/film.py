@@ -25,7 +25,10 @@ from app.models.user import User
 router = APIRouter(prefix="/films", tags=["films"])
 
 
-@router.get("/search", response_model=list[Film], status_code=status.HTTP_200_OK)
+@router.get(
+        "/search", response_model=list[Film],
+        status_code=status.HTTP_200_OK
+        )
 async def search_films(query: str = Query(..., min_length=1)):
     """
     Search the TMDB catalog by movie title.
@@ -51,11 +54,16 @@ async def search_films(query: str = Query(..., min_length=1)):
     except httpx.RequestError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not reach the film database. Please try again later."
+            detail="Could not reach the film database. " +
+            "Please try again later."
         )
 
 
-@router.get("/{tmdb_id}", response_model=FilmWithStatus, status_code=status.HTTP_200_OK)
+@router.get(
+        "/{tmdb_id}",
+        response_model=FilmWithStatus,
+        status_code=status.HTTP_200_OK
+        )
 async def get_film(
     tmdb_id: int,
     current_user: User = Depends(get_current_user),
@@ -78,7 +86,10 @@ async def get_film(
         HTTPException 503: If TMDB returns another error or is unreachable.
     """
     try:
-        return await film_service.get_film_with_status(db, current_user, tmdb_id)
+        return await film_service.get_film_with_status(
+            db, current_user,
+            tmdb_id
+            )
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 404:
             raise HTTPException(
@@ -92,5 +103,6 @@ async def get_film(
     except httpx.RequestError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not reach the film database. Please try again later."
+            detail="Could not reach the film database. " +
+            "Please try again later."
         )

@@ -7,10 +7,14 @@ response forwarding. All business logic is delegated to
 viewing_history_service.
 
 Routes:
-    - GET    /history:             retrieve the current user's viewing history
-    - POST   /history:             log a film in the current user's history
-    - PATCH  /history/{tmdb_id}:   update tags/prestige/note on an existing entry
-    - DELETE /history/{tmdb_id}:   remove a film from the current user's history
+    - GET    /history:             retrieve the current user's
+                                   viewing history
+    - POST   /history:             log a film in the current
+                                   user's history
+    - PATCH  /history/{tmdb_id}:   update tags/prestige/note
+                                   on an existing entry
+    - DELETE /history/{tmdb_id}:   remove a film from the
+                                   current user's history
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -23,14 +27,18 @@ from app.dependencies import get_current_user
 from app.models.user import User
 from app.services import viewing_history_service
 from app.schemas.viewing_history import (
-    ViewingHistoryEntryCreate, ViewingHistoryEntryUpdate, ViewingHistoryEntryResponse
+    ViewingHistoryEntryCreate, ViewingHistoryEntryUpdate,
+    ViewingHistoryEntryResponse
 )
 
 
 router = APIRouter(prefix="/history", tags=["history"])
 
 
-@router.get("", response_model=list[ViewingHistoryEntryResponse])
+@router.get(
+        "",
+        response_model=list[ViewingHistoryEntryResponse]
+        )
 def get_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -48,7 +56,11 @@ def get_history(
     return viewing_history_service.get_history(db, current_user)
 
 
-@router.post("", response_model=ViewingHistoryEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+        "",
+        response_model=ViewingHistoryEntryResponse,
+        status_code=status.HTTP_201_CREATED
+        )
 async def log_film(
     payload: ViewingHistoryEntryCreate,
     current_user: User = Depends(get_current_user),
@@ -76,7 +88,11 @@ async def log_film(
         HTTPException 503: If TMDB is unreachable.
     """
     try:
-        return await viewing_history_service.create_entry(db, current_user, payload)
+        return await viewing_history_service.create_entry(
+            db,
+            current_user,
+            payload
+            )
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -120,7 +136,12 @@ def update_film(
         HTTPException 401: If the request is not authenticated.
         HTTPException 404: If the user has no history entry for this film.
     """
-    return viewing_history_service.update_entry(db, current_user, tmdb_id, payload)
+    return viewing_history_service.update_entry(
+        db,
+        current_user,
+        tmdb_id,
+        payload
+        )
 
 
 @router.delete("/{tmdb_id}", status_code=status.HTTP_200_OK)

@@ -107,9 +107,10 @@ def get_by_user(db: Session, user_id: UUID) -> list[ViewingHistoryEntry]:
         list[ViewingHistoryEntry]: All entries belonging to the user.
             Returns an empty list if the user has no history.
     """
-    # unique() is required when lazy="joined" is used on a collection relationship.
-    # The JOIN produces one row per tag, so SQLAlchemy 2.0 requires explicit
-    # deduplication before converting to a Python list.
+    # unique() is required when lazy="joined" is used on a
+    # collection relationship.
+    # The JOIN produces one row per tag, so SQLAlchemy 2.0 requires
+    # explicit deduplication before converting to a Python list.
     return db.execute(
         select(ViewingHistoryEntry)
         .where(ViewingHistoryEntry.user_id == user_id)
@@ -136,7 +137,8 @@ def get_by_user_and_tmdb(
     """
     # unique() required for the same reason as get_by_user: lazy="joined"
     # on tags can produce multiple rows for a single entry.
-    # scalar_one_or_none() doesn't accept unique(), so we chain through scalars().
+    # scalar_one_or_none() doesn't accept unique(),
+    # so we chain through scalars().
     return db.execute(
         select(ViewingHistoryEntry)
         .where(ViewingHistoryEntry.user_id == user_id)
