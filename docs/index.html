@@ -216,12 +216,16 @@
     }
     .ai-step h3 { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
     .ai-step p { font-size: 0.88rem; color: #888; line-height: 1.7; }
-    .demo-video-section { padding-bottom: 2rem; }
+
+    /* ── Demo: See it in action ──────────────────────────────────────────── */
+    .demo-video-section { padding-bottom: 2rem; text-align: center; }
+    .demo-video-section .section-desc { margin-left: auto; margin-right: auto; }
     .video-frame {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
-      margin-top: 2.5rem;
+      max-width: 720px;
+      aspect-ratio: 778 / 720;
+      margin: 2.5rem auto 0;
       overflow: hidden;
       border: 1px solid var(--border);
       background: #000;
@@ -231,8 +235,17 @@
       width: 100%; height: 100%;
       border: 0;
     }
+
     /* ── About: Story ────────────────────────────────────────────────────── */
-    .about-story-section { padding: 6rem 2.5rem; max-width: 1160px; margin: 0 auto; }
+    .about-story-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .about-story-inner {
+      max-width: 1160px; margin: 0 auto;
+      padding: 6rem 2.5rem;
+    }
     .about-story-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -272,16 +285,16 @@
       align-items: start;
     }
     .about-dev-name { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; margin-top: 0.4rem; }
-    .about-dev-role { font-size: 0.72em; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #888; }
+    .about-dev-role { font-size: 0.72em; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #a3a3a3; }
     .about-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
     .links-group { display: flex; flex-direction: column; gap: 0.6rem; }
     .links-group-label {
       font-size: 0.65rem; font-weight: 700; letter-spacing: 0.16em;
-      text-transform: uppercase; color: #888; margin-bottom: 0.3rem;
+      text-transform: uppercase; color: #a3a3a3; margin-bottom: 0.3rem;
     }
     .link-item {
       display: flex; align-items: center; gap: 0.65rem;
-      font-size: 0.88rem; font-weight: 500; color: #888; transition: color 0.2s;
+      font-size: 0.88rem; font-weight: 500; color: #a3a3a3; transition: color 0.2s;
     }
     .link-item:hover { color: #fff; }
     .link-item svg { width: 15px; height: 15px; opacity: 0.35; flex-shrink: 0; }
@@ -325,7 +338,7 @@
       .ai-step { grid-template-columns: 1fr; gap: 1.5rem; }
       .ai-step:nth-child(even) .ai-step-visual,
       .ai-step:nth-child(even) .ai-step-content { order: unset; }
-      .about-story-section { padding: 4rem 1.25rem; }
+      .about-story-inner { padding: 4rem 1.25rem; }
       .about-story-grid { grid-template-columns: 1fr; gap: 2rem; }
       .about-dev-inner { grid-template-columns: 1fr; gap: 2.5rem; padding: 4rem 1.25rem; }
       .about-links-grid { grid-template-columns: 1fr; gap: 1.5rem; }
@@ -367,6 +380,7 @@
       <li><a href="#features">Features</a></li>
       <li><a href="#library">Film Library</a></li>
       <li><a href="#ai">AI Reco</a></li>
+      <li><a href="#demo">Demo</a></li>
       <li><a href="#about">About</a></li>
     </ul>
     <a href="https://cine-mood-five.vercel.app" target="_blank" rel="noopener" class="nav-cta">Open App</a>
@@ -402,9 +416,9 @@
         <span class="eyebrow">Features</span>
         <h2 class="section-title">A full-stack web app for film lovers</h2>
         <p class="section-desc">
-          CinéMood is a single-page web application developed in Python with FastAPI 
+          CinéMood is a single-page web application developed in Python with FastAPI
           and built using React and Tailwind CSS.<br>
-          It combines a personal movie library with an AI-powered recommendation engine, 
+          It combines a personal movie library with an AI-powered recommendation engine,
           all filtered based on the streaming platforms that you're actually subscribed to.
         </p>
 
@@ -542,6 +556,7 @@
       </div>
     </div>
   </div>
+
   <!-- Demo Video -->
   <div class="section-wrap demo-video-section" id="demo">
     <span class="eyebrow">Demo</span>
@@ -551,7 +566,7 @@
     </p>
     <div class="video-frame">
       <iframe
-        src="https://www.youtube-nocookie.com/embed/wN4LL-N2zqk"
+        src="https://www.youtube-nocookie.com/embed/wN4LL-N2zqk?vq=hd720"
         title="CinéMood demo video"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -560,45 +575,48 @@
       </iframe>
     </div>
   </div>
+
   <!-- About: Story -->
   <div class="about-story-section" id="about">
-    <span class="eyebrow">About</span>
-    <h2 class="section-title">The story behind it</h2>
-    <div class="about-story-grid">
-      <div class="about-story-col">
-        <p class="about-pull">"What do I actually feel like watching tonight?"</p>
-        <p>
-          As a lifelong movie enthusiast myself, I decided to create CinéMood because I was tired
-          of the same old evening routine: opening a streaming app, scrolling through titles
-          for 45 minutes, and eventually giving up. The problem wasn't the catalog itself,
-          but the fact that <b>there was no tool that could provide varied, personalized recommendations
-          in a simple and intuitive way</b>.
-        </p>
-        <p>
-          The project started as a simple film logging app. Over six weeks and six sprints,
-          it grew into a <b>full AI-powered recommendation engine</b>, with a PostgreSQL database,
-          a FastAPI backend following a strict layered architecture, and a React frontend
-          designed for mobile from the start.
-        </p>
-      </div>
-      <div class="about-story-col">
-        <p>
-          Developing it on my own forced me to make every decision: from designing the data model
-          to engineering the prompts, from JWT authentication to deployment on Vercel.
-          It was up to me to diagnose every bug and every pattern mine to choose..
-        </p>
-        <p>
-          CinéMood is my end-of-year portfolio project at
-          <a href="https://www.holbertonschool.fr/" target="_blank" rel="noopener"><b>Holberton School Bordeaux</b></a>,
-          where I'm studying application design and development.
-          The entire codebase is available as open source on <a href="https://github.com/FelixBesancon/holbertonschool-CineMood" target="_blank" rel="noopener"><b>GitHub</b></a>.
-        </p>
-        <p>
-          123 automated tests with 85% backend coverage.<br>
-          11,101 lines of code written in Python and TypeScript.<br>
-          Fully documented and live on Vercel.<br>
-          <strong>Built in 6 sprints. Shipped solo.</strong>
-        </p>
+    <div class="about-story-inner">
+      <span class="eyebrow">About</span>
+      <h2 class="section-title">The story behind it</h2>
+      <div class="about-story-grid">
+        <div class="about-story-col">
+          <p class="about-pull">"What do I actually feel like watching tonight?"</p>
+          <p>
+            As a lifelong movie enthusiast myself, I decided to create CinéMood because I was tired
+            of the same old evening routine: opening a streaming app, scrolling through titles
+            for 45 minutes, and eventually giving up. The problem wasn't the catalog itself,
+            but the fact that <b>there was no tool that could provide varied, personalized recommendations
+            in a simple and intuitive way</b>.
+          </p>
+          <p>
+            The project started as a simple film logging app. Over six weeks and six sprints,
+            it grew into a <b>full AI-powered recommendation engine</b>, with a PostgreSQL database,
+            a FastAPI backend following a strict layered architecture, and a React frontend
+            designed for mobile from the start.
+          </p>
+        </div>
+        <div class="about-story-col">
+          <p>
+            Developing it on my own forced me to make every decision: from designing the data model
+            to engineering the prompts, from JWT authentication to deployment on Vercel.
+            It was up to me to diagnose every bug and every pattern mine to choose..
+          </p>
+          <p>
+            CinéMood is my end-of-year portfolio project at
+            <a href="https://www.holbertonschool.fr/" target="_blank" rel="noopener"><b>Holberton School Bordeaux</b></a>,
+            where I'm studying application design and development.
+            The entire codebase is available as open source on <a href="https://github.com/FelixBesancon/holbertonschool-CineMood" target="_blank" rel="noopener"><b>GitHub</b></a>.
+          </p>
+          <p>
+            123 automated tests with 85% backend coverage.<br>
+            11,101 lines of code written in Python and TypeScript.<br>
+            Fully documented and live on Vercel.<br>
+            <strong>Built in 6 sprints. Shipped solo.</strong>
+          </p>
+        </div>
       </div>
     </div>
   </div>
