@@ -121,7 +121,7 @@
     /* ── Shared section shell ────────────────────────────────────────────── */
     .section-wrap { padding: 6rem 2.5rem; max-width: 1160px; margin: 0 auto; }
     .eyebrow {
-      display: block; font-size: 0.68rem; font-weight: 700;
+      display: block; font-size: 0.72rem; font-weight: 700;
       letter-spacing: 0.18em; text-transform: uppercase;
       color: var(--accent); margin-bottom: 0.6rem;
     }
@@ -151,25 +151,26 @@
     .features-intro-text .section-desc { margin-bottom: 2rem; }
     .feature-bullets { display: flex; flex-direction: column; gap: 1rem; }
     .feature-bullet {
-      display: flex; gap: 0.85rem; align-items: flex-start;
+      display: flex; gap: 0.85rem; align-items: center;
       padding: 1rem 1.1rem;
       background: var(--bg);
       border: 1px solid var(--border);
     }
     .feature-bullet-icon {
-      width: 32px; height: 32px; flex-shrink: 0;
+      width: 30px; height: 30px; flex-shrink: 0;
+      border-radius: 8px;
       background: var(--surface); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       color: var(--accent);
     }
-    .feature-bullet-icon svg { width: 14px; height: 14px; }
+    .feature-bullet-icon svg { width: 16px; height: 16px; }
     .feature-bullet-body h4 { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.1rem; }
     .feature-bullet-body p { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; }
 
     /* ── Phone mockup ────────────────────────────────────────────────────── */
     .phone-wrap { display: flex; justify-content: center; }
     .phone-frame {
-      position: relative; width: 220px; background: #111;
+      position: relative; width: 280px; background: #111;
       border-radius: 36px; padding: 14px 10px;
       box-shadow: 0 0 0 2px #333, 0 24px 60px rgba(0,0,0,0.22), 0 8px 20px rgba(0,0,0,0.14);
     }
@@ -187,13 +188,14 @@
     .feature-library { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
     .screenshot { border: 1px solid var(--border); display: block; width: 100%; }
     .feature-points { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem; }
-    .feature-point { display: flex; gap: 1rem; align-items: flex-start; }
+    .feature-point { display: flex; gap: 1rem; align-items: center; }
     .feature-point-icon {
-      width: 34px; height: 34px; background: var(--surface);
+      width: 30px; height: 30px; background: var(--surface);
+      border-radius: 8px;
       border: 1px solid var(--border); display: flex; align-items: center;
       justify-content: center; flex-shrink: 0; color: var(--accent);
     }
-    .feature-point-icon svg { width: 15px; height: 15px; }
+    .feature-point-icon svg { width: 16px; height: 16px; }
     .feature-point-body h4 { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
     .feature-point-body p { font-size: 0.83rem; color: var(--text-2); line-height: 1.6; }
 
@@ -209,12 +211,26 @@
     .ai-step:nth-child(even) .ai-step-content { order: 1; }
     .ai-step-screenshot { width: 100%; display: block; border: 1px solid #222; }
     .ai-step-num {
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.16em;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.16em;
       text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; display: block;
     }
     .ai-step h3 { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
     .ai-step p { font-size: 0.88rem; color: #888; line-height: 1.7; }
-
+    .demo-video-section { padding-bottom: 2rem; }
+    .video-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      margin-top: 2.5rem;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+    .video-frame iframe {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
     /* ── About: Story ────────────────────────────────────────────────────── */
     .about-story-section { padding: 6rem 2.5rem; max-width: 1160px; margin: 0 auto; }
     .about-story-grid {
@@ -256,16 +272,16 @@
       align-items: start;
     }
     .about-dev-name { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; margin-top: 0.4rem; }
-    .about-dev-role { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #555; }
+    .about-dev-role { font-size: 0.72em; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #888; }
     .about-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
     .links-group { display: flex; flex-direction: column; gap: 0.6rem; }
     .links-group-label {
       font-size: 0.65rem; font-weight: 700; letter-spacing: 0.16em;
-      text-transform: uppercase; color: #444; margin-bottom: 0.3rem;
+      text-transform: uppercase; color: #888; margin-bottom: 0.3rem;
     }
     .link-item {
       display: flex; align-items: center; gap: 0.65rem;
-      font-size: 0.88rem; font-weight: 500; color: #777; transition: color 0.2s;
+      font-size: 0.88rem; font-weight: 500; color: #888; transition: color 0.2s;
     }
     .link-item:hover { color: #fff; }
     .link-item svg { width: 15px; height: 15px; opacity: 0.35; flex-shrink: 0; }
@@ -282,12 +298,21 @@
     .footer-inner {
       max-width: 1160px; margin: 0 auto; width: 100%;
       display: flex; align-items: center; justify-content: space-between;
+      position: relative;
     }
-    .footer-brand { font-size: 0.88rem; font-weight: 700; color: #444; }
+    .footer-logo-link {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex; align-items: center;
+      transition: opacity 0.2s;
+    }
+    .footer-logo-link:hover { opacity: 0.7; }
+    .footer-logo { height: 34px; width: auto; display: block; }
+    .footer-brand { font-size: 1.4rem; font-weight: 700; color: #fff; }
     .footer-brand span { color: var(--accent); }
-    .footer-note { font-size: 0.75rem; color: #444; }
-    .footer-note a { color: #444; border-bottom: 1px solid #333; }
-    .footer-note a:hover { color: #888; }
+    .footer-note { font-size: 0.75rem; color: #888; }
+    .footer-note a { color: #888; border-bottom: 1px solid #444; }
+    .footer-note a:hover { color: #fff; }
 
     /* ── Responsive ──────────────────────────────────────────────────────── */
     @media (max-width: 860px) {
@@ -307,6 +332,7 @@
       .feature-ai { padding: 4rem 1.25rem; }
       footer { padding: 1.5rem 1.25rem; }
       .footer-inner { flex-direction: column; gap: 0.5rem; text-align: center; }
+      .footer-logo-link { position: static; transform: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -314,7 +340,7 @@
     }
   </style>
 </head>
-<body>
+<body id="top">
 
   <!-- Top bar -->
   <div class="top-bar">
@@ -352,8 +378,9 @@
     <h1>Ciné<span>Mood</span></h1>
     <p class="hero-tagline">Mood-first film discovery</p>
     <p class="hero-desc">
-      Stop scrolling. Tell CinéMood how you feel tonight - it recommends
-      films you can actually watch on the platforms you already subscribe to.
+      <b>Stop scrolling through your streaming apps now!</b><br>
+      Tell CinéMood how you're feeling, and get personalized movie recommendations
+      that you can actually watch on the platforms you already subscribe to.
     </p>
     <div class="hero-actions">
       <a href="https://cine-mood-five.vercel.app" target="_blank" rel="noopener" class="btn-primary">Open the App</a>
@@ -375,9 +402,10 @@
         <span class="eyebrow">Features</span>
         <h2 class="section-title">A full-stack web app for film lovers</h2>
         <p class="section-desc">
-          CinéMood is a Single Page Application built with React and FastAPI.
-          It combines a personal film library with an AI-powered recommendation engine -
-          all filtered to the streaming platforms you actually subscribe to.
+          CinéMood is a single-page web application developed in Python with FastAPI 
+          and built using React and Tailwind CSS.<br>
+          It combines a personal movie library with an AI-powered recommendation engine, 
+          all filtered based on the streaming platforms that you're actually subscribed to.
         </p>
 
         <div class="feature-bullets" style="margin-top: 2rem;">
@@ -387,25 +415,25 @@
             </div>
             <div class="feature-bullet-body">
               <h4>Film Library</h4>
-              <p>Search any film, build a watchlist, and log your viewing history with ratings and emotional tags.</p>
+              <p>Search for any film in the TMDB catalog, build a watchlist of your favorites, and log your viewing history with a tier list ranking and emotional tags designed to reflect your mood while watching.</p>
             </div>
           </div>
           <div class="feature-bullet">
             <div class="feature-bullet-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
             </div>
             <div class="feature-bullet-body">
               <h4>AI Recommendations</h4>
-              <p>Answer a quick mood questionnaire, swipe through candidates, and get personalized picks with a match score from Mistral AI.</p>
+              <p>Answer a quick mood questionnaire, swipe through candidates, and get personalized movie suggestions selected to match your current mood, along with with a match score from Mistral AI.</p>
             </div>
           </div>
           <div class="feature-bullet">
             <div class="feature-bullet-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="10" height="14" x="3" y="8" rx="2"/><path d="M5 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-2.4"/><path d="M8 18h.01"/></svg>
             </div>
             <div class="feature-bullet-body">
               <h4>Mobile-First & Responsive</h4>
-              <p>Designed from the ground up for mobile. The full experience works on any screen size.</p>
+              <p>Designed from the ground up for mobile devices, CinéMood offers a seamless browsing experience that adapts to all screen sizes.</p>
             </div>
           </div>
         </div>
@@ -432,7 +460,7 @@
             </div>
             <div class="feature-point-body">
               <h4>Film Search</h4>
-              <p>Search any film via the TMDB database. View synopsis, cast, director, and which of your streaming platforms have it tonight.</p>
+              <p>Connected to TMDB API, the world's leading movie database, search for any movie through the CinéMood app. Check out the related information such as the synopsis, cast, and director, and find out which streaming platforms it's available on in real time.</p>
             </div>
           </div>
           <div class="feature-point">
@@ -441,7 +469,7 @@
             </div>
             <div class="feature-point-body">
               <h4>Watchlist</h4>
-              <p>Save films you want to watch later. Your watchlist feeds directly into the AI recommendation engine.</p>
+              <p>Bookmark the movies you want to watch later so you don't forget any of them. Your watchlist feeds directly into the AI-powered recommendation engine!</p>
             </div>
           </div>
           <div class="feature-point">
@@ -449,8 +477,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </div>
             <div class="feature-point-body">
-              <h4>Viewing History & Prestige Tiers</h4>
-              <p>Log every film with a six-tier Prestige rating - Platinum to Trash - and tag it with emotional markers like "Hidden Gem" or "Emotional Damage".</p>
+              <h4>Viewing History</h4>
+              <p>Rate each film you watch using a six-tier Prestige rating: Platinum, Gold... Way down to Trash! Add emotional tags that reflect your personal viewing experience, such as "Hidden Gem" or "Emotional Damage".</p>
             </div>
           </div>
         </div>
@@ -462,10 +490,11 @@
   <div class="feature-ai" id="ai">
     <div class="feature-ai-inner">
       <span class="eyebrow">AI Recommendations</span>
-      <h2 class="section-title">From mood to film<br>in three steps</h2>
+      <h2 class="section-title">From mood to film<br>in three guided steps</h2>
       <p class="section-desc">
-        CinéMood uses Mistral AI to turn your current state of mind into a
-        personalized shortlist - filtered to your platforms, informed by your history.
+        CinéMood uses Mistral AI to turn your current state of mind<br>
+        into a personalized selection of movies, tailored to your platforms<br>
+        and based on your watchlist and viewing history.
       </p>
       <div class="ai-flow">
         <div class="ai-step">
@@ -475,7 +504,11 @@
           <div class="ai-step-content">
             <span class="ai-step-num">Step 01</span>
             <h3>Answer the questionnaire</h3>
-            <p>A short mood questionnaire captures how you feel tonight - energy level, what kind of experience you're after, and an optional free-text note. No typing required, just quick selections.</p>
+            <p>
+              A short questionnaire with 5 multiple-choice questions helps the tool assess your mood: your energy level, the context of your session, the type of experience you're looking for etc..<br>
+              You can add an optional note with free-form text for more specific requests.<br>
+              No need to spend time writing a complex request-just one minute is all it takes to describe exactly what you want!
+            </p>
           </div>
         </div>
         <div class="ai-step">
@@ -485,7 +518,11 @@
           <div class="ai-step-content">
             <span class="ai-step-num">Step 02</span>
             <h3>Swipe the deck</h3>
-            <p>Mistral AI generates a deck of candidate films based on your profile. Swipe right to like, left to reject. Your preferences are gathered locally and sent in a single call at the end - no delay between swipes.</p>
+            <p>
+              Mistral AI generates a deck of candidate film cards based on your profile and the answers you provided in the previous step.<br>
+              Just like a dating app, swipe right to indicate you like the suggestion, and left to reject it.<br>
+              Your preferences are gathered locally and sent in a single call at the end - so there's no delay between swipes.
+            </p>
           </div>
         </div>
         <div class="ai-step">
@@ -495,13 +532,34 @@
           <div class="ai-step-content">
             <span class="ai-step-num">Step 03</span>
             <h3>Get your results</h3>
-            <p>A second AI call processes your likes, dislikes, history, and watchlist together. Each result comes with a match score out of 100 and a personal explanation of why this film fits your mood tonight.</p>
+            <p>
+              Finally, a second AI call processes your likes, dislikes, history, and watchlist together, and you receive a list of movie suggestions that are 100% personalized for you and tailored to your current mood.<br>
+              Each suggestion comes with a match score out of 100, and a personalized explanation of why this film fits your mood and desired experience.<br>
+              From there, you can save the movies you want and add them to your watchlist.
+            </p>
           </div>
         </div>
       </div>
     </div>
   </div>
-
+  <!-- Demo Video -->
+  <div class="section-wrap demo-video-section" id="demo">
+    <span class="eyebrow">Demo</span>
+    <h2 class="section-title">See the app in action</h2>
+    <p class="section-desc">
+      A quick walkthrough of the mood questionnaire, the swipe deck, and the AI-generated recommendations.
+    </p>
+    <div class="video-frame">
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/wN4LL-N2zqk"
+        title="CinéMood demo video"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
   <!-- About: Story -->
   <div class="about-story-section" id="about">
     <span class="eyebrow">About</span>
@@ -510,31 +568,35 @@
       <div class="about-story-col">
         <p class="about-pull">"What do I actually feel like watching tonight?"</p>
         <p>
-          I built CinéMood because I was tired of the same Friday evening ritual: open a
-          streaming app, scroll for 45 minutes, give up. The problem wasn't the catalogue
-          - it was that no tool asked the right question first.
+          As a lifelong movie enthusiast myself, I decided to create CinéMood because I was tired
+          of the same old evening routine: opening a streaming app, scrolling through titles
+          for 45 minutes, and eventually giving up. The problem wasn't the catalog itself,
+          but the fact that <b>there was no tool that could provide varied, personalized recommendations
+          in a simple and intuitive way</b>.
         </p>
         <p>
           The project started as a simple film logging app. Over six weeks and six sprints,
-          it grew into a full AI-powered recommendation engine - with a PostgreSQL database,
+          it grew into a <b>full AI-powered recommendation engine</b>, with a PostgreSQL database,
           a FastAPI backend following a strict layered architecture, and a React frontend
           designed for mobile from the start.
         </p>
       </div>
       <div class="about-story-col">
         <p>
-          Building it solo meant owning every decision - from data model design to prompt
-          engineering, from JWT authentication to Vercel deployment. Every bug was mine to
-          diagnose, every pattern mine to choose.
+          Developing it on my own forced me to make every decision: from designing the data model
+          to engineering the prompts, from JWT authentication to deployment on Vercel.
+          It was up to me to diagnose every bug and every pattern mine to choose..
         </p>
         <p>
           CinéMood is my end-of-year portfolio project at
-          <a href="https://www.holbertonschool.com" target="_blank" rel="noopener">Holberton School Bordeaux</a>,
+          <a href="https://www.holbertonschool.fr/" target="_blank" rel="noopener"><b>Holberton School Bordeaux</b></a>,
           where I'm studying application design and development.
-          The full codebase is open source on GitHub.
+          The entire codebase is available as open source on <a href="https://github.com/FelixBesancon/holbertonschool-CineMood" target="_blank" rel="noopener"><b>GitHub</b></a>.
         </p>
         <p>
-          123 automated tests. 85% backend coverage. Live on Vercel.<br>
+          123 automated tests with 85% backend coverage.<br>
+          11,101 lines of code written in Python and TypeScript.<br>
+          Fully documented and live on Vercel.<br>
           <strong>Built in 6 sprints. Shipped solo.</strong>
         </p>
       </div>
@@ -577,12 +639,15 @@
 
   <!-- Footer -->
   <footer>
-    <div class="footer-inner">
-      <div class="footer-brand">Ciné<span>Mood</span></div>
-      <p class="footer-note">
-        Portfolio Project - <a href="https://www.holbertonschool.com" target="_blank" rel="noopener">Holberton School Bordeaux</a> · 2025
-      </p>
-    </div>
+      <div class="footer-inner">
+        <div class="footer-brand">Ciné<span>Mood</span></div>
+        <a href="#top" class="footer-logo-link" aria-label="Back to top">
+          <img src="images/logo-icon-white.svg" alt="CinéMood logo" class="footer-logo" />
+        </a>
+        <p class="footer-note">
+          Portfolio Project - <a href="https://www.holbertonschool.fr/" target="_blank" rel="noopener">Holberton School Bordeaux</a> · 2025
+        </p>
+      </div>
   </footer>
 
 </body>
